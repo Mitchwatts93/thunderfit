@@ -1,0 +1,5 @@
+PLAN:
+
+- fit the peaks
+- report back key peak details: centre, width, amplitude, chisq, free parameters, p value?
+- make some methods to do this recursively e.g. for map scans

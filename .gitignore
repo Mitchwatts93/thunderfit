@@ -1,0 +1,187 @@
+Last login: Wed Dec 19 11:52:15 on ttys005
+eduroam-int-dhcp-97-227-30:src mitch$ source activate bagmanthunder
+(bagmanthunder) eduroam-int-dhcp-97-227-30:src mitch$ conda install -n bagmanthunder -c cbetters peakutils
+Solving environment: done
+
+## Package Plan ##
+
+  environment location: /Users/mitch/anaconda3/envs/bagmanthunder
+
+  added / updated specs: 
+    - peakutils
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    peakutils-1.0.3            |           py36_0          15 KB  cbetters
+
+The following NEW packages will be INSTALLED:
+
+    peakutils: 1.0.3-py36_0 cbetters
+
+Proceed ([y]/n)? y
+
+
+Downloading and Extracting Packages
+peakutils-1.0.3      | 15 KB     | ################################################################################################################################################################# | 100% 
+Preparing transaction: done
+Verifying transaction: done
+Executing transaction: done
+(bagmanthunder) eduroam-int-dhcp-97-227-30:src mitch$ ls
+__init__.py		analysed		funcs.py		obj_old.py		setup.py
+__pycache__		data.txt		obj.py			requirements.txt
+(bagmanthunder) eduroam-int-dhcp-97-227-30:src mitch$ cd ..
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ ls
+LICENSE			README.md		bash_scripts.txt	example_data		params.txt		plan.txt		src			todo.txt
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ cd ..
+(bagmanthunder) eduroam-int-dhcp-97-227-30:Documents mitch$ ls
+BagmanThunder		GitTracing		PhD			plot_software		signal
+Christmas Quiz.key	Personal		paper TEM stuff		rina_analysis		spec1d
+(bagmanthunder) eduroam-int-dhcp-97-227-30:Documents mitch$ cd BagmanThunder/
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ ls
+LICENSE			README.md		bash_scripts.txt	example_data		params.txt		plan.txt		src			todo.txt
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ git add ./*
+fatal: Not a git repository (or any of the parent directories): .git
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ git commit -m 'working prototype'
+fatal: Not a git repository (or any of the parent directories): .git
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ git push origin master
+fatal: Not a git repository (or any of the parent directories): .git
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ ls
+LICENSE			README.md		bash_scripts.txt	example_data		params.txt		plan.txt		src			todo.txt
+(bagmanthunder) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ source deactivate
+(base) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ ls
+LICENSE			README.md		bash_scripts.txt	example_data		params.txt		plan.txt		src			todo.txt
+(base) eduroam-int-dhcp-97-227-30:BagmanThunder mitch$ cd ..
+(base) eduroam-int-dhcp-97-227-30:Documents mitch$ ls
+Christmas Quiz.key	Personal		paper TEM stuff		rina_analysis		spec1d
+GitTracing		PhD			plot_software		signal			thunderfit
+(base) eduroam-int-dhcp-97-227-30:Documents mitch$ cd rina_analysis/
+(base) eduroam-int-dhcp-97-227-30:rina_analysis mitch$ ls
+11_04_17a		README.md		data			params.txt		tcs_latest.ipynb
+LICENSE			bash_scripts.txt	example_data		src			todo.txt
+(base) eduroam-int-dhcp-97-227-30:rina_analysis mitch$ ls -la
+total 344
+drwxr-xr-x  15 mitch  staff     480 19 Dec 14:44 .
+drwx------+ 15 mitch  staff     480 21 Dec 13:29 ..
+-rw-r--r--@  1 mitch  staff    8196 19 Dec 14:44 .DS_Store
+drwxr-xr-x  12 mitch  staff     384 19 Dec 11:53 .git
+-rw-r--r--   1 mitch  staff    1210 19 Dec 11:52 .gitignore
+drwxr-xr-x@ 69 mitch  staff    2208  9 Nov 09:02 11_04_17a
+-rw-r--r--   1 mitch  staff    1069 19 Dec 11:52 LICENSE
+-rw-r--r--   1 mitch  staff    7664 19 Dec 11:52 README.md
+-rw-r--r--   1 mitch  staff     324 19 Dec 11:52 bash_scripts.txt
+drwxr-xr-x   3 mitch  staff      96 19 Dec 11:52 data
+drwxr-xr-x  31 mitch  staff     992 19 Dec 11:52 example_data
+-rw-r--r--@  1 mitch  staff     195 19 Dec 11:52 params.txt
+drwxr-xr-x   9 mitch  staff     288 19 Dec 11:52 src
+-rw-r--r--   1 mitch  staff  131919 10 Dec 17:08 tcs_latest.ipynb
+-rw-r--r--   1 mitch  staff     202 19 Dec 11:52 todo.txt
+(base) eduroam-int-dhcp-97-227-30:rina_analysis mitch$ less .gitignore 
+example_data/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/

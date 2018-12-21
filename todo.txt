@@ -1,0 +1,9 @@
+TODO:
+
+- make plot methods for object
+- cleanup data and move some variables from fit_data dict into object attributes
+- move bounds making into a new function in main
+
+- add some checks to user passed data
+- maybe use upper bound as e.g. 2x height for width
+- make width ranges a vairable
