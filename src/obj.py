@@ -3,25 +3,26 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import os
 import json
-import math
 
 from scipy.signal import find_peaks_cwt as peak_find
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
-from scipy.optimize import leastsq, least_squares
+from scipy.optimize import least_squares
 import numpy as np
 import pandas as pd
-import tables
+from matplotlib import axes
+import matplotlib.pyplot as plt
+
 from typing import Dict, Union
-import peakutils
 import copy
 
+import lmfit
 from lmfit import models
 
 
 
 
-import funcs
+
 
 
 class BagmanThunder():
@@ -39,11 +40,12 @@ class BagmanThunder():
         self.y_label: str = 'y_axis'
         self.e_label: Union[str, None] = None
         self.datapath: str = 'data.txt'
+        self.peaks: lmfit.model.ModelResult
+
         self.user_params: Dict = {'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
                          'peak_amps': [], 'chisq': None, 'free_params': None, 'p_value':None, 'bounds' : {'centers':None,
                     'widths':None,
                     'amps':None}}
-        #self.peaks: lmfit.models.ModelResult
 
         if isinstance(input, BagmanThunder):  # if only pass one but its already a spec1d object then just use that
             self.overwrite_bagman(input)  # add all the details in depending on args
@@ -150,14 +152,12 @@ class BagmanThunder():
                 'background']  # subtract background from the data
             self.data_bg_rm[self.x_label] = self.data[self.x_label]
         elif self.user_params['background'] == 'no':  # then user doesn't want to make a background
-            import ipdb
-            ipdb.set_trace()
             LOGGER.warning(
                 "not using a background, this may prevent algorithm from converging if a background is present")
             self.user_params['background'] = np.array(
                 [0 for _ in self.data[self.y_label]])  # set the background as 0 everywhere
 
-            self.data_bg_rm[self.y_label] = self.data[self.y_label]  # subtract background from the data
+            self.data_bg_rm[self.y_label] = self.data[self.y_label] - 0 # subtract background from the data
             self.data_bg_rm[self.x_label] = self.data[self.x_label]
         elif not isinstance(self.user_params['background'], np.ndarray):
             raise TypeError('the background passed is in the incorrect format, please pass as type np array')
@@ -174,7 +174,6 @@ class BagmanThunder():
         bounds = [np.array([0.001, 10 ** 5]), np.array([0.1, 10 ** 9])]
         baseline_values = least_squares(self.residual_baseline, params[:], args=(data.values,),
                                   bounds=bounds)
-        #baseline_values = peakutils.baseline(data, deg=20) # use peakutils to find the baseline
 
         p, lam = baseline_values['x']
         baseline_values = self.baseline_als(data.values, lam, p, niter=10)
@@ -203,21 +202,18 @@ class BagmanThunder():
     ##### background end
 
     ##### peak fitting
-    def fit_peaks(self, user_params, data_bg_rm, x_label, y_label):
-        specs = self.make_params(data_bg_rm, user_params, x_label, y_label)
+    def fit_peaks(self):
+        self.user_params = self.make_bounds(self.data_bg_rm, self.user_params, self.x_label, self.y_label)
+        self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
 
-        model, params = self.generate_model(specs)
+        self.model, self.peak_params = self.generate_model(self.specs)
 
-        peaks = model.fit(specs['y_bg_rm'], params, x=specs['x_bg_rm'])
-        self.peaks = peaks
-        return peaks
+        self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
+        return self.peaks
 
-    def make_params(self, data_bg_rm, user_params, x_label, y_label):
-        peak_widths = user_params['peak_widths']
-        peak_amps = user_params['peak_amps']
-        peak_cents = user_params['peak_centres']
-
+    def make_bounds(self, data_bg_rm, user_params, x_label, y_label):
         if user_params['bounds']['centers'] is None:
+            peak_cents = user_params['peak_centres']
             cent_lb = data_bg_rm[x_label].min()
             cent_ub = data_bg_rm[x_label].max()
             l_cent_bounds = [cent_lb for _ in peak_cents]
@@ -226,6 +222,7 @@ class BagmanThunder():
             user_params['bounds']['centers'] = cent_bounds
 
         if user_params['bounds']['widths'] is None:
+            peak_widths = user_params['peak_widths']
             width_ub = (data_bg_rm[x_label].max() - data_bg_rm[x_label].min()) # width of data
             l_width_bounds = [1e-6 for _ in peak_widths]
             u_width_bounds = [width_ub for _ in peak_widths] # TODO maybe use upper bound as e.g. 2x height
@@ -233,6 +230,7 @@ class BagmanThunder():
             user_params['bounds']['widths'] = width_bounds
 
         if user_params['bounds']['amps'] is None:
+            peak_amps = user_params['peak_amps']
             amps_lb = data_bg_rm[y_label].min()
             amps_ub = data_bg_rm[y_label].max()
             l_amp_bounds = [amps_lb for _ in peak_amps]
@@ -240,12 +238,9 @@ class BagmanThunder():
             amp_bounds = list(zip(l_amp_bounds, u_amp_bounds))
             user_params['bounds']['amps'] = amp_bounds
 
-        # currently our bounds are set by the data ranges. It may make sense to define
+        # todo currently our bounds are set by the data ranges. It may make sense to define
         # narrower ranges around the peaks themselves
-
-        specs = self.build_specs(data_bg_rm[x_label].values, data_bg_rm[y_label].values, user_params)
-
-        return specs
+        return user_params
 
     @staticmethod
     def build_specs(x_bg_rm, y_bg_rm, user_params):
@@ -308,6 +303,72 @@ class BagmanThunder():
         return composite_model, params
     ##### peak fitting end
 
+    ##### plotting
+    #todo fix the assertions in these
+    # for all of these take a figure as optional input so can be plotted on same axis
+    @staticmethod
+    def plot_data(x, y, ax=False, params=('r-',)):
+        if ax:
+            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
+                                                                " an axes object"
+        else:
+            fig, ax = plt.subplots()
+
+        if params:
+            assert isinstance(params, tuple), "invalid plot params passed"
+
+        ax.plot(x, y, *params)
+        return ax
+
+    @staticmethod
+    def plot_fits(x, peaks, ax=False):
+        if ax:
+            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
+                                                                " an axes object"
+        else:
+            fig, ax = plt.subplots()
+
+        for i, peak in enumerate(peaks):
+            ax.plot(x, peaks[peak])
+        return ax
+
+    @staticmethod
+    def plot_background(x, background_data, ax=False, params=('b-',)):
+        if ax:
+            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
+                                                                " an axes object"
+        else:
+            fig, ax = plt.subplots()
+
+        if params:
+            assert isinstance(params, tuple), "invalid plot params passed"
+
+        ax.plot(x, background_data, *params)
+        return ax
+
+    @staticmethod
+    def plot_fit_sum(x, peak_sum, ax=False, params=('k-',)): # option of including background
+        if ax:
+            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
+                                                                " an axes object"
+        else:
+            fig, ax = plt.subplots()
+
+        if params:
+            assert isinstance(params, tuple), "invalid plot params passed"
+
+        ax.plot(x, peak_sum, *params)
+        return ax
+
+    def plot_all(self):
+        ax = self.plot_data(self.data[self.x_label], self.data[self.y_label])
+        ax = self.plot_fits(self.data[self.x_label], self.peaks.eval_components(), ax)
+        ax = self.plot_background(self.data[self.x_label], self.user_params['background'], ax)
+        ax = self.plot_fit_sum(self.data[self.x_label], self.peaks.eval(), ax)
+
+        plt.show()
+    ##### plotting end
+
 
 # TODO move bounds making into a new function in main
 def main(arguments):
@@ -319,13 +380,9 @@ def main(arguments):
         bagman.peaks_unspecified()
 
     # now fit peaks
-    peaks = bagman.fit_peaks(bagman.user_params, bagman.data_bg_rm, bagman.x_label, bagman.y_label)
-    peak_sum = peaks.eval()
-    peak_info = peaks.fit_report()
-    ind_peaks = peaks.eval_components()
+    bagman.fit_peaks()
 
-    fit_info = {'bagman':bagman, 'peak_info':peak_info, 'peak_sum':peak_sum, 'individual_peaks':ind_peaks}
-    return fit_info
+    return bagman
 
 
 if __name__ == '__main__':

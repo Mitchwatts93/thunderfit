@@ -2,7 +2,10 @@ TODO:
 
 - make plot methods for object
 - cleanup data and move some variables from fit_data dict into object attributes
-- move bounds making into a new function in main
+- sort out which methods should be static and which use attributes, clear that up
+- add in order checks etc and assertions etc
+- initialise model, peaks and peak params and specs
+- add data smoothing option
 
 - add some checks to user passed data
 - maybe use upper bound as e.g. 2x height for width
