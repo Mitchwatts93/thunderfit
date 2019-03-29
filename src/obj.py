@@ -6,6 +6,8 @@ import json
 import pickle
 import dill
 import operator
+import difflib
+import re
 
 from scipy.signal import find_peaks_cwt as peak_find
 from scipy import sparse
@@ -22,6 +24,8 @@ import copy
 import lmfit
 from lmfit import models
 
+
+# todo add paraameter for bound tightness
 
 class Thunder():
     """
@@ -395,8 +399,9 @@ class Thunder():
         self.plot = plt
     ##### plotting end
 
+
     def fit_report(self):
-        self.fit_data = {}
+        self.fit_data = {mod_no:{} for mod_no in range(len(self.user_params['peak_types']))}
 
         ## total fit data
         chi_sq = self.peaks.chisqr
@@ -404,12 +409,23 @@ class Thunder():
         free_params = round(chi_sq / reduced_chi_sq)
 
         ## individual parameter data
+        param_info = {"center":"centers", "amplitude":"amps", "sigma":"widths", "fwhm":False, "height":False}
         for parameter, param_obj in self.peaks.params.items():
-            value =param_obj.value
-            err = param_obj.stderr
-        bounds = self.user_params['bounds']
+            model_no = int(re.findall(r'\d+', parameter)[0])
+            param_type = param_info[difflib.get_close_matches(parameter, param_info.keys())[0]]
 
+            if param_type:
+                value =param_obj.value
+                err = param_obj.stderr
+                type = self.user_params['peak_types'][model_no]
+                bounds = self.user_params['bounds'][param_type][model_no]
 
+                fit_info = {"value":value,
+                            "stderr":err,
+                            "peak_type":type,
+                            "bounds":bounds}
+
+                self.fit_data[model_no][param_type] = fit_info
 
 
 def peak_details(params):
@@ -432,9 +448,6 @@ def main(arguments):
     specified_dict = peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)
 
-    if not thunder.user_params['peak_centres']:  # i.e. if no peak centres were specified, then we detect the centres
-        thunder.peaks_unspecified()
-
     # now fit peaks
     thunder.fit_peaks()
     thunder.plot_all()
@@ -453,6 +466,10 @@ def load_thunder(path):
 
 def save_plot(plot, path='.', figname='figure.png'):
     plot.savefig(os.path.join(path, figname), transparent=True, format='svg')
+
+def save_fit_report(obj, path, filename="report.json"):
+    json.dump(obj, open(os.path.join(path, filename), 'w'))
+
 
 def parse_param_file(filepath='./params.txt'):
     """
@@ -557,3 +574,4 @@ if __name__ == '__main__':
     dataname = os.path.basename(arguments['datapath'])
     save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
     save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
+    save_fit_report(thunder.fit_data, path=dirname, filename=f"{dataname}_report.json")
