@@ -3,6 +3,9 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import os
 import json
+import pickle
+import dill
+import operator
 
 from scipy.signal import find_peaks_cwt as peak_find
 from scipy import sparse
@@ -20,17 +23,12 @@ import lmfit
 from lmfit import models
 
 
-
-
-
-
-
-class BagmanThunder():
+class Thunder():
     """
-    bagman object with all the methods we love inside it. Name generated using WuTang Clan name generator.
+    thunder object with all the methods we love inside it. Name generated using WuTang Clan name generator.
     """
     def __init__(self, input):
-        self.input: Union[BagmanThunder, Dict] = input
+        self.input: Union[Thunder, Dict] = input
         self.data: pd.DataFrame = pd.DataFrame([])  # this is what we will create later
         self.data_bg_rm: pd.DataFrame = pd.DataFrame([]) # later we will fill this with background remove data
         self.x_ind: int = 0
@@ -41,35 +39,40 @@ class BagmanThunder():
         self.e_label: Union[str, None] = None
         self.datapath: str = 'data.txt'
         self.peaks: lmfit.model.ModelResult
+        self.plot: plt = None
+        self.fit_data: {} = {}
 
         self.user_params: Dict = {'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
                          'peak_amps': [], 'chisq': None, 'free_params': None, 'p_value':None, 'bounds' : {'centers':None,
                     'widths':None,
                     'amps':None}}
 
-        if isinstance(input, BagmanThunder):  # if only pass one but its already a spec1d object then just use that
-            self.overwrite_bagman(input)  # add all the details in depending on args
+
+
+        if isinstance(input, Thunder):  # if only pass one but its already a spec1d object then just use that
+            self.overwrite_thunder(input)  # add all the details in depending on args
         elif isinstance(input, dict):
-            self.create_bagman(input)  # add all the details in depending on args
+            self.create_thunder(input)  # add all the details in depending on args
         else:
-            raise TypeError('Cannot convert input to BagmanThunder object')
+            raise TypeError('Cannot convert input to Thunder object')
 
         self.data = self.load_data(self.datapath, self.x_ind, self.y_ind, self.x_label, self.y_label, self.e_ind,
                                    self.e_label) # load the data
 
-    def overwrite_bagman(self, inp):
-        bag = inp
-        self.x_ind = bag.x_ind
-        self.y_ind = bag.y_ind
-        self.e_ind = bag.e_ind
-        self.x_label = bag.x_label
-        self.y_label = bag.y_label
-        self.datapath = bag.datapath
-        self.user_params = bag.user_params
+    #### loading data and thunder object
+    def overwrite_thunder(self, inp):
+        thun = inp
+        self.x_ind = thun.x_ind
+        self.y_ind = thun.y_ind
+        self.e_ind = thun.e_ind
+        self.x_label = thun.x_label
+        self.y_label = thun.y_label
+        self.datapath = thun.datapath
+        self.user_params = thun.user_params
 
-    def create_bagman(self, inp: Dict):
+    def create_thunder(self, inp: Dict):
         """
-        Used to create a bagman object given different input types
+        Used to create a thunder object given different input types
         :param args: a,b,c depending on type of input and
         :return: None, we modify the object unless a spec1d object is passed, in which case we return that
         """
@@ -115,26 +118,45 @@ class BagmanThunder():
         dropped = data.dropna() # drop any rows with NaN etc in them
         return data
 
+
     ##### peak finding
-    def peaks_unspecified(self):
+    def peaks_unspecified(self, specified_dict):
         x_data = self.data_bg_rm[self.x_label]
 
-        width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
-        peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
+        if not specified_dict['cents_specified']:
+            width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
+            peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
                                                   width_ranges)  # run peak finder here
-        self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
+            self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
 
-        if not self.user_params['peak_types']:
-            self.user_params['peak_types'] = ['GaussianModel' for _ in
-                                             peak_centres_indices]  # we assume all the types are gaussian
-        elif len(self.user_params['peak_types']) != len(peak_centres_indices):
-            self.user_params['peak_types'] = [self.user_params['peak_types'][0] for _ in peak_centres_indices]
+        if not specified_dict['amps_specified']: # find a faster way to do this
+            xcents = self.user_params['peak_centres'] # this is x data
+            peak_centres_indices = [self.data_bg_rm[self.x_label].iloc[(self.data_bg_rm[self.x_label] - xval)
+                                 .abs().argsort()[:1]].index for xval in xcents] #find the indices for these xvalues
+            peak_centres_indices = [ind.tolist()[0] for ind in peak_centres_indices] # stupid pandas index type
 
-        y_peaks = self.data_bg_rm[self.y_label][peak_centres_indices]  # get the y values from the indices
-        self.user_params['peak_amps'] = list(y_peaks)  # all peak amps are the order of mag of largest y
+            y_peaks = self.data_bg_rm[self.y_label][peak_centres_indices]  # get the y values from the indices
+            self.user_params['peak_amps'] = list(y_peaks)  # all peak amps are the order of mag of largest y
 
-        width = x_data.max() - x_data.min()
-        self.user_params['peak_widths'] = [(width / 10) * np.random.random() for _ in self.user_params['peak_centres']]
+        if not specified_dict['widths_specified']:
+            width = x_data.max() - x_data.min()
+            self.user_params['peak_widths'] = [(width / 10) * np.random.random() for _ in self.user_params['peak_centres']]
+
+        if not specified_dict['types_specified']:
+            self.user_params['peak_types'] = ['LorentzianModel' for _ in
+                                              self.user_params['peak_centres']]  # we assume all the types are gaussian
+
+        # this needs to be fixed
+
+        len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
+        len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
+        shortest_specified = next(len_ord_specified)[0]  # this is the dict key with the shortest specified data
+
+        for param in ['peak_amps', 'peak_centres', 'peak_widths', 'peak_types']:
+            if len(self.user_params[param]) > specified_dict[shortest_specified]: # then we need to trim it
+                LOGGER.warning("Some of the specified peak parameters differ in length. Choosing peak paramters"
+                               "as the first n parameters where n is the length of the shortest set of parameters")
+                self.user_params[param] = self.user_params[param][:specified_dict[shortest_specified]]
 
     @staticmethod
     def peak_finder(data, width_range):
@@ -153,7 +175,8 @@ class BagmanThunder():
             self.data_bg_rm[self.x_label] = self.data[self.x_label]
         elif self.user_params['background'] == 'no':  # then user doesn't want to make a background
             LOGGER.warning(
-                "not using a background, this may prevent algorithm from converging if a background is present")
+                "Warning: no background specified, so not using a background,"
+                " this may prevent algorithm from converging")
             self.user_params['background'] = np.array(
                 [0 for _ in self.data[self.y_label]])  # set the background as 0 everywhere
 
@@ -203,35 +226,32 @@ class BagmanThunder():
 
     ##### peak fitting
     def fit_peaks(self):
-        self.user_params = self.make_bounds(self.data_bg_rm, self.user_params, self.x_label, self.y_label)
+        self.user_params = self.make_bounds(self.data_bg_rm, self.user_params, self.y_label)
         self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
 
         self.model, self.peak_params = self.generate_model(self.specs)
 
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
+        self.peak_params = self.peaks.best_values
         return self.peaks
 
-    def make_bounds(self, data_bg_rm, user_params, x_label, y_label):
+    def make_bounds(self, data_bg_rm, user_params, y_label):
         if user_params['bounds']['centers'] is None:
-            peak_cents = user_params['peak_centres']
-            cent_lb = data_bg_rm[x_label].min()
-            cent_ub = data_bg_rm[x_label].max()
-            l_cent_bounds = [cent_lb for _ in peak_cents]
-            u_cent_bounds = [cent_ub for _ in peak_cents]
+            l_cent_bounds = [cent - 10 * user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
+            u_cent_bounds = [cent + 10 * user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
             cent_bounds = list(zip(l_cent_bounds, u_cent_bounds))
             user_params['bounds']['centers'] = cent_bounds
 
         if user_params['bounds']['widths'] is None:
             peak_widths = user_params['peak_widths']
-            width_ub = (data_bg_rm[x_label].max() - data_bg_rm[x_label].min()) # width of data
-            l_width_bounds = [1e-6 for _ in peak_widths]
-            u_width_bounds = [width_ub for _ in peak_widths] # TODO maybe use upper bound as e.g. 2x height
+            l_width_bounds = [width / 10 for width in peak_widths]
+            u_width_bounds = [width * 3 for width in peak_widths]
             width_bounds = list(zip(l_width_bounds, u_width_bounds))
             user_params['bounds']['widths'] = width_bounds
 
         if user_params['bounds']['amps'] is None:
             peak_amps = user_params['peak_amps']
-            amps_lb = data_bg_rm[y_label].min()
+            amps_lb = data_bg_rm[y_label].mean() # maybe change this to min
             amps_ub = data_bg_rm[y_label].max()
             l_amp_bounds = [amps_lb for _ in peak_amps]
             u_amp_bounds = [amps_ub for _ in peak_amps]
@@ -307,21 +327,18 @@ class BagmanThunder():
     #todo fix the assertions in these
     # for all of these take a figure as optional input so can be plotted on same axis
     @staticmethod
-    def plot_data(x, y, ax=False, params=('r-',)):
+    def plot_data(x, y, ax=False, line='r-', linethickness=0.5):
         if ax:
             #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                " an axes object"
+                                                                 " an axes object"
         else:
             fig, ax = plt.subplots()
 
-        if params:
-            assert isinstance(params, tuple), "invalid plot params passed"
-
-        ax.plot(x, y, *params)
+        ax.plot(x, y, line, linewidth=linethickness)
         return ax
 
     @staticmethod
-    def plot_fits(x, peaks, ax=False):
+    def plot_fits(x, peaks, ax=False, linethickness=0.5):
         if ax:
             #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
                                                                 " an axes object"
@@ -329,79 +346,135 @@ class BagmanThunder():
             fig, ax = plt.subplots()
 
         for i, peak in enumerate(peaks):
-            ax.plot(x, peaks[peak])
+            ax.plot(x, peaks[peak], linewidth=linethickness)
         return ax
 
     @staticmethod
-    def plot_background(x, background_data, ax=False, params=('b-',)):
+    def plot_background(x, background_data, ax=False, line='b-', linethickness=0.5):
         if ax:
             #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                " an axes object"
+                                                                 " an axes object"
         else:
             fig, ax = plt.subplots()
 
-        if params:
-            assert isinstance(params, tuple), "invalid plot params passed"
 
-        ax.plot(x, background_data, *params)
+        ax.plot(x, background_data, line, linewidth=linethickness)
         return ax
 
     @staticmethod
-    def plot_fit_sum(x, peak_sum, ax=False, params=('k-',)): # option of including background
+    def plot_fit_sum(x, peak_sum, ax=False, line='k-', linethickness=0.5): # option of including background
         if ax:
             #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                " an axes object"
+                                                                 " an axes object"
         else:
             fig, ax = plt.subplots()
 
-        if params:
-            assert isinstance(params, tuple), "invalid plot params passed"
+        ax.plot(x, peak_sum, line, linewidth=linethickness)
+        return ax
 
-        ax.plot(x, peak_sum, *params)
+    @staticmethod
+    def plot_uncertainty_curve(x, eval_unc, peak_sum, ax=False, color="#ABABAB"):
+        if ax:
+            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
+                                                                 " an axes object"
+        else:
+            fig, ax = plt.subplots()
+
+        ax.fill_between(x, peak_sum - eval_unc, peak_sum + eval_unc, color=color) #plot a grey band of uncertainty
+
         return ax
 
     def plot_all(self):
-        ax = self.plot_data(self.data[self.x_label], self.data[self.y_label])
-        ax = self.plot_fits(self.data[self.x_label], self.peaks.eval_components(), ax)
-        ax = self.plot_background(self.data[self.x_label], self.user_params['background'], ax)
-        ax = self.plot_fit_sum(self.data[self.x_label], self.peaks.eval(), ax)
+        ax = self.plot_data(self.data[self.x_label], self.data[self.y_label]) # plot the raw data
+        ax = self.plot_fits(self.data[self.x_label], self.peaks.eval_components(), ax) # plot each component of the model
+        ax = self.plot_background(self.data[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
+        ax = self.plot_fit_sum(self.data[self.x_label], self.peaks.best_fit, ax) # plot the fitted data
+        ax = self.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
+                                         self.peaks.best_fit, ax) #plot a band of uncertainty
 
-        plt.show()
+        self.plot = plt
     ##### plotting end
 
+    def fit_report(self):
+        self.fit_data = {}
+
+        ## total fit data
+        chi_sq = self.peaks.chisqr
+        reduced_chi_sq = self.peaks.redchi
+        free_params = round(chi_sq / reduced_chi_sq)
+
+        ## individual parameter data
+        for parameter, param_obj in self.peaks.params.items():
+            value =param_obj.value
+            err = param_obj.stderr
+        bounds = self.user_params['bounds']
+
+
+
+
+def peak_details(params):
+    cents_specified = len(params['peak_centres'])
+    types_specified = len(params['peak_types'])
+    widths_specified = len(params['peak_widths'])
+    amps_specified = len(params['peak_amps'])
+
+    return {'cents_specified':cents_specified,
+            'types_specified': types_specified,
+            'widths_specified': widths_specified,
+            'amps_specified': amps_specified}
 
 # TODO move bounds making into a new function in main
 def main(arguments):
-    bagman = BagmanThunder(copy.deepcopy(arguments)) # load object
+    thunder = Thunder(copy.deepcopy(arguments)) # load object
 
-    bagman.background_finder() # then determine the background
+    thunder.background_finder() # then determine the background
 
-    if not bagman.user_params['peak_centres']:  # i.e. if no peak centres were specified, then we detect the centres
-        bagman.peaks_unspecified()
+    specified_dict = peak_details(thunder.user_params)
+    thunder.peaks_unspecified(specified_dict)
+
+    if not thunder.user_params['peak_centres']:  # i.e. if no peak centres were specified, then we detect the centres
+        thunder.peaks_unspecified()
 
     # now fit peaks
-    bagman.fit_peaks()
+    thunder.fit_peaks()
+    thunder.plot_all()
+    thunder.fit_report()
 
-    return bagman
+    return thunder
+
+
+#### tools
+def save_thunder(obj, path, filename='thunder.p'):
+    dill.dump(obj, open(os.path.join(path, filename), 'wb'))
+
+def load_thunder(path):
+    obj = dill.load(open(path, 'rb'))
+    return obj
+
+def save_plot(plot, path='.', figname='figure.png'):
+    plot.savefig(os.path.join(path, figname), transparent=True, format='svg')
+
+def parse_param_file(filepath='./params.txt'):
+    """
+    parse a params file which we assume is a dictionary
+    :param filepath: str: path to params file
+    :return: dictionary of paramters
+    """
+    # maybe use json loads if you end up writing parameter files non-manually
+
+    with open(filepath, 'r') as f:
+        arguments = json.load(f)
+        f.close()
+
+    # TODO: add some checks to user passed data
+    return arguments
+#### tools
 
 
 if __name__ == '__main__':
 
     ##### for saving and parsing
-    def parse_param_file(filepath='./params.txt'):
-        """
-        parse a params file which we assume is a dictionary
-        :param filepath: str: path to params file
-        :return: dictionary of paramters
-        """
-        # maybe use json loads if you end up writing parameter files non-manually
 
-        with open(filepath, 'r') as f:
-            arguments = json.load(f)
-            f.close()
-
-        # TODO: add some checks to user passed data
-        return arguments
 
     def parse_args(arg):
         """
@@ -435,7 +508,7 @@ if __name__ == '__main__':
         except FileExistsError as e:
             dirname = make_dir(f'{dirname}_new', i + 1)
             if i == 1:
-                print(e, f' so I named the file: {dirname}')
+                print(e, f'. So I named the file: {dirname}')
             return dirname
         return dirname
     #####
@@ -457,7 +530,7 @@ if __name__ == '__main__':
                         help='the label for uncertainties in y')
     parser.add_argument('--x_ind', type=int, default=0,
                         help='the column in data which is the independent data')
-    parser.add_argument('--y_ind', type=int, default='',
+    parser.add_argument('--y_ind', type=int, default=1,
                         help='the column in data which is the dependent data')
     parser.add_argument('--e_ind', type=Union[int, None], default=None,
                         help='the column in data which is the independent data uncertainties')
@@ -466,7 +539,7 @@ if __name__ == '__main__':
     parser.add_argument('--user_params', type=Dict, default={'yfit': None, 'background': None, 'peak_types': [],
                             'peak_centres': [], 'peak_widths':[], 'peak_amps': [], 'chisq': None, 'free_params': None,
                                                           'p_value':None},
-                        help='the fit data as specified in the bagmanthunder __init__')
+                        help='the fit data as specified in the Thunder __init__')
     args = parser.parse_args()  # this allows us to now use them all
 
     if args.param_file_path: # if there is a params file then use it
@@ -478,4 +551,9 @@ if __name__ == '__main__':
 
     dirname = make_dir('analysed')  # make a dict for the processed data to be saved in
 
-    main(arguments)
+    thunder = main(arguments)
+
+    # save a plot of the figure and the thunder object
+    dataname = os.path.basename(arguments['datapath'])
+    save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
+    save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
