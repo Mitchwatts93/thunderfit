@@ -25,7 +25,7 @@ import lmfit
 from lmfit import models
 
 
-# todo add paraameter for bound tightness
+# TODO: need to fail if peak fitting doesn't work!
 
 class Thunder():
     """
@@ -47,13 +47,10 @@ class Thunder():
         self.fit_data: {} = {}
 
         self.user_params: Dict = {'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
-                         'peak_amps': [], 'chisq': None, 'free_params': None, 'p_value':None, 'bounds' : {'centers':None,
-                    'widths':None,
-                    'amps':None}}
+                                'peak_amps': [], 'chisq': None, 'free_params': None, 'p_value':None, 'tightness':None,
+                                'bounds' : {'centers':None, 'widths':None, 'amps':None}}
 
-
-
-        if isinstance(input, Thunder):  # if only pass one but its already a spec1d object then just use that
+        if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
             self.overwrite_thunder(input)  # add all the details in depending on args
         elif isinstance(input, dict):
             self.create_thunder(input)  # add all the details in depending on args
@@ -62,6 +59,39 @@ class Thunder():
 
         self.data = self.load_data(self.datapath, self.x_ind, self.y_ind, self.x_label, self.y_label, self.e_ind,
                                    self.e_label) # load the data
+
+        self.tightness = self.tightness_setter(self.user_params['tightness'])
+
+    @staticmethod
+    def tightness_setter(tightness):
+        tight_dict = {}
+        if tightness == None:
+            tight_dict['width'] = 10
+            tight_dict['centre_bounds'] = 10
+            tight_dict['width_bounds'] = (10, 3)
+
+        elif tightness == 'low':
+            tight_dict['width'] = 2
+            tight_dict['centre_bounds'] = 20
+            tight_dict['width_bounds'] = (100, 10)
+
+        elif tightness == 'med':
+            tight_dict['width'] = 10
+            tight_dict['centre_bounds'] = 10
+            tight_dict['width_bounds'] = (10, 3)
+
+        elif tightness == 'high':
+            tight_dict['width'] = 20
+            tight_dict['centre_bounds'] = 5
+            tight_dict['width_bounds'] = (5, 2)
+
+        else:
+            logging.warn('The tightness defined was incorrect format, use low, med or high. Using default med settings')
+            tight_dict['width'] = 10
+            tight_dict['centre_bounds'] = 10
+            tight_dict['width_bounds'] = (10, 3)
+
+        return tight_dict
 
     #### loading data and thunder object
     def overwrite_thunder(self, inp):
@@ -119,7 +149,7 @@ class Thunder():
             col_lab.append(e_label)
         data = data[col_ind]  # keep only these columns, don't want to waste memory
         data.columns = col_lab   # rename the columns
-        dropped = data.dropna() # drop any rows with NaN etc in them
+        data.dropna() # drop any rows with NaN etc in them
         return data
 
 
@@ -144,13 +174,11 @@ class Thunder():
 
         if not specified_dict['widths_specified']:
             width = x_data.max() - x_data.min()
-            self.user_params['peak_widths'] = [(width / 10) * np.random.random() for _ in self.user_params['peak_centres']]
+            self.user_params['peak_widths'] = [(width / self.tightness['width']) * np.random.random() for _ in self.user_params['peak_centres']]
 
         if not specified_dict['types_specified']:
             self.user_params['peak_types'] = ['LorentzianModel' for _ in
                                               self.user_params['peak_centres']]  # we assume all the types are gaussian
-
-        # this needs to be fixed
 
         len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
         len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
@@ -236,20 +264,24 @@ class Thunder():
         self.model, self.peak_params = self.generate_model(self.specs)
 
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
+        if not self.peaks.success:
+            logging.warn('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
+                         'inputting a background, peak bounds and peak info.')
         self.peak_params = self.peaks.best_values
-        return self.peaks
 
     def make_bounds(self, data_bg_rm, user_params, y_label):
         if user_params['bounds']['centers'] is None:
-            l_cent_bounds = [cent - 10 * user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
-            u_cent_bounds = [cent + 10 * user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
+            l_cent_bounds = [cent - self.tightness['centre_bounds'] *
+                             user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
+            u_cent_bounds = [cent + self.tightness['centre_bounds'] *
+                             user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
             cent_bounds = list(zip(l_cent_bounds, u_cent_bounds))
             user_params['bounds']['centers'] = cent_bounds
 
         if user_params['bounds']['widths'] is None:
             peak_widths = user_params['peak_widths']
-            l_width_bounds = [width / 10 for width in peak_widths]
-            u_width_bounds = [width * 3 for width in peak_widths]
+            l_width_bounds = [width / self.tightness['width_bounds'][0] for width in peak_widths]
+            u_width_bounds = [width * self.tightness['width_bounds'][1] for width in peak_widths]
             width_bounds = list(zip(l_width_bounds, u_width_bounds))
             user_params['bounds']['widths'] = width_bounds
 
@@ -338,7 +370,7 @@ class Thunder():
         else:
             fig, ax = plt.subplots()
 
-        ax.plot(x, y, line, linewidth=linethickness)
+        ax.plot(x, y, line, linewidth=linethickness, alpha=0.5)
         return ax
 
     @staticmethod
@@ -361,19 +393,20 @@ class Thunder():
         else:
             fig, ax = plt.subplots()
 
-
         ax.plot(x, background_data, line, linewidth=linethickness)
         return ax
 
     @staticmethod
-    def plot_fit_sum(x, peak_sum, ax=False, line='k-', linethickness=0.5): # option of including background
+    def plot_fit_sum(x, peak_sum, background, ax=False, line='k-', linethickness=0.5): # option of including background
         if ax:
             #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
                                                                  " an axes object"
         else:
             fig, ax = plt.subplots()
 
-        ax.plot(x, peak_sum, line, linewidth=linethickness)
+        sum = peak_sum + background
+
+        ax.plot(x, sum, line, linewidth=linethickness)
         return ax
 
     @staticmethod
@@ -389,12 +422,20 @@ class Thunder():
         return ax
 
     def plot_all(self):
-        ax = self.plot_data(self.data[self.x_label], self.data[self.y_label]) # plot the raw data
-        ax = self.plot_fits(self.data[self.x_label], self.peaks.eval_components(), ax) # plot each component of the model
+        ax = self.plot_fits(self.data[self.x_label], self.peaks.eval_components()) # plot each component of the model
         ax = self.plot_background(self.data[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
-        ax = self.plot_fit_sum(self.data[self.x_label], self.peaks.best_fit, ax) # plot the fitted data
-        ax = self.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
+        ax = self.plot_fit_sum(self.data[self.x_label], self.peaks.best_fit, self.user_params['background'], ax) # plot the fitted data
+        try:
+            ax = self.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
                                          self.peaks.best_fit, ax) #plot a band of uncertainty
+        except TypeError:
+            logging.warn('There are not uncertainties available for some reason - '
+                         'try lowering the tightness of automatic bounds')
+        ax = self.plot_data(self.data[self.x_label], self.data[self.y_label], ax)  # plot the raw data
+
+        ax.minorticks_on()
+        ax.grid(which='minor', alpha=0.2)
+        ax.grid(which='major', alpha=0.5)
 
         self.plot = plt
     ##### plotting end
@@ -470,7 +511,6 @@ def save_plot(plot, path='.', figname='figure.png'):
 def save_fit_report(obj, path, filename="report.json"):
     json.dump(obj, open(os.path.join(path, filename), 'w'))
 
-
 def parse_param_file(filepath='./params.txt'):
     """
     parse a params file which we assume is a dictionary
@@ -489,10 +529,7 @@ def parse_param_file(filepath='./params.txt'):
 
 
 if __name__ == '__main__':
-
     ##### for saving and parsing
-
-
     def parse_args(arg):
         """
         convert argparse arguments into a dictionary for consistency later
@@ -530,12 +567,11 @@ if __name__ == '__main__':
         return dirname
     #####
 
-
     # i.e. called from bash
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='Compute the cumulative counts at various radii given the beam data and background files'
+        description='fit peaks and background to the given data given a set of parameter'
     )
     parser.add_argument('--param_file_path', type=str, default='./params.txt',
                         help='input filepath to param file, if you want to use it')
@@ -555,7 +591,7 @@ if __name__ == '__main__':
                         help='relative path to the datafile from where python script is called')
     parser.add_argument('--user_params', type=Dict, default={'yfit': None, 'background': None, 'peak_types': [],
                             'peak_centres': [], 'peak_widths':[], 'peak_amps': [], 'chisq': None, 'free_params': None,
-                                                          'p_value':None},
+                                                          'p_value':None, 'tightness':None},
                         help='the fit data as specified in the Thunder __init__')
     args = parser.parse_args()  # this allows us to now use them all
 
