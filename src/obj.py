@@ -260,28 +260,30 @@ class Thunder():
 
                 # then apply SG filter to L
                 while True:
-                    L_sg = utili.sg_filter(L, window_length, poly_order)
-                    fig, ax = plt.subplots()
-                    ax.plot(L_sg)
-                    ax.plot(y_data)
-                    print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
-                          f"{window_length}, {poly_order}")
-                    plt.show(block=True)
-                    ans = input("please enter y if you are happy with these values, or enter two integers with a space."
-                                "Note that window length must be an odd integer. "
-                                "polynomial order must be less than window length.")
-                    if ans == 'y':
-                        L = L_sg
-                        break
-                    else:
-                        try:
-                            ans = ans.split(' ')
-                            if len(ans) != 2:
-                                raise ValueError("The tuple was more than two elements long")
-                            window_length = int(ans[0])
-                            poly_order = int(ans[1])
-                        except ValueError:
-                            print("You entered an incorrect answer! Trying again...")
+                    try:
+                        L_sg = utili.sg_filter(L, window_length, poly_order)
+                        fig, ax = plt.subplots()
+                        ax.plot(L_sg)
+                        ax.plot(y_data)
+                        print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
+                              f"{window_length}, {poly_order}")
+                        plt.show(block=True)
+                        ans = input("please enter y if you are happy with these values, or enter two integers with a space "
+                                    "for window_length and poly_order")
+                        if ans == 'y':
+                            L = L_sg
+                            break
+                        else:
+                            try:
+                                ans = ans.split(' ')
+                                if len(ans) != 2:
+                                    raise ValueError("The tuple was more than two elements long")
+                                window_length = int(ans[0])
+                                poly_order = int(ans[1])
+                            except ValueError:
+                                print("You entered an incorrect answer! Trying again...")
+                    except ValueError as e:
+                        print("Incorrect values for window_length and poly_order have been entered. Poly order must be less than window length and window length must be odd")
 
                 # final question before exiting
                 fig, ax = plt.subplots()
