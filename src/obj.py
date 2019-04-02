@@ -153,7 +153,6 @@ class Thunder():
         data.dropna() # drop any rows with NaN etc in them
         return data
 
-
     ##### peak finding
     def peaks_unspecified(self, specified_dict):
         x_data = self.data_bg_rm[self.x_label]
@@ -220,27 +219,88 @@ class Thunder():
 
         elif bg == 'SCARF':
             rad = 20
+            b = 0
+            window_length, poly_order = 3, 5
             while True:
-                D = utili.rcf(y_data, rad)
-                fig, ax = plt.subplots()
-                ax.plot(D)
+                while True:
+                    D = utili.rcf(y_data, rad)
+                    fig, ax = plt.subplots()
+                    ax.plot(D)
+                    ax.plot(y_data)
+                    print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
+                    plt.show()
+                    ans = input("If you are happy with the plot, type y. if not then please type a new rad")
+                    if ans == 'y':
+                        break
+                    else:
+                        try:
+                            rad = int(ans)
+                        except ValueError:
+                            print("You entered an incorrect answer! Trying again...")
+
+                L = D + b
+                while True: # now estimate a baseline to add to D to get L
+                    ax.plot(L)
+                    ax.plot(y_data)
+                    print(f"Please look at the following bg with a shift={b}")
+                    plt.show()
+                    ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
+                                "Please note that the background should NOT intercept the data. Ideally it would pass through"
+                                "the mean of the noise for the correct bg already fit")
+                    if ans == 'y':
+                        L = D + b
+                        break
+                    else:
+                        try:
+                            b = int(ans)
+                            L = D + b
+                        except ValueError:
+                            print("You entered an incorrect answer! Trying again...")
+
+                # then apply SG filter to L
+                while True:
+                    L = utili.sg_filter(L, window_length, poly_order)
+                    ax.plot(L)
+                    ax.plot(y_data)
+                    print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
+                          f"{window_length}, {poly_order}")
+                    plt.show()
+                    ans = input("please enter y if you are happy with these values, or enter a tuple of integers."
+                                "Note that window length must be an odd integer. "
+                                "polynomial order must be less than window length.")
+                    if ans == 'y':
+                        break
+                    else:
+                        try:
+                            ans = tuple(ans)
+                            if len(ans) != 2:
+                                raise ValueError("The tuple was more than two elements long")
+                            window_length = int(ans[0])
+                            poly_order = int(ans[1])
+                        except ValueError:
+                            print("You entered an incorrect answer! Trying again...")
+
+                # final question before exiting
+                ax.plot(L)
                 ax.plot(y_data)
-                print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
+                print(f"Please look at the following bg with selected parameters")
                 plt.show()
-                ans = input("If you are happy with the plot, type y. if not then please type a new rad")
+                ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. "
+                            "questions with the current parameters")
                 if ans == 'y':
                     break
+                elif ans == 'n':
+                    pass
+                elif ans =='repeat':
+                    print("apply two bg removal steps, this will mean the background just specified will be removed "
+                          "from the data")
+                    y_data -= L # remove the bg found here from the original data and go again
                 else:
-                    try:
-                        rad = int(ans)
-                    except ValueError:
-                        print("You entered an incorrect answer! Trying again...")
+                    print("You entered an incorrect answer! Trying whole fitting routine again...")
 
-            import ipdb
-            ipdb.set_trace()
-            # now estimate a baseline to add to D to get L
-            # then apply SG filter to L
-            # then set bg = SG(L), subtract it from the y data and store it all
+            bg = L
+            data_bg_rm[y_label] = y_data - bg  # subtract background from the data
+            data_bg_rm[x_label] = x_data
 
         elif isinstance(bg, np.ndarray):
             assert len(self.user_params['background']) == len(y_data), \

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.signal import savgol_filter
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
@@ -93,3 +94,13 @@ def generate_diff_matrix(A_sub, RC_sub):
 
     D = np.array(D)
     return D
+
+def sg_filter(L, window_length, polyorder):
+    """
+    Savgol filter applied to data
+    :param L: the data to be smoothed
+    :param window_length: positive odd integer
+    :param polyorder: must be less than window length
+    :return:
+    """
+    return savgol_filter(L, window_length, polyorder)
