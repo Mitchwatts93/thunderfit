@@ -374,8 +374,9 @@ class Thunder():
         self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
 
         self.model, self.peak_params = self.generate_model(self.specs)
-
+        print('fitting')
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
+        print('finished fitting')
         if not self.peaks.success:
             logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
                          'inputting a background, peak bounds and peak info.')
@@ -602,8 +603,11 @@ def main(arguments):
     thunder.peaks_unspecified(specified_dict)
 
     # now fit peaks
+    print('found peaks and bg')
     thunder.fit_peaks()
+    print('plotting')
     thunder.plot_all()
+    print('fit_report')
     thunder.fit_report()
 
     return thunder
