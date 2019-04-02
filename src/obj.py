@@ -218,7 +218,7 @@ class Thunder():
             data_bg_rm[y_label] = y_data # no background subtracted
             data_bg_rm[x_label] = x_data
 
-        elif bg is 'SCARF':
+        elif bg == 'SCARF':
             rad = 20
             while True:
                 D = utili.rcf(y_data, rad)
