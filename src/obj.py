@@ -260,9 +260,9 @@ class Thunder():
 
                 # then apply SG filter to L
                 while True:
-                    L = utili.sg_filter(L, window_length, poly_order)
+                    L_sg = utili.sg_filter(L, window_length, poly_order)
                     fig, ax = plt.subplots()
-                    ax.plot(L)
+                    ax.plot(L_sg)
                     ax.plot(y_data)
                     print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                           f"{window_length}, {poly_order}")
@@ -271,6 +271,7 @@ class Thunder():
                                 "Note that window length must be an odd integer. "
                                 "polynomial order must be less than window length.")
                     if ans == 'y':
+                        L = L_sg
                         break
                     else:
                         try:
