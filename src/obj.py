@@ -3,11 +3,13 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import os
 import json
-import pickle
 import dill
 import operator
 import difflib
 import re
+from typing import Dict, Union
+import copy
+import time
 
 from scipy.signal import find_peaks_cwt as peak_find
 from scipy import sparse
@@ -15,14 +17,12 @@ from scipy.sparse.linalg import spsolve
 from scipy.optimize import least_squares
 import numpy as np
 import pandas as pd
-from matplotlib import axes
 import matplotlib.pyplot as plt
-
-from typing import Dict, Union
-import copy
 
 import lmfit
 from lmfit import models
+
+import src.utilities as utili
 
 
 # TODO: need to fail if peak fitting doesn't work!
@@ -203,34 +203,61 @@ class Thunder():
 
     ##### background
     def background_finder(self):
-        if isinstance(self.user_params['background'], int):
-            # then we have a polynomial simulataneous bg to build
-            self.data_bg_rm[self.y_label] = self.data[self.y_label] - 0  # subtract 0 from the data since we'll do bg later
-            self.data_bg_rm[self.x_label] = self.data[self.x_label]
-        elif self.user_params['background'] is 'separate':
-            self.user_params['background'] = self.find_background(self.data[self.y_label])
+        y_label = self.y_label
+        x_label = self.x_label
+        y_data = self.data[y_label]
+        x_data = self.data[x_label]
+        bg = self.user_params['background']
+        data_bg_rm = self.data_bg_rm
 
-            self.data_bg_rm[self.y_label] = self.data[self.y_label] - self.user_params[
-                'background']  # subtract background from the data
-            self.data_bg_rm[self.x_label] = self.data[self.x_label]
-        elif self.user_params['background'] == 'no':  # then user doesn't want to make a background
+        if bg == 'no':  # then user doesn't want to make a background
             LOGGER.warning(
                 "Warning: no background specified, so not using a background,"
                 " this may prevent algorithm from converging")
-            self.user_params['background'] = np.array(
-                [0 for _ in self.data[self.y_label]])  # set the background as 0 everywhere
+            bg = np.array([0 for _ in y_data])  # set the background as 0 everywhere
+            data_bg_rm[y_label] = y_data # no background subtracted
+            data_bg_rm[x_label] = x_data
 
-            self.data_bg_rm[self.y_label] = self.data[self.y_label] - 0 # subtract background from the data
-            self.data_bg_rm[self.x_label] = self.data[self.x_label]
-        elif not isinstance(self.user_params['background'], np.ndarray):
+        elif bg is 'SCARF':
+            rad = 20
+            while True:
+                D = utili.rcf(y_data, rad)
+                fig, ax = plt.subplots()
+                ax.plot(D)
+                ax.plot(y_data)
+                print("SCARF background removal requires user input. Please look at the following bg with rad=20")
+                plt.show()
+                ans = input("If you are happy with the plot, type y. if not then please type a new rad")
+                if ans == 'y':
+                    break
+                elif isinstance(ans, int):
+                    rad = ans
+                else:
+                    print("You entered an incorrect answer! Trying again...")
+
+            import ipdb
+            ipdb.set_trace()
+            # now estimate a baseline to add to D to get L
+            # then apply SG filter to L
+            # then set bg = SG(L), subtract it from the y data and store it all
+
+        elif isinstance(bg, np.ndarray):
+            assert len(self.user_params['background']) == len(y_data), \
+                    "the background generated or passed is of incorrect length"
+            data_bg_rm[y_label] = y_data - bg # subtract user supplied background from the data
+            data_bg_rm[x_label] = x_data
+
+        elif bg is 'OLD':
+            bg = self.find_background(y_data) # find a background the old way
+            data_bg_rm[y_label] = y_data - bg  # subtract background from the data
+            data_bg_rm[x_label] = x_data
+
+        else:  # then it is the incorrect type
             raise TypeError('the background passed is in the incorrect format, please pass as type np array')
-        else:  # then it is the correct type and has been passed, so check the length
-            assert len(self.user_params['background']) == len(
-                self.data[self.y_label]), "the background generated or passed" \
-                                              "is of incorrect length"
-            self.data_bg_rm[self.y_label] = self.data[self.y_label] - self.user_params[
-                'background']  # subtract background from the data
-            self.data_bg_rm[self.x_label] = self.data[self.x_label]
+
+        self.user_params['background'] = bg
+        self.data_bg_rm = data_bg_rm
+
 
     def find_background(self, data):
         params = np.array([0.01, 10 ** 5])
@@ -269,7 +296,7 @@ class Thunder():
         self.user_params = self.make_bounds(self.data_bg_rm, self.user_params, self.y_label)
         self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
 
-        self.model, self.peak_params = self.generate_model(self.specs, self.user_params['background'])
+        self.model, self.peak_params = self.generate_model(self.specs)
 
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
         if not self.peaks.success:
@@ -321,7 +348,7 @@ class Thunder():
         return specs
 
     @staticmethod
-    def generate_model(spec, bg):
+    def generate_model(spec):
         """
         https://chrisostrouchov.com/post/peak_fit_xrd_python/
         :param spec:
@@ -364,22 +391,6 @@ class Thunder():
                 params.update(model_params)
                 composite_model = composite_model + model
 
-        if isinstance(bg, int):
-            if bg > 7:
-                bg = 7
-            elif bg < 0:
-                bg = 0
-            bg_model = models.PolynomialModel(bg, prefix='background_')
-
-            for i in range(bg + 1):
-                bg_model.set_param_hint(f'background_c{i}', min=-1000000000, max=1000000000)
-
-            default_params = {f'background_c{i}': 1/(i * 10 + 1) for i in range(bg + 1)}
-
-            bg_params = bg_model.make_params(**default_params)
-            params.update(bg_params)
-            composite_model = composite_model + bg_model
-
         return composite_model, params
     ##### peak fitting end
 
@@ -417,11 +428,7 @@ class Thunder():
         else:
             fig, ax = plt.subplots()
 
-        if isinstance(background_data, int):
-            # then we don't want to do this, so skip and it will be included in the models
-            pass
-        else:
-            ax.plot(x, background_data, line, linewidth=linethickness)
+        ax.plot(x, background_data, line, linewidth=linethickness)
         return ax
 
     @staticmethod

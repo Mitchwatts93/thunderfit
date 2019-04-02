@@ -3,7 +3,6 @@ import pandas as pd
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
-import matplotlib.pyplot as plt
 
 
 def rcf(A, rad):
@@ -32,13 +31,7 @@ def rcf(A, rad):
 
     D = generate_diff_matrix(A_sub, RC_sub)
 
-    fig, ax = plt.subplots()
-    ax.plot(D)
-    ax.plot(A)
-
-    L = []
-
-    return plt
+    return D
 
 def semi_circle_array(rad):
     """Generate an array of length 2r+1 with values corresponding to points on a semi circle"""
