@@ -326,7 +326,7 @@ class Thunder():
         x_data = self.data_bg_rm[self.x_label]
 
         if not specified_dict['cents_specified']:
-            width_ranges = [50, len(x_data) / 4]  # these are index widths TODO make this a variable...
+            width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
             peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
                                                   width_ranges)  # run peak finder here
             self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
@@ -363,7 +363,7 @@ class Thunder():
 
     @staticmethod
     def peak_finder(data, width_range):
-        peaks = peak_find(data, widths=width_range) # find the peak positions in the data
+        peaks = peak_find(data, widths=width_range, noise_perc=20) # find the peak positions in the data
         peaks = list(peaks) # convert to a list
         return peaks
     ##### peak finding end
@@ -374,9 +374,9 @@ class Thunder():
         self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
 
         self.model, self.peak_params = self.generate_model(self.specs)
-        print('fitting')
+        import ipdb
+        ipdb.set_trace()
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
-        print('finished fitting')
         if not self.peaks.success:
             logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
                          'inputting a background, peak bounds and peak info.')
@@ -603,11 +603,8 @@ def main(arguments):
     thunder.peaks_unspecified(specified_dict)
 
     # now fit peaks
-    print('found peaks and bg')
     thunder.fit_peaks()
-    print('plotting')
     thunder.plot_all()
-    print('fit_report')
     thunder.fit_report()
 
     return thunder
