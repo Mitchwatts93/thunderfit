@@ -219,7 +219,8 @@ class Thunder():
 
         elif bg == 'SCARF':
             rad = 20
-            b = np.array([0 for _ in y_data])
+            bg = np.array([0 for _ in y_data])
+            b = 0
             window_length, poly_order = 51, 3
             L_sg = 0
 
