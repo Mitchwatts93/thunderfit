@@ -182,8 +182,8 @@ class Thunder():
                 while True:
                     D = utili.rcf(data_bg_rm[y_label], rad)
                     fig, ax = plt.subplots()
-                    ax.plot(D)
-                    ax.plot(data_bg_rm[y_label])
+                    ax.plot(D, x_data)
+                    ax.plot(data_bg_rm[y_label], x_data)
                     print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
                     plt.show(block=True)
                     ans = input("If you are happy with the plot, type y. if not then please type a new rad")
@@ -198,8 +198,8 @@ class Thunder():
                 L = D + b
                 while True: # now estimate a baseline to add to D to get L
                     fig, ax = plt.subplots()
-                    ax.plot(L)
-                    ax.plot(data_bg_rm[y_label])
+                    ax.plot(L, x_data)
+                    ax.plot(data_bg_rm[y_label], x_data)
                     print(f"Please look at the following bg with a shift={b}")
                     plt.show(block=True)
                     ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
@@ -220,8 +220,8 @@ class Thunder():
                     try:
                         L_sg = utili.sg_filter(L, window_length, poly_order)
                         fig, ax = plt.subplots()
-                        ax.plot(L_sg)
-                        ax.plot(data_bg_rm[y_label])
+                        ax.plot(L_sg, x_data)
+                        ax.plot(data_bg_rm[y_label], x_data)
                         print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                               f"{window_length}, {poly_order}")
                         plt.show(block=True)
@@ -245,8 +245,8 @@ class Thunder():
 
                 # final question before exiting
                 fig, ax = plt.subplots()
-                ax.plot(L)
-                ax.plot(data_bg_rm[y_label])
+                ax.plot(L, x_data)
+                ax.plot(data_bg_rm[y_label], x_data)
                 print(f"Please look at the following bg with selected parameters")
                 plt.show(block=True)
                 ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
