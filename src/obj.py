@@ -153,53 +153,6 @@ class Thunder():
         data.dropna() # drop any rows with NaN etc in them
         return data
 
-    ##### peak finding
-    def peaks_unspecified(self, specified_dict):
-        x_data = self.data_bg_rm[self.x_label]
-
-        if not specified_dict['cents_specified']:
-            width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
-            peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
-                                                  width_ranges)  # run peak finder here
-            self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
-
-        if not specified_dict['amps_specified']: # find a faster way to do this
-            xcents = self.user_params['peak_centres'] # this is x data
-            peak_centres_indices = [self.data_bg_rm[self.x_label].iloc[(self.data_bg_rm[self.x_label] - xval)
-                                 .abs().argsort()[:1]].index for xval in xcents] #find the indices for these xvalues
-            peak_centres_indices = [ind.tolist()[0] for ind in peak_centres_indices] # stupid pandas index type
-
-            y_peaks = self.data_bg_rm[self.y_label][peak_centres_indices]  # get the y values from the indices
-            self.user_params['peak_amps'] = list(y_peaks)  # all peak amps are the order of mag of largest y
-
-        if not specified_dict['widths_specified']:
-            width = x_data.max() - x_data.min()
-            self.user_params['peak_widths'] = [(width / self.tightness['width']) * np.random.random() for _ in self.user_params['peak_centres']]
-
-        if not specified_dict['types_specified']:
-            self.user_params['peak_types'] = ['LorentzianModel' for _ in
-                                              self.user_params['peak_centres']]  # we assume all the types are gaussian
-
-        len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
-        len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
-        try:
-            shortest_specified = next(len_ord_specified)[0]  # this is the dict key with the shortest specified data
-
-            for param in ['peak_amps', 'peak_centres', 'peak_widths', 'peak_types']:
-                if len(self.user_params[param]) > specified_dict[shortest_specified]: # then we need to trim it
-                    LOGGER.warning("Some of the specified peak parameters differ in length. Choosing peak paramters"
-                                   "as the first n parameters where n is the length of the shortest set of parameters")
-                    self.user_params[param] = self.user_params[param][:specified_dict[shortest_specified]]
-        except StopIteration:
-            pass
-
-    @staticmethod
-    def peak_finder(data, width_range):
-        peaks = peak_find(data, widths=width_range) # find the peak positions in the data
-        peaks = list(peaks) # convert to a list
-        return peaks
-    ##### peak finding end
-
     ##### background
     def background_finder(self):
         y_label = self.y_label
@@ -294,7 +247,7 @@ class Thunder():
                 # final question before exiting
                 fig, ax = plt.subplots()
                 ax.plot(L)
-                ax.plot(y_data)
+                ax.plot(data_bg_rm[y_label])
                 print(f"Please look at the following bg with selected parameters")
                 plt.show(block=True)
                 ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
@@ -314,6 +267,9 @@ class Thunder():
             data_bg_rm[y_label] -= L  # subtract background from the data
             data_bg_rm[x_label] = x_data
 
+            import ipdb
+            ipdb.set_trace()
+
         elif isinstance(bg, np.ndarray):
             assert len(self.user_params['background']) == len(y_data), \
                     "the background generated or passed is of incorrect length"
@@ -330,7 +286,6 @@ class Thunder():
 
         self.user_params['background'] = bg
         self.data_bg_rm = data_bg_rm
-
 
     def find_background(self, data):
         params = np.array([0.01, 10 ** 5])
@@ -363,6 +318,53 @@ class Thunder():
             w = p * (y > z) + (1 - p) * (y < z)
         return z
     ##### background end
+
+    ##### peak finding
+    def peaks_unspecified(self, specified_dict):
+        x_data = self.data_bg_rm[self.x_label]
+
+        if not specified_dict['cents_specified']:
+            width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
+            peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
+                                                  width_ranges)  # run peak finder here
+            self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
+
+        if not specified_dict['amps_specified']: # find a faster way to do this
+            xcents = self.user_params['peak_centres'] # this is x data
+            peak_centres_indices = [self.data_bg_rm[self.x_label].iloc[(self.data_bg_rm[self.x_label] - xval)
+                                 .abs().argsort()[:1]].index for xval in xcents] #find the indices for these xvalues
+            peak_centres_indices = [ind.tolist()[0] for ind in peak_centres_indices] # stupid pandas index type
+
+            y_peaks = self.data_bg_rm[self.y_label][peak_centres_indices]  # get the y values from the indices
+            self.user_params['peak_amps'] = list(y_peaks)  # all peak amps are the order of mag of largest y
+
+        if not specified_dict['widths_specified']:
+            width = x_data.max() - x_data.min()
+            self.user_params['peak_widths'] = [(width / self.tightness['width']) * np.random.random() for _ in self.user_params['peak_centres']]
+
+        if not specified_dict['types_specified']:
+            self.user_params['peak_types'] = ['LorentzianModel' for _ in
+                                              self.user_params['peak_centres']]  # we assume all the types are gaussian
+
+        len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
+        len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
+        try:
+            shortest_specified = next(len_ord_specified)[0]  # this is the dict key with the shortest specified data
+
+            for param in ['peak_amps', 'peak_centres', 'peak_widths', 'peak_types']:
+                if len(self.user_params[param]) > specified_dict[shortest_specified]: # then we need to trim it
+                    LOGGER.warning("Some of the specified peak parameters differ in length. Choosing peak paramters"
+                                   "as the first n parameters where n is the length of the shortest set of parameters")
+                    self.user_params[param] = self.user_params[param][:specified_dict[shortest_specified]]
+        except StopIteration:
+            pass
+
+    @staticmethod
+    def peak_finder(data, width_range):
+        peaks = peak_find(data, widths=width_range) # find the peak positions in the data
+        peaks = list(peaks) # convert to a list
+        return peaks
+    ##### peak finding end
 
     ##### peak fitting
     def fit_peaks(self):
@@ -596,6 +598,9 @@ def main(arguments):
 
     specified_dict = peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)
+
+    import ipdb
+    ipdb.set_trace()
 
     # now fit peaks
     thunder.fit_peaks()
