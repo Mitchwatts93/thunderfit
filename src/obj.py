@@ -220,7 +220,7 @@ class Thunder():
         elif bg == 'SCARF':
             rad = 20
             b = 0
-            window_length, poly_order = 3, 5
+            window_length, poly_order = 5, 3
             while True:
                 while True:
                     D = utili.rcf(y_data, rad)
