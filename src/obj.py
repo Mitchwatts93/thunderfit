@@ -222,7 +222,7 @@ class Thunder():
             b = 0
             window_length, poly_order = 5, 3
             L_sg = 0
-            
+
             while True:
                 while True:
                     D = utili.rcf(y_data, rad)
@@ -273,7 +273,7 @@ class Thunder():
                     except ValueError as e:
                         print(
                             "Incorrect values for window_length and poly_order have been entered. Poly order must be less than window length and window length must be odd")
-                        ans = input("please enter y if you are happy with these values, or enter two integers with a space "
+                    ans = input("please enter y if you are happy with these values, or enter two integers with a space "
                                     "for window_length and poly_order")
                     if ans == 'y':
                         L = L_sg
@@ -296,7 +296,7 @@ class Thunder():
                 print(f"Please look at the following bg with selected parameters")
                 plt.show(block=True)
                 ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. "
-                            "questions with the current parameters")
+                            "typing repeat will add an additional bg subtraction to this one")
                 if ans == 'y':
                     break
                 elif ans == 'n':
