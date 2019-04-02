@@ -363,8 +363,7 @@ class Thunder():
 
     @staticmethod
     def peak_finder(data, width_range):
-        max_dists = np.array([width/8 for width in width_range])
-        peaks = peak_find(data, widths=width_range, max_distances=max_dists) # find the peak positions in the data
+        peaks = peak_find(data, widths=width_range) # find the peak positions in the data
         peaks = list(peaks) # convert to a list
         return peaks
     ##### peak finding end
