@@ -267,14 +267,14 @@ class Thunder():
                     print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                           f"{window_length}, {poly_order}")
                     plt.show(block=True)
-                    ans = input("please enter y if you are happy with these values, or enter a tuple of integers."
+                    ans = input("please enter y if you are happy with these values, or enter two integers with a space."
                                 "Note that window length must be an odd integer. "
                                 "polynomial order must be less than window length.")
                     if ans == 'y':
                         break
                     else:
                         try:
-                            ans = tuple(ans)
+                            ans = ans.split(' ')
                             if len(ans) != 2:
                                 raise ValueError("The tuple was more than two elements long")
                             window_length = int(ans[0])
