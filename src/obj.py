@@ -220,7 +220,7 @@ class Thunder():
         elif bg == 'SCARF':
             rad = 20
             b = 0
-            window_length, poly_order = 5, 3
+            window_length, poly_order = 51, 3
             L_sg = 0
 
             while True:
@@ -295,7 +295,7 @@ class Thunder():
                 ax.plot(y_data)
                 print(f"Please look at the following bg with selected parameters")
                 plt.show(block=True)
-                ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. "
+                ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
                             "typing repeat will add an additional bg subtraction to this one")
                 if ans == 'y':
                     break
