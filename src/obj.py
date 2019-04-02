@@ -225,15 +225,16 @@ class Thunder():
                 fig, ax = plt.subplots()
                 ax.plot(D)
                 ax.plot(y_data)
-                print("SCARF background removal requires user input. Please look at the following bg with rad=20")
+                print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
                 plt.show()
                 ans = input("If you are happy with the plot, type y. if not then please type a new rad")
                 if ans == 'y':
                     break
-                elif isinstance(ans, int):
-                    rad = ans
                 else:
-                    print("You entered an incorrect answer! Trying again...")
+                    try:
+                        rad = int(ans)
+                    except ValueError::
+                        print("You entered an incorrect answer! Trying again...")
 
             import ipdb
             ipdb.set_trace()
