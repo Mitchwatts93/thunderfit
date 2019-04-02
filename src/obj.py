@@ -302,13 +302,14 @@ class Thunder():
                 elif ans == 'n':
                     pass
                 elif ans =='repeat':
+                    bg += L
                     print("apply two bg removal steps, this will mean the background just specified will be removed "
                           "from the data")
                     y_data -= L # remove the bg found here from the original data and go again
                 else:
                     print("You entered an incorrect answer! Trying whole fitting routine again...")
 
-            bg = L
+            bg += L
             data_bg_rm[y_label] = y_data - bg  # subtract background from the data
             data_bg_rm[x_label] = x_data
 
