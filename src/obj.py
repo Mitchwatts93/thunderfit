@@ -265,6 +265,10 @@ class Thunder():
                     print("You entered an incorrect answer! Trying whole fitting routine again...")
 
             data_bg_rm[y_label] -= L  # subtract background from the data
+
+            if data_bg_rm[y_label].min() < 0:
+                data_bg_rm[y_label] += abs(data_bg_rm[y_label].min()) # then shift all the data up so no points are below zero
+                bg -= abs(data_bg_rm[y_label].min()) # and lower the bg we have calculated by that shift too
             data_bg_rm[x_label] = x_data
 
         elif isinstance(bg, np.ndarray):
@@ -595,9 +599,6 @@ def main(arguments):
 
     specified_dict = peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)
-
-    import ipdb
-    ipdb.set_trace()
 
     # now fit peaks
     thunder.fit_peaks()
