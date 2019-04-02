@@ -281,10 +281,10 @@ class Thunder():
         else:  # then it is the incorrect type
             raise TypeError('the background passed is in the incorrect format, please pass as type np array')
 
-        y_min = data_bg_rm[y_label].min()
-        if y_min < 0:
-            data_bg_rm[y_label] += abs(y_min)  # then shift all the data up so no points are below zero
-            bg -= abs(y_min)  # and lower the bg we have calculated by that shift too
+        #y_min = data_bg_rm[y_label].min()
+        #if y_min < 0:
+        #    data_bg_rm[y_label] += abs(y_min)  # then shift all the data up so no points are below zero
+        #    bg -= abs(y_min)  # and lower the bg we have calculated by that shift too
 
         self.user_params['background'] = bg
         self.data_bg_rm = data_bg_rm
