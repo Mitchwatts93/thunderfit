@@ -38,7 +38,7 @@ def rcf(A, rad):
 
     L = []
 
-    return ax
+    return plt
 
 def semi_circle_array(rad):
     """Generate an array of length 2r+1 with values corresponding to points on a semi circle"""
