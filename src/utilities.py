@@ -103,4 +103,4 @@ def sg_filter(L, window_length, polyorder):
     :param polyorder: must be less than window length
     :return:
     """
-    return savgol_filter(L, window_length, polyorder)
+    return savgol_filter(L, window_length, polyorder, mode='nearest')
