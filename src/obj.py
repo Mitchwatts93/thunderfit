@@ -171,8 +171,8 @@ class Thunder():
             data_bg_rm[x_label] = x_data
 
         elif bg == 'SCARF':
-            rad = 20
             bg = np.array([0 for _ in y_data], dtype=np.float64)
+            rad = 20
             b = 0
             window_length, poly_order = 51, 3
             L_sg = 0
@@ -243,7 +243,6 @@ class Thunder():
                         except ValueError:
                             print("You entered an incorrect answer! Trying again...")
 
-
                 # final question before exiting
                 fig, ax = plt.subplots()
                 ax.plot(L)
@@ -253,6 +252,7 @@ class Thunder():
                 ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
                             "typing repeat will add an additional bg subtraction to this one")
                 if ans == 'y':
+                    bg += L
                     break
                 elif ans == 'n':
                     pass
@@ -266,9 +266,6 @@ class Thunder():
 
             data_bg_rm[y_label] -= L  # subtract background from the data
             data_bg_rm[x_label] = x_data
-
-            import ipdb
-            ipdb.set_trace()
 
         elif isinstance(bg, np.ndarray):
             assert len(self.user_params['background']) == len(y_data), \
