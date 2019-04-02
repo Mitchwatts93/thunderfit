@@ -223,13 +223,14 @@ class Thunder():
             b = 0
             window_length, poly_order = 51, 3
             L_sg = 0
+            data_bg_rm[y_label] = y_data
 
             while True:
                 while True:
-                    D = utili.rcf(y_data, rad)
+                    D = utili.rcf(data_bg_rm[y_label], rad)
                     fig, ax = plt.subplots()
                     ax.plot(D)
-                    ax.plot(y_data)
+                    ax.plot(data_bg_rm[y_label])
                     print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
                     plt.show(block=True)
                     ans = input("If you are happy with the plot, type y. if not then please type a new rad")
@@ -245,7 +246,7 @@ class Thunder():
                 while True: # now estimate a baseline to add to D to get L
                     fig, ax = plt.subplots()
                     ax.plot(L)
-                    ax.plot(y_data)
+                    ax.plot(data_bg_rm[y_label])
                     print(f"Please look at the following bg with a shift={b}")
                     plt.show(block=True)
                     ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
@@ -267,7 +268,7 @@ class Thunder():
                         L_sg = utili.sg_filter(L, window_length, poly_order)
                         fig, ax = plt.subplots()
                         ax.plot(L_sg)
-                        ax.plot(y_data)
+                        ax.plot(data_bg_rm[y_label])
                         print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                               f"{window_length}, {poly_order}")
                         plt.show(block=True)
@@ -306,12 +307,11 @@ class Thunder():
                     bg += L
                     print("apply two bg removal steps, this will mean the background just specified will be removed "
                           "from the data")
-                    y_data -= L # remove the bg found here from the original data and go again
+                    data_bg_rm[y_label] -= L # remove the bg found here from the original data and go again
                 else:
                     print("You entered an incorrect answer! Trying whole fitting routine again...")
 
-            bg += L
-            data_bg_rm[y_label] = y_data - bg  # subtract background from the data
+            data_bg_rm[y_label] -= L  # subtract background from the data
             data_bg_rm[x_label] = x_data
 
         elif isinstance(bg, np.ndarray):
