@@ -87,7 +87,7 @@ class Thunder():
             tight_dict['width_bounds'] = (5, 2)
 
         else:
-            logging.warn('The tightness defined was incorrect format, use low, med or high. Using default med settings')
+            logging.warning('The tightness defined was incorrect format, use low, med or high. Using default med settings')
             tight_dict['width'] = 10
             tight_dict['centre_bounds'] = 10
             tight_dict['width_bounds'] = (10, 3)
@@ -273,7 +273,7 @@ class Thunder():
 
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
         if not self.peaks.success:
-            logging.warn('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
+            logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
                          'inputting a background, peak bounds and peak info.')
         self.peak_params = self.peaks.best_values
 
@@ -457,7 +457,7 @@ class Thunder():
             ax = self.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
                                          self.peaks.best_fit, ax) #plot a band of uncertainty
         except TypeError:
-            logging.warn('There are not uncertainties available for some reason - '
+            logging.warning('There are not uncertainties available for some reason - '
                          'try lowering the tightness of automatic bounds')
         ax = self.plot_data(self.data[self.x_label], self.data[self.y_label], ax)  # plot the raw data
 
@@ -520,7 +520,7 @@ def main(arguments):
     # now fit peaks
     thunder.fit_peaks()
     thunder.plot_all()
-    #thunder.fit_report()
+    thunder.fit_report()
 
     return thunder
 
