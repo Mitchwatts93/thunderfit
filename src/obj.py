@@ -233,7 +233,7 @@ class Thunder():
                 else:
                     try:
                         rad = int(ans)
-                    except ValueError::
+                    except ValueError:
                         print("You entered an incorrect answer! Trying again...")
 
             import ipdb
