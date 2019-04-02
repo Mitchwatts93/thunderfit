@@ -265,10 +265,6 @@ class Thunder():
                     print("You entered an incorrect answer! Trying whole fitting routine again...")
 
             data_bg_rm[y_label] -= L  # subtract background from the data
-
-            if data_bg_rm[y_label].min() < 0:
-                data_bg_rm[y_label] += abs(data_bg_rm[y_label].min()) # then shift all the data up so no points are below zero
-                bg -= abs(data_bg_rm[y_label].min()) # and lower the bg we have calculated by that shift too
             data_bg_rm[x_label] = x_data
 
         elif isinstance(bg, np.ndarray):
@@ -284,6 +280,11 @@ class Thunder():
 
         else:  # then it is the incorrect type
             raise TypeError('the background passed is in the incorrect format, please pass as type np array')
+
+        if data_bg_rm[y_label].min() < 0:
+            data_bg_rm[y_label] += abs(
+                data_bg_rm[y_label].min())  # then shift all the data up so no points are below zero
+            bg -= abs(data_bg_rm[y_label].min())  # and lower the bg we have calculated by that shift too
 
         self.user_params['background'] = bg
         self.data_bg_rm = data_bg_rm
@@ -325,7 +326,7 @@ class Thunder():
         x_data = self.data_bg_rm[self.x_label]
 
         if not specified_dict['cents_specified']:
-            width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
+            width_ranges = [50, len(x_data) / 4]  # these are index widths TODO make this a variable...
             peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
                                                   width_ranges)  # run peak finder here
             self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
@@ -362,7 +363,7 @@ class Thunder():
 
     @staticmethod
     def peak_finder(data, width_range):
-        peaks = peak_find(data, widths=width_range) # find the peak positions in the data
+        peaks = peak_find(data, widths=width_range, max_distances=width_range/8) # find the peak positions in the data
         peaks = list(peaks) # convert to a list
         return peaks
     ##### peak finding end
