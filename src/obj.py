@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import lmfit
 from lmfit import models
 
-import src.utilities as utili
+import utilities as utili
 
 
 # TODO: need to fail if peak fitting doesn't work!
