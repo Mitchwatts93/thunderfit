@@ -1,31 +1,101 @@
 from obj import *
+import glob
+import copy
+import pandas
+from tqdm import tqdm
 
-# here we want to fit multiple datasets.
+
+# TODO
+# make option of passing in many params files - one for each data file
 
 class ThunderBag():
 
     def __init__(self, input):
         # initialise everything first
+        self.thunder_bag: {} = {}
 
         if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
             self.overwrite_thunder(input)  # add all the details in depending on args
         elif isinstance(input, dict):
-            self.create_thunder(input)  # add all the details in depending on args
+            self.create_bag(input)  # add all the details in depending on args
         else:
             raise TypeError('Cannot convert input to Thunder object')
 
-        self.data = self.load_data(self.datapath, self.x_ind, self.y_ind, self.x_label, self.y_label, self.e_ind,
-                                   self.e_label) # load the data
+    def overwite_thunder(self, inp):
+        thun = inp
+        self.x_ind = thun.x_ind
+        self.y_ind = thun.y_ind
+        self.e_ind = thun.e_ind
+        self.x_label = thun.x_label
+        self.y_label = thun.y_label
+        self.datapath = thun.datapath
+        self.user_params = thun.user_params
 
+    def create_bag(self, inp):
+        self.x_label = inp['x_label']
+        self.y_label = inp['y_label']
+        self.e_label = inp['e_label']
+        self.x_ind =  inp['x_ind']
+        self. y_ind = inp['y_ind']
+        self.e_ind = inp['e_ind']
+        self.user_params = inp['fit_params']
+        self.img_path = inp['imgpath']
 
+        assert isinstance(inp['datapath'], list), "Wrong format for datapath, should be a list"
+        self.datapath = inp['datapath']
 
+        for i, data in tqdm(enumerate(self.datapath)):
+            if isinstance(data, Thunder):
+                self.thunder_bag[i] = data
+            elif isinstance(data, str):
+                # then read the data file
+                if '*' in data:
+                    filematches = glob.glob(data)
+                    for j, file in enumerate(filematches):
+                        try:
+                            self.thunder_bag[f'{i}_{j}'] = self.create_thunder(file, inp) # make a thunder object for each file
+                        except pandas.errors.ParserError as e:
+                            logging.warn(f"A Thunder object could not be created for the datafile: {file}, skipping")
+                else:
+                    try:
+                        self.thunder_bag[str(i)] = self.create_thunder(data, inp)
+                    except pandas.errors.ParserError as e:
+                        logging.warn(f"A Thunder object could not be created for the datafile: {file}, skipping")
+            else:
+                logging.warn(f"wrong format in data list detected for {i}th element: {data}. Skipping element")
+                pass
+
+    @staticmethod
+    def create_thunder(file, inp):
+        arguments = copy.deepcopy(inp)
+        arguments['datapath'] = file
+        thund_obj = Thunder(arguments)
+        return thund_obj
+
+    @staticmethod
+    def fit_bag(bag_dict):
+        for baglabel, thund in tqdm(bag_dict.items()):
+            thund.background_finder()  # then determine the background
+            specified_dict = peak_details(thund.user_params)
+            thund.peaks_unspecified(specified_dict)
+
+            # now fit peaks
+            thund.fit_peaks()
+            #thund.plot_all()
+            thund.fit_report()
+
+        return bag_dict
 
 def main(arguments):
+
     bag = ThunderBag(copy.deepcopy(arguments)) # load object
 
+    bag.fit_bag(bag.thunder_bag)
+    import ipdb
+    ipdb.set_trace()
 
 
-    return bagman
+    return bag
 
 
 def parse_param_file(filepath='./bag_params.txt'):
@@ -62,7 +132,6 @@ if __name__ == '__main__':
         arguments['datapath'] = arg.datapath
         arguments['user_params'] = arg.user_params
         arguments['imgpath'] = arg.imgpath
-        arguments['info_path'] = arg.info_path
 
         # TODO: add some checks to user passed data
 
@@ -111,8 +180,6 @@ if __name__ == '__main__':
                         help='relative paths to the datafiles from where python script is called, a list of paths')
     parser.add_argument('--imgpath', type=str, default=['./data.txt'],
                         help='relative path to the image file for the scans - if it exists')
-    parser.add_argument('--info_path', type=str, default=['./data.txt'],
-                        help='relative path to the scan infomation - if it exists')
     parser.add_argument('--user_params', type=Dict, default={'yfit': None, 'background': None, 'peak_types': [],
                                                              'peak_centres': [], 'peak_widths': [], 'peak_amps': [],
                                                              'chisq': None, 'free_params': None,
@@ -127,6 +194,7 @@ if __name__ == '__main__':
         print('not using params file')
         arguments = parse_args(args) # else use argparse but put in dictionary form
 
+    main(arguments)
 
 
     # now save things!

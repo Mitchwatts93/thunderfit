@@ -26,6 +26,7 @@ from lmfit import models
 
 
 # TODO: need to fail if peak fitting doesn't work!
+# need to sort out background fitting so its an extra model for lmfit, so is minimised with the peaks
 
 class Thunder():
     """
@@ -182,13 +183,16 @@ class Thunder():
 
         len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
         len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
-        shortest_specified = next(len_ord_specified)[0]  # this is the dict key with the shortest specified data
+        try:
+            shortest_specified = next(len_ord_specified)[0]  # this is the dict key with the shortest specified data
 
-        for param in ['peak_amps', 'peak_centres', 'peak_widths', 'peak_types']:
-            if len(self.user_params[param]) > specified_dict[shortest_specified]: # then we need to trim it
-                LOGGER.warning("Some of the specified peak parameters differ in length. Choosing peak paramters"
-                               "as the first n parameters where n is the length of the shortest set of parameters")
-                self.user_params[param] = self.user_params[param][:specified_dict[shortest_specified]]
+            for param in ['peak_amps', 'peak_centres', 'peak_widths', 'peak_types']:
+                if len(self.user_params[param]) > specified_dict[shortest_specified]: # then we need to trim it
+                    LOGGER.warning("Some of the specified peak parameters differ in length. Choosing peak paramters"
+                                   "as the first n parameters where n is the length of the shortest set of parameters")
+                    self.user_params[param] = self.user_params[param][:specified_dict[shortest_specified]]
+        except StopIteration:
+            pass
 
     @staticmethod
     def peak_finder(data, width_range):
@@ -199,7 +203,11 @@ class Thunder():
 
     ##### background
     def background_finder(self):
-        if self.user_params['background'] is None:
+        if isinstance(self.user_params['background'], int):
+            # then we have a polynomial simulataneous bg to build
+            self.data_bg_rm[self.y_label] = self.data[self.y_label] - 0  # subtract 0 from the data since we'll do bg later
+            self.data_bg_rm[self.x_label] = self.data[self.x_label]
+        elif self.user_params['background'] is 'separate':
             self.user_params['background'] = self.find_background(self.data[self.y_label])
 
             self.data_bg_rm[self.y_label] = self.data[self.y_label] - self.user_params[
@@ -261,7 +269,7 @@ class Thunder():
         self.user_params = self.make_bounds(self.data_bg_rm, self.user_params, self.y_label)
         self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
 
-        self.model, self.peak_params = self.generate_model(self.specs)
+        self.model, self.peak_params = self.generate_model(self.specs, self.user_params['background'])
 
         self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
         if not self.peaks.success:
@@ -313,7 +321,7 @@ class Thunder():
         return specs
 
     @staticmethod
-    def generate_model(spec):
+    def generate_model(spec, bg):
         """
         https://chrisostrouchov.com/post/peak_fit_xrd_python/
         :param spec:
@@ -356,6 +364,22 @@ class Thunder():
                 params.update(model_params)
                 composite_model = composite_model + model
 
+        if isinstance(bg, int):
+            if bg > 7:
+                bg = 7
+            elif bg < 0:
+                bg = 0
+            bg_model = models.PolynomialModel(bg, prefix='background_')
+
+            for i in range(bg + 1):
+                bg_model.set_param_hint(f'background_c{i}', min=-1000000000, max=1000000000)
+
+            default_params = {f'background_c{i}': 1/(i * 10 + 1) for i in range(bg + 1)}
+
+            bg_params = bg_model.make_params(**default_params)
+            params.update(bg_params)
+            composite_model = composite_model + bg_model
+
         return composite_model, params
     ##### peak fitting end
 
@@ -386,14 +410,18 @@ class Thunder():
         return ax
 
     @staticmethod
-    def plot_background(x, background_data, ax=False, line='b-', linethickness=0.5):
+    def plot_background(x, background_data, ax=False, line='b--', linethickness=0.5):
         if ax:
             #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
                                                                  " an axes object"
         else:
             fig, ax = plt.subplots()
 
-        ax.plot(x, background_data, line, linewidth=linethickness)
+        if isinstance(background_data, int):
+            # then we don't want to do this, so skip and it will be included in the models
+            pass
+        else:
+            ax.plot(x, background_data, line, linewidth=linethickness)
         return ax
 
     @staticmethod
@@ -492,7 +520,7 @@ def main(arguments):
     # now fit peaks
     thunder.fit_peaks()
     thunder.plot_all()
-    thunder.fit_report()
+    #thunder.fit_report()
 
     return thunder
 
