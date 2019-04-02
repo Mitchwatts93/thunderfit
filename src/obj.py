@@ -320,7 +320,7 @@ class Thunder():
             data_bg_rm[y_label] = y_data - bg # subtract user supplied background from the data
             data_bg_rm[x_label] = x_data
 
-        elif bg is 'OLD':
+        elif bg == 'OLD':
             bg = self.find_background(y_data) # find a background the old way
             data_bg_rm[y_label] = y_data - bg  # subtract background from the data
             data_bg_rm[x_label] = x_data
