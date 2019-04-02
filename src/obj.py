@@ -228,7 +228,7 @@ class Thunder():
                     ax.plot(D)
                     ax.plot(y_data)
                     print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
-                    plt.show()
+                    plt.show(block=True)
                     ans = input("If you are happy with the plot, type y. if not then please type a new rad")
                     if ans == 'y':
                         break
@@ -240,10 +240,11 @@ class Thunder():
 
                 L = D + b
                 while True: # now estimate a baseline to add to D to get L
+                    fig, ax = plt.subplots()
                     ax.plot(L)
                     ax.plot(y_data)
                     print(f"Please look at the following bg with a shift={b}")
-                    plt.show()
+                    plt.show(block=True)
                     ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
                                 "Please note that the background should NOT intercept the data. Ideally it would pass through"
                                 "the mean of the noise for the correct bg already fit")
@@ -260,11 +261,12 @@ class Thunder():
                 # then apply SG filter to L
                 while True:
                     L = utili.sg_filter(L, window_length, poly_order)
+                    fig, ax = plt.subplots()
                     ax.plot(L)
                     ax.plot(y_data)
                     print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                           f"{window_length}, {poly_order}")
-                    plt.show()
+                    plt.show(block=True)
                     ans = input("please enter y if you are happy with these values, or enter a tuple of integers."
                                 "Note that window length must be an odd integer. "
                                 "polynomial order must be less than window length.")
@@ -281,10 +283,11 @@ class Thunder():
                             print("You entered an incorrect answer! Trying again...")
 
                 # final question before exiting
+                fig, ax = plt.subplots()
                 ax.plot(L)
                 ax.plot(y_data)
                 print(f"Please look at the following bg with selected parameters")
-                plt.show()
+                plt.show(block=True)
                 ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. "
                             "questions with the current parameters")
                 if ans == 'y':
