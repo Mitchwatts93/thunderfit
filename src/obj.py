@@ -221,6 +221,8 @@ class Thunder():
             rad = 20
             b = 0
             window_length, poly_order = 5, 3
+            L_sg = 0
+            
             while True:
                 while True:
                     D = utili.rcf(y_data, rad)
@@ -268,22 +270,24 @@ class Thunder():
                         print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                               f"{window_length}, {poly_order}")
                         plt.show(block=True)
+                    except ValueError as e:
+                        print(
+                            "Incorrect values for window_length and poly_order have been entered. Poly order must be less than window length and window length must be odd")
                         ans = input("please enter y if you are happy with these values, or enter two integers with a space "
                                     "for window_length and poly_order")
-                        if ans == 'y':
-                            L = L_sg
-                            break
-                        else:
-                            try:
-                                ans = ans.split(' ')
-                                if len(ans) != 2:
-                                    raise ValueError("The tuple was more than two elements long")
-                                window_length = int(ans[0])
-                                poly_order = int(ans[1])
-                            except ValueError:
-                                print("You entered an incorrect answer! Trying again...")
-                    except ValueError as e:
-                        print("Incorrect values for window_length and poly_order have been entered. Poly order must be less than window length and window length must be odd")
+                    if ans == 'y':
+                        L = L_sg
+                        break
+                    else:
+                        try:
+                            ans = ans.split(' ')
+                            if len(ans) != 2:
+                                raise ValueError("The tuple was more than two elements long")
+                            window_length = int(ans[0])
+                            poly_order = int(ans[1])
+                        except ValueError:
+                            print("You entered an incorrect answer! Trying again...")
+
 
                 # final question before exiting
                 fig, ax = plt.subplots()
