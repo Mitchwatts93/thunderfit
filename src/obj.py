@@ -29,7 +29,7 @@ import utilities as utili
 # fix peak finder
 # add argument for number of peaks to use pick these based on some paramter e.g. prominence
 # sort peaks in this order
-# add try for matplotlib and set interactive plotting to not run if it fails
+# add try for matplotlib and set interactive background to not run if it fails
 
 class Thunder():
     """
@@ -327,6 +327,17 @@ class Thunder():
         return z
     ##### background end
 
+    #### normalise
+    @staticmethod
+    def normalisation(y_data):
+        mean_y_data = np.mean(y_data)
+        shifted_y_data = y_data - mean_y_data
+        std_dev = np.std(y_data)
+        normalised_y = shifted_y_data / std_dev
+        return normalised_y
+
+    #### normalise end
+
     ##### peak finding
     def peaks_unspecified(self, specified_dict):
         x_data = self.data_bg_rm[self.x_label]
@@ -606,6 +617,11 @@ def main(arguments):
     thunder = Thunder(copy.deepcopy(arguments)) # load object
 
     thunder.background_finder() # then determine the background
+    import ipdb
+    ipdb.set_trace()
+    thunder.data_bg_rm[thunder.y_label] = thunder.normalisation(thunder.data_bg_rm[thunder.y_label]) # normalise the data
+    import ipdb
+    ipdb.set_trace()
 
     specified_dict = peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)
