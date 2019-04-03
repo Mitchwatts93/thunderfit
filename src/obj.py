@@ -218,7 +218,7 @@ class Thunder():
                 # then apply SG filter to L
                 while True:
                     try:
-                        L_sg = utili.sg_filter(L, window_length, poly_order)
+                        L_sg = utili.smooth(L, window_length, poly_order)
                         fig, ax = plt.subplots()
                         ax.plot(x_data, L_sg)
                         ax.plot(x_data, data_bg_rm[y_label])

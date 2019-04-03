@@ -95,7 +95,7 @@ def generate_diff_matrix(A_sub, RC_sub):
     D = np.array(D)
     return D
 
-def sg_filter(L, window_length, polyorder):
+def smooth(L, window_length, polyorder):
     """
     Savgol filter applied to data
     :param L: the data to be smoothed
