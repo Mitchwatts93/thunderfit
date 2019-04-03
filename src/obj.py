@@ -11,7 +11,7 @@ from typing import Dict, Union
 import copy
 import time
 
-from scipy.signal import find_peaks_cwt as peak_find
+from scipy.signal import find_peaks as peak_find
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
 from scipy.optimize import least_squares
@@ -326,9 +326,10 @@ class Thunder():
         x_data = self.data_bg_rm[self.x_label]
 
         if not specified_dict['cents_specified']:
-            width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
+            #width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
+            prominence = 0.7
             peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
-                                                  width_ranges)  # run peak finder here
+                                                    prominence)  # run peak finder here
             self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
 
         if not specified_dict['amps_specified']: # find a faster way to do this
@@ -362,8 +363,10 @@ class Thunder():
             pass
 
     @staticmethod
-    def peak_finder(data, width_range):
-        peaks = peak_find(data, widths=width_range, noise_perc=20) # find the peak positions in the data
+    def peak_finder(data, prominence):
+        # do a routine looping through until the right number of peaks is found
+
+        peaks, properties = peak_find(data, prominence=prominence) # find the peak positions in the data
         peaks = list(peaks) # convert to a list
         return peaks
     ##### peak finding end
