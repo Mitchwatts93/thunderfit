@@ -330,6 +330,7 @@ class Thunder():
     #### normalise
     @staticmethod
     def normalisation(y_data):
+        """normalise using std variance normalisation"""
         mean_y_data = np.mean(y_data)
         shifted_y_data = y_data - mean_y_data
         std_dev = np.std(y_data)
@@ -341,15 +342,25 @@ class Thunder():
     ##### peak finding
     def peaks_unspecified(self, specified_dict):
         x_data = self.data_bg_rm[self.x_label]
+        # fix this up since only cents_specified works now
 
         if not specified_dict['cents_specified']:
+
+            #width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
+            prominence = 1.6
+            # do question asking routine for picking prominence to find peaks
+            peak_info = self.peak_finder(self.data_bg_rm[self.y_label],
+                                                    prominence)  # find the peak centers
+
+            # use peak info dict and store the heights and widths of peaks
+            self.user_params['peak_centres'] = x_data[peak_info['center_indices']].values  # these are the indices of the centres
+            self.user_params['peak_widths'] = x_data[peak_info['right_edges']].values - x_data[peak_info['left_edges']].values
+            self.user_params['peak_amps'] = peak_info['amps']
             import ipdb
             ipdb.set_trace()
-            #width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
-            prominence = 0.7
-            peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
-                                                    prominence)  # run peak finder here
-            self.user_params['peak_centres'] = x_data[peak_centres_indices].values  # these are the indices of the centres
+
+            # set bounds from these too
+
 
         if not specified_dict['amps_specified']: # find a faster way to do this
             xcents = self.user_params['peak_centres'] # this is x data
@@ -367,6 +378,7 @@ class Thunder():
         if not specified_dict['types_specified']:
             self.user_params['peak_types'] = ['LorentzianModel' for _ in
                                               self.user_params['peak_centres']]  # we assume all the types are gaussian
+
 
         len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
         len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
@@ -386,8 +398,13 @@ class Thunder():
         # do a routine looping through until the right number of peaks is found
 
         peaks, properties = peak_find(data, prominence=prominence) # find the peak positions in the data
+
         peaks = list(peaks) # convert to a list
-        return peaks
+        amps = list(properties['prominences']) # store the heights
+
+        peak_info = {'center_indices':peaks, 'right_edges':list(properties['right_bases']),
+                     'left_edges':list(properties['left_bases']), 'amps':amps}
+        return peak_info
     ##### peak finding end
 
     ##### peak fitting
@@ -617,11 +634,7 @@ def main(arguments):
     thunder = Thunder(copy.deepcopy(arguments)) # load object
 
     thunder.background_finder() # then determine the background
-    import ipdb
-    ipdb.set_trace()
     thunder.data_bg_rm[thunder.y_label] = thunder.normalisation(thunder.data_bg_rm[thunder.y_label]) # normalise the data
-    import ipdb
-    ipdb.set_trace()
 
     specified_dict = peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)
