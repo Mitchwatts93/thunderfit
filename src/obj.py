@@ -26,7 +26,10 @@ import utilities as utili
 
 
 # TODO: need to fail if peak fitting doesn't work!
-# need to sort out background fitting so its an extra model for lmfit, so is minimised with the peaks
+# fix peak finder
+# add argument for number of peaks to use pick these based on some paramter e.g. prominence
+# sort peaks in this order
+# add try for matplotlib and set interactive plotting to not run if it fails
 
 class Thunder():
     """
@@ -62,37 +65,6 @@ class Thunder():
                                    self.e_label) # load the data
 
         self.tightness = self.tightness_setter(self.user_params['tightness'])
-
-    @staticmethod
-    def tightness_setter(tightness):
-        tight_dict = {}
-        if tightness == None:
-            tight_dict['width'] = 10
-            tight_dict['centre_bounds'] = 10
-            tight_dict['width_bounds'] = (10, 3)
-
-        elif tightness == 'low':
-            tight_dict['width'] = 2
-            tight_dict['centre_bounds'] = 20
-            tight_dict['width_bounds'] = (100, 10)
-
-        elif tightness == 'med':
-            tight_dict['width'] = 10
-            tight_dict['centre_bounds'] = 10
-            tight_dict['width_bounds'] = (10, 3)
-
-        elif tightness == 'high':
-            tight_dict['width'] = 20
-            tight_dict['centre_bounds'] = 5
-            tight_dict['width_bounds'] = (5, 2)
-
-        else:
-            logging.warning('The tightness defined was incorrect format, use low, med or high. Using default med settings')
-            tight_dict['width'] = 10
-            tight_dict['centre_bounds'] = 10
-            tight_dict['width_bounds'] = (10, 3)
-
-        return tight_dict
 
     #### loading data and thunder object
     def overwrite_thunder(self, inp):
@@ -153,7 +125,40 @@ class Thunder():
         data.dropna() # drop any rows with NaN etc in them
         return data
 
-    ##### background
+    @staticmethod
+    def tightness_setter(tightness):
+        tight_dict = {}
+        if tightness == None:
+            tight_dict['width'] = 10
+            tight_dict['centre_bounds'] = 10
+            tight_dict['width_bounds'] = (10, 3)
+
+        elif tightness == 'low':
+            tight_dict['width'] = 2
+            tight_dict['centre_bounds'] = 20
+            tight_dict['width_bounds'] = (100, 10)
+
+        elif tightness == 'med':
+            tight_dict['width'] = 10
+            tight_dict['centre_bounds'] = 10
+            tight_dict['width_bounds'] = (10, 3)
+
+        elif tightness == 'high':
+            tight_dict['width'] = 20
+            tight_dict['centre_bounds'] = 5
+            tight_dict['width_bounds'] = (5, 2)
+
+        else:
+            logging.warning(
+                'The tightness defined was incorrect format, use low, med or high. Using default med settings')
+            tight_dict['width'] = 10
+            tight_dict['centre_bounds'] = 10
+            tight_dict['width_bounds'] = (10, 3)
+
+        return tight_dict
+    #### end loading
+
+    #### background
     def background_finder(self):
         y_label = self.y_label
         x_label = self.x_label
@@ -289,6 +294,7 @@ class Thunder():
         self.user_params['background'] = bg
         self.data_bg_rm = data_bg_rm
 
+    # old
     def find_background(self, data):
         params = np.array([0.01, 10 ** 5])
         bounds = [np.array([0.001, 10 ** 5]), np.array([0.1, 10 ** 9])]
@@ -298,14 +304,14 @@ class Thunder():
         p, lam = baseline_values['x']
         baseline_values = self.baseline_als(data.values, lam, p, niter=10)
         return baseline_values
-
+    # old
     def residual_baseline(self, params, y):
         p, lam = params
         niter = 10
         baseline = self.baseline_als(y, lam, p, niter)
         residual = y - baseline
         return residual
-
+    #old
     @staticmethod
     def baseline_als(y, lam, p, niter=10):
         L = len(y)
@@ -326,6 +332,8 @@ class Thunder():
         x_data = self.data_bg_rm[self.x_label]
 
         if not specified_dict['cents_specified']:
+            import ipdb
+            ipdb.set_trace()
             #width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
             prominence = 0.7
             peak_centres_indices = self.peak_finder(self.data_bg_rm[self.y_label],
@@ -475,7 +483,6 @@ class Thunder():
 
     ##### plotting
     #todo fix the assertions in these
-    # for all of these take a figure as optional input so can be plotted on same axis
     @staticmethod
     def plot_data(x, y, ax=False, line='r-', linethickness=0.5):
         if ax:
