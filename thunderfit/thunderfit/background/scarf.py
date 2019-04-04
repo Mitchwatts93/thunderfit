@@ -4,6 +4,8 @@ from scipy.signal import savgol_filter
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 def rcf(A, rad):
