@@ -11,9 +11,6 @@ from typing import Dict, Union
 import copy
 
 from scipy.signal import find_peaks as peak_find
-from scipy import sparse
-from scipy.sparse.linalg import spsolve
-from scipy.optimize import least_squares
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,11 +18,12 @@ import matplotlib.pyplot as plt
 import lmfit
 from lmfit import models
 
-import scarf
+import background.scarf as scarf
 import utilities as utili
 import plotting
-import background_removal as bg_remove
+import background.background_removal as bg_remove
 import normalisation
+import peak_finding
 
 
 # TODO: need to fail if peak fitting doesn't work!
@@ -53,7 +51,7 @@ class Thunder():
         self.plot: plt = None
         self.fit_data: {} = {}
 
-        self.user_params: Dict = {'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
+        self.user_params: Dict = {"no_peaks": None , 'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
                                 'peak_amps': [], 'chisq': None, 'free_params': None, 'p_value':None, 'tightness':None,
                                 'bounds' : {'centers':None, 'widths':None, 'amps':None}}
 
@@ -96,7 +94,7 @@ class Thunder():
             self.datapath = inp['datapath']
         except KeyError as e:
             LOGGER.info(f"KeyError: Missing field in the data dictionary: {e}")
-        self.user_params = inp.get('fit_params', self.user_params)
+        self.user_params = inp.get('user_params', self.user_params)
     #### end loading
 
     #### background
@@ -134,71 +132,75 @@ class Thunder():
     ##### background end
 
     ##### peak finding
-    def peaks_unspecified(self, specified_dict):
-        x_data = self.data_bg_rm[self.x_label]
-        # fix this up since only cents_specified works now
-
-        if not specified_dict['cents_specified']:
-
-            #width_ranges = [50, len(x_data) / 2]  # these are index widths TODO make this a variable...
-            prominence = 1.6
-            # do question asking routine for picking prominence to find peaks
-            peak_info = self.peak_finder(self.data_bg_rm[self.y_label],
-                                                    prominence)  # find the peak centers
-
-            # use peak info dict and store the heights and widths of peaks
-            self.user_params['peak_centres'] = x_data[peak_info['center_indices']].values  # these are the indices of the centres
-            self.user_params['peak_widths'] = x_data[peak_info['right_edges']].values - x_data[peak_info['left_edges']].values
-            self.user_params['peak_amps'] = peak_info['amps']
-            import ipdb
-            ipdb.set_trace()
-
-            # set bounds from these too
-
-
-        if not specified_dict['amps_specified']: # find a faster way to do this
-            xcents = self.user_params['peak_centres'] # this is x data
-            peak_centres_indices = [self.data_bg_rm[self.x_label].iloc[(self.data_bg_rm[self.x_label] - xval)
-                                 .abs().argsort()[:1]].index for xval in xcents] #find the indices for these xvalues
-            peak_centres_indices = [ind.tolist()[0] for ind in peak_centres_indices] # stupid pandas index type
-
-            y_peaks = self.data_bg_rm[self.y_label][peak_centres_indices]  # get the y values from the indices
-            self.user_params['peak_amps'] = list(y_peaks)  # all peak amps are the order of mag of largest y
-
-        if not specified_dict['widths_specified']:
-            width = x_data.max() - x_data.min()
-            self.user_params['peak_widths'] = [(width / self.tightness['width']) * np.random.random() for _ in self.user_params['peak_centres']]
-
-        if not specified_dict['types_specified']:
-            self.user_params['peak_types'] = ['LorentzianModel' for _ in
-                                              self.user_params['peak_centres']]  # we assume all the types are gaussian
-
-
-        len_ord_specified = sorted(specified_dict.items(), key=operator.itemgetter(1))  # get the shortest
-        len_ord_specified = filter(lambda tup: tup[1] > 0, len_ord_specified)
-        try:
-            shortest_specified = next(len_ord_specified)[0]  # this is the dict key with the shortest specified data
-
-            for param in ['peak_amps', 'peak_centres', 'peak_widths', 'peak_types']:
-                if len(self.user_params[param]) > specified_dict[shortest_specified]: # then we need to trim it
-                    LOGGER.warning("Some of the specified peak parameters differ in length. Choosing peak paramters"
-                                   "as the first n parameters where n is the length of the shortest set of parameters")
-                    self.user_params[param] = self.user_params[param][:specified_dict[shortest_specified]]
-        except StopIteration:
-            pass
-
     @staticmethod
-    def peak_finder(data, prominence):
-        # do a routine looping through until the right number of peaks is found
+    def peaks_unspecified(data_bg_rm, x_label, y_label, tightness, user_params):
+        peak_no = user_params["no_peaks"]
+        #pass in prominence x2 values
 
-        peaks, properties = peak_find(data, prominence=prominence) # find the peak positions in the data
+        if len(user_params['peak_centres']) == 0 or len(user_params['peak_centres']) < peak_no:
+            if len(user_params['peak_centres']) < peak_no:
+                logging.warning("you specified less peak centers than peak_numbers."
+                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
+            prominence = 1.6
+            if not peak_no: # then they don't know so we can find everything in one go and save some time
+                peak_info = peak_finding.find_cents(prominence, data_bg_rm[y_label], find_all=True)
+                center_indices = peak_info['center_indices']
+                peak_amps = peak_info['amps']
+                peak_left_edges, peak_right_edges = peak_info['left_edges'], peak_info['left_edges']
+                peak_widths = data_bg_rm[x_label][peak_right_edges].values - \
+                              data_bg_rm[x_label][peak_left_edges].values  # the xvalues can be indexed from the data
 
-        peaks = list(peaks) # convert to a list
-        amps = list(properties['prominences']) # store the heights
+                user_params['peak_centres'] = data_bg_rm[x_label][center_indices].values
+                user_params['peak_amps'] = peak_amps
+                user_params['peak_widths'] = peak_widths
 
-        peak_info = {'center_indices':peaks, 'right_edges':list(properties['right_bases']),
-                     'left_edges':list(properties['left_bases']), 'amps':amps}
-        return peak_info
+            else: # just find the centers
+                center_indices = peak_finding.find_cents(prominence, data_bg_rm[y_label])
+                center_indices = center_indices[:peak_no] # take the first n as user has specified how
+                                                            # many peaks they want
+                # need to pick the correct amount of peaks
+                user_params['peak_centres'] = data_bg_rm[x_label][center_indices].values
+        elif len(user_params['peak_centres']) > peak_no:
+            logging.warning("specified more peak centers than no_peaks. cutting the peaks supplied as [:no_peaks]")
+            user_params['peak_centres'] = user_params['peak_centres'][:peak_no]
+
+
+        if len(user_params['peak_amps']) == 0 or len(user_params['peak_amps']) < peak_no:
+            if len(user_params['peak_amps']) < peak_no:
+                logging.warning("you specified less peak amps than peak_numbers."
+                    " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
+            center_x_values = user_params['peak_centres']
+            peak_amps = peak_finding.find_peak_properties(1, center_x_values, data_bg_rm[y_label], 'amps')
+            user_params['peak_amps'] = peak_amps
+        elif len(user_params['peak_amps']) > peak_no:
+            logging.warning("specified more peak amps than no_peaks. cutting the peaks supplied as [:no_peaks]")
+            user_params['peak_amps'] = user_params['peak_amps'][:peak_no]
+
+        if len(user_params['peak_widths']) == 0 or len(user_params['peak_widths']) < peak_no:
+            if len(user_params['peak_widths']) < peak_no:
+                logging.warning("you specified less peak widths than peak_numbers."
+                    " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
+            center_x_values = user_params['peak_centres']
+            peak_left_edges, peak_right_edges = peak_finding.find_peak_properties(1, center_x_values,
+                                                             data_bg_rm[y_label], 'widths') # get the indices of edges
+            peak_widths = data_bg_rm[x_label][peak_right_edges].values - \
+                          data_bg_rm[x_label][peak_left_edges].values # the xvalues can be indexed from the data
+            user_params['peak_widths'] = peak_widths
+        elif len(user_params['peak_widths']) > peak_no:
+            logging.warning("specified more peak widths than no_peaks. cutting the peaks supplied as [:no_peaks]")
+            user_params['peak_widths'] = user_params['peak_widths'][:peak_no]
+
+        if len(user_params['peak_types']) == 0 or len(user_params['peak_types']) < peak_no:
+            if len(user_params['peak_types']) < peak_no:
+                logging.warning("you specified less peak types than peak_numbers."
+                    " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
+            user_params['peak_types'] = ['LorentzianModel' for _ in
+                                              user_params['peak_centres']]  # we assume all the types are gaussian
+        elif len(user_params['peak_types']) > peak_no:
+            logging.warning("specified more peak types than no_peaks. cutting the peaks supplied as [:no_peaks]")
+            user_params['peak_types'] = user_params['peak_widths'][:peak_no]
+
+        return user_params
     ##### peak finding end
 
     ##### peak fitting
@@ -362,8 +364,8 @@ def main(arguments):
 
     thunder.data_bg_rm[thunder.y_label] = normalisation.svn(thunder.data_bg_rm[thunder.y_label]) # normalise the data
 
-    specified_dict = utili.peak_details(thunder.user_params)
-    thunder.peaks_unspecified(specified_dict)
+    thunder.user_params = thunder.peaks_unspecified(thunder.data_bg_rm, thunder.x_label,
+                                                    thunder.y_label, thunder.tightness, thunder.user_params)
 
     # now fit peaks
     thunder.fit_peaks()

@@ -37,16 +37,6 @@ def parse_param_file(filepath='./params.txt'):
 #### tools
 
 #### parsing user params
-def peak_details(params):
-    cents_specified = len(params['peak_centres'])
-    types_specified = len(params['peak_types'])
-    widths_specified = len(params['peak_widths'])
-    amps_specified = len(params['peak_amps'])
-
-    return {'cents_specified':cents_specified,
-            'types_specified': types_specified,
-            'widths_specified': widths_specified,
-            'amps_specified': amps_specified}
 
 def tightness_setter(tightness):
     tight_dict = {}
