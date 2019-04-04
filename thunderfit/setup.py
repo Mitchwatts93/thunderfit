@@ -33,6 +33,6 @@ setuptools.setup(
     test_suite='nose.collector',
     tests_require=['nose'],
     entry_points={
-        "console_scripts": ['ramananalyse = thunderfit.thunderfit:main']},
+        "console_scripts": ['ramananalyse = thunderfit:main']},
     )
 
