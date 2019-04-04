@@ -1,28 +1,31 @@
 from scipy.signal import find_peaks as peak_find
-from itertools import product
+import numpy as np
 
-
-def peak_finder(data, prominence):
+def peak_finder(data, prominence, height=0, width=0):
     # do a routine looping through until the right number of peaks is found
 
-    peaks, properties = peak_find(data, prominence=prominence)  # find the peak positions in the data
+    peaks, properties = peak_find(data, prominence=prominence, height=height, width=width)  # find the peak positions in the data
 
     peaks = list(peaks)  # convert to a list
-    amps = list(properties['prominences'])  # store the heights
+    amps = list(properties['heights'])  # store the heights
+    sorted_indices = np.argsort(amps) # we will sort below in order of amplitudes
 
-    peak_info = {'center_indices': peaks, 'right_edges': list(properties['right_bases']),
-                 'left_edges': list(properties['left_bases']), 'amps': amps}
+    peak_info = {'center_indices': sort_lists(sorted_indices, peaks), 'right_edges': sort_lists(sorted_indices, list(properties['right_bases'])),
+                 'left_edges': sort_lists(sorted_indices, list(properties['left_bases'])), 'amps': sort_lists(sorted_indices, amps)}
     return peak_info
 
+def sort_lists(sorted_indices, list_to_sort):
+    return [list_to_sort[i] for i in sorted_indices]
+
 def find_cents(prominence, y_data, find_all=False):
-    peak_info = peak_finder(y_data, prominence)  # find the peak centers
+    peak_info = peak_finder(y_data, prominence, height=0, width=0)  # find the peak centers
     if find_all:
         return peak_info
     center_indices = peak_info['center_indices']
     return center_indices
 
 def find_peak_properties(prominence, center_list, y_data, peak_info_key):
-    peak_info = peak_finder(y_data, prominence)
+    peak_info = peak_finder(y_data, prominence, height=0, width=0)
     center_indices = peak_info['center_indices']
 
     matching_indices = find_closest_indices(center_indices, center_list)
