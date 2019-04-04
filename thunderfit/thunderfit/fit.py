@@ -223,8 +223,8 @@ class Thunder():
     @staticmethod
     def make_bounds(user_params, tightness):
         bounds = {}
-        peaks = len(user_params['no_peaks'])
-
+        peaks = user_params['no_peaks']
+        
         if len(user_params['bounds']['centers']) != peaks:
             l_cent_bounds = [cent - tightness['centre_bounds'] *
                              user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
