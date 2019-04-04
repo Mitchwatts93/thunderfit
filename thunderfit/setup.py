@@ -8,7 +8,7 @@ def readme():
 setuptools.setup(
     name='thunderfit',
     python_requires='>3.6',
-    version='1.0.7.7',
+    version='1.0.7.8',
     description='Thunderfit fitting code',
     long_description=readme(),
     classifiers=[
