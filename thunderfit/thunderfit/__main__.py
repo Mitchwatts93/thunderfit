@@ -1,5 +1,5 @@
 """thunderfit.__main__: executed when thunderfit directory is called as script."""
-from .thundobj import main
+"""from .thundobj import main
 import utilities as utili
 
 import argparse
@@ -51,4 +51,4 @@ thunder = main(arguments)
 dataname = os.path.basename(arguments['datapath'])
 utili.save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
 utili.save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
-utili.save_fit_report(thunder.fit_data, path=dirname, filename=f"{dataname}_report.json")
+utili.save_fit_report(thunder.fit_data, path=dirname, filename=f"{dataname}_report.json")"""
