@@ -24,6 +24,7 @@ from lmfit import models
 import scarf
 import utilities as utili
 import plotting
+import background_removal as bg_remove
 
 
 # TODO: need to fail if peak fitting doesn't work!
@@ -218,7 +219,7 @@ class Thunder():
             data_bg_rm[x_label] = x_data
 
         elif bg == 'OLD':
-            bg = self.find_background(y_data, self.residual_baseline) # find a background the old way
+            bg = bg_remove.find_background(y_data, bg_remove.residual_baseline, bg_remove.baseline_als) # find a background the old way
             data_bg_rm[y_label] = y_data - bg  # subtract background from the data
             data_bg_rm[x_label] = x_data
 
@@ -232,39 +233,6 @@ class Thunder():
 
         self.user_params['background'] = bg
         self.data_bg_rm = data_bg_rm
-
-    # old
-    def find_background(self, data, residual_baseline_func):
-        params = (np.array([0.01, 10 ** 5]))
-        bounds = [np.array([0.001, 10 ** 5]), np.array([0.1, 10 ** 9])]
-        baseline_values = least_squares(residual_baseline_func, params[:], args=(data.values,), bounds=bounds)
-        import ipdb
-        ipdb.set_trace()
-        p, lam = baseline_values['x']
-        baseline_values = self.baseline_als(data.values, lam, p, niter=10)
-        return baseline_values
-
-    # old
-    def residual_baseline(self, params, y):
-        p, lam = params
-        niter = 10
-        baseline = self.baseline_als(y, lam, p, niter)
-        residual = y - baseline
-        return residual
-
-    @staticmethod
-    def baseline_als(y, lam, p, niter=10):
-        L = len(y)
-        D = sparse.diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
-        w = np.ones(L)
-        if niter < 1:
-            raise ValueError("n iter is too small!")
-        for i in range(niter):
-            W = sparse.spdiags(w, 0, L, L)
-            Z = W + lam * D.dot(D.transpose())
-            z = spsolve(Z, w * y)
-            w = p * (y > z) + (1 - p) * (y < z)
-        return z
     ##### background end
 
     #### normalise
