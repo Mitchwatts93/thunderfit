@@ -25,6 +25,7 @@ import scarf
 import utilities as utili
 import plotting
 import background_removal as bg_remove
+import normalisation
 
 
 # TODO: need to fail if peak fitting doesn't work!
@@ -99,14 +100,8 @@ class Thunder():
     #### end loading
 
     #### background
-    def background_finder(self):
-        y_label = self.y_label
-        x_label = self.x_label
-        y_data = self.data[y_label]
-        x_data = self.data[x_label]
-        bg = self.user_params['background']
-        data_bg_rm = self.data_bg_rm
-
+    @staticmethod
+    def background_finder(y_data, y_label, x_data, x_label, bg, data_bg_rm):
         if bg == 'no':  # then user doesn't want to make a background
             LOGGER.warning(
                 "Warning: no background specified, so not using a background,"
@@ -116,104 +111,10 @@ class Thunder():
             data_bg_rm[x_label] = x_data
 
         elif bg == 'SCARF':
-            bg = np.array([0 for _ in y_data], dtype=np.float64)
-            rad = 20
-            b = 0
-            window_length, poly_order = 51, 3
-            L_sg = 0
-            data_bg_rm[y_label] = y_data
-
-            while True:
-                while True:
-                    D = scarf.rcf(data_bg_rm[y_label], rad)
-                    fig, ax = plt.subplots()
-                    ax.plot(x_data, D)
-                    ax.plot(x_data, data_bg_rm[y_label])
-                    print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
-                    plt.show(block=True)
-                    ans = input("If you are happy with the plot, type y. if not then please type a new rad")
-                    if ans == 'y':
-                        break
-                    else:
-                        try:
-                            rad = int(ans)
-                        except ValueError:
-                            print("You entered an incorrect answer! Trying again...")
-
-                L = D + b
-                while True: # now estimate a baseline to add to D to get L
-                    fig, ax = plt.subplots()
-                    ax.plot(x_data, L)
-                    ax.plot(x_data, data_bg_rm[y_label])
-                    print(f"Please look at the following bg with a shift={b}")
-                    plt.show(block=True)
-                    ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
-                                "Please note that the background should NOT intercept the data. Ideally it would pass through"
-                                "the mean of the noise for the correct bg already fit")
-                    if ans == 'y':
-                        L = D + b
-                        break
-                    else:
-                        try:
-                            b = int(ans)
-                            L = D + b
-                        except ValueError:
-                            print("You entered an incorrect answer! Trying again...")
-
-                # then apply SG filter to L
-                while True:
-                    try:
-                        L_sg = scarf.smooth(L, window_length, poly_order)
-                        fig, ax = plt.subplots()
-                        ax.plot(x_data, L_sg)
-                        ax.plot(x_data, data_bg_rm[y_label])
-                        print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
-                              f"{window_length}, {poly_order}")
-                        plt.show(block=True)
-                    except ValueError as e:
-                        print(
-                            "Incorrect values for window_length and poly_order have been entered. Poly order must be less than window length and window length must be odd")
-                    ans = input("please enter y if you are happy with these values, or enter two integers with a space "
-                                    "for window_length and poly_order")
-                    if ans == 'y':
-                        L = L_sg
-                        break
-                    else:
-                        try:
-                            ans = ans.split(' ')
-                            if len(ans) != 2:
-                                raise ValueError("The tuple was more than two elements long")
-                            window_length = int(ans[0])
-                            poly_order = int(ans[1])
-                        except ValueError:
-                            print("You entered an incorrect answer! Trying again...")
-
-                # final question before exiting
-                fig, ax = plt.subplots()
-                ax.plot(x_data, L)
-                ax.plot(x_data, data_bg_rm[y_label])
-                print(f"Please look at the following bg with selected parameters")
-                plt.show(block=True)
-                ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
-                            "typing repeat will add an additional bg subtraction to this one")
-                if ans == 'y':
-                    bg += L
-                    break
-                elif ans == 'n':
-                    pass
-                elif ans =='repeat':
-                    bg += L
-                    print("apply two bg removal steps, this will mean the background just specified will be removed "
-                          "from the data")
-                    data_bg_rm[y_label] -= L # remove the bg found here from the original data and go again
-                else:
-                    print("You entered an incorrect answer! Trying whole fitting routine again...")
-
-            data_bg_rm[y_label] -= L  # subtract background from the data
-            data_bg_rm[x_label] = x_data
+            data_bg_rm, bg = scarf.perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label)
 
         elif isinstance(bg, np.ndarray):
-            assert len(self.user_params['background']) == len(y_data), \
+            assert len(bg) == len(y_data), \
                     "the background generated or passed is of incorrect length"
             data_bg_rm[y_label] = y_data - bg # subtract user supplied background from the data
             data_bg_rm[x_label] = x_data
@@ -226,26 +127,11 @@ class Thunder():
         else:  # then it is the incorrect type
             raise TypeError('the background passed is in the incorrect format, please pass as type np array')
 
-        #y_min = data_bg_rm[y_label].min()
-        #if y_min < 0:
-        #    data_bg_rm[y_label] += abs(y_min)  # then shift all the data up so no points are below zero
-        #    bg -= abs(y_min)  # and lower the bg we have calculated by that shift too
+        data_bg_rm[y_label], bg = bg_remove.correct_negative_bg(data_bg_rm[y_label], bg) #shift the whole thing up if
+                                                                                        # any negative values
 
-        self.user_params['background'] = bg
-        self.data_bg_rm = data_bg_rm
+        return bg, data_bg_rm
     ##### background end
-
-    #### normalise
-    @staticmethod
-    def normalisation(y_data):
-        """normalise using std variance normalisation"""
-        mean_y_data = np.mean(y_data)
-        shifted_y_data = y_data - mean_y_data
-        std_dev = np.std(y_data)
-        normalised_y = shifted_y_data / std_dev
-        return normalised_y
-
-    #### normalise end
 
     ##### peak finding
     def peaks_unspecified(self, specified_dict):
@@ -417,6 +303,7 @@ class Thunder():
         return composite_model, params
     ##### peak fitting end
 
+
     def plot_all(self):
         ax = plotting.plot_fits(self.data[self.x_label], self.peaks.eval_components()) # plot each component of the model
         ax = plotting.plot_background(self.data[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
@@ -468,8 +355,12 @@ class Thunder():
 def main(arguments):
     thunder = Thunder(copy.deepcopy(arguments)) # load object
 
-    thunder.background_finder() # then determine the background
-    thunder.data_bg_rm[thunder.y_label] = thunder.normalisation(thunder.data_bg_rm[thunder.y_label]) # normalise the data
+    thunder.user_params['background'], thunder.data_bg_rm = thunder.background_finder(thunder.data[thunder.y_label],
+                                                            thunder.y_label, thunder.data[thunder.x_label],
+                                                            thunder.x_label, thunder.user_params['background'],
+                                                                    thunder.data_bg_rm) # then determine the background
+
+    thunder.data_bg_rm[thunder.y_label] = normalisation.svn(thunder.data_bg_rm[thunder.y_label]) # normalise the data
 
     specified_dict = utili.peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)

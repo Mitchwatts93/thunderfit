@@ -36,3 +36,10 @@ def baseline_als(y, lam, p, niter=10):
         w = p * (y > z) + (1 - p) * (y < z)
     return z
 ####
+
+def correct_negative_bg(y_bg_rm, bg):
+    y_min = y_bg_rm.min()
+    if y_min < 0:
+        y_bg_rm += abs(y_min)  # then shift all the data up so no points are below zero
+        bg -= abs(y_min)  # and lower the bg we have calculated by that shift too
+    return y_bg_rm, bg
