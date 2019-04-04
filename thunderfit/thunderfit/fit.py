@@ -218,7 +218,7 @@ class Thunder():
             data_bg_rm[x_label] = x_data
 
         elif bg == 'OLD':
-            bg = self.find_background(y_data, self.residual_baseline, self.baseline_als) # find a background the old way
+            bg = self.find_background(y_data, self.residual_baseline) # find a background the old way
             data_bg_rm[y_label] = y_data - bg  # subtract background from the data
             data_bg_rm[x_label] = x_data
 
@@ -234,27 +234,23 @@ class Thunder():
         self.data_bg_rm = data_bg_rm
 
     # old
-    @staticmethod
-    def find_background(data, residual_baseline_func, baseline_als_func):
-        params = (np.array([0.01, 10 ** 5]), baseline_als_func)
+    def find_background(self, data, residual_baseline_func):
+        params = (np.array([0.01, 10 ** 5]))
         bounds = [np.array([0.001, 10 ** 5]), np.array([0.1, 10 ** 9])]
-        baseline_values = least_squares(residual_baseline_func, params, args=(data.values,),
-                                  bounds=bounds)
-
+        baseline_values = least_squares(residual_baseline_func, params[:], args=(data.values,), bounds=bounds)
+        import ipdb
+        ipdb.set_trace()
         p, lam = baseline_values['x']
-        baseline_values = baseline_als_func(data.values, lam, p, niter=10)
+        baseline_values = self.baseline_als(data.values, lam, p, niter=10)
         return baseline_values
 
     # old
-    @staticmethod
-    def residual_baseline(params, y):
-        baseline_als_func, params = params
+    def residual_baseline(self, params, y):
         p, lam = params
         niter = 10
-        baseline = baseline_als_func(y, lam, p, niter)
+        baseline = self.baseline_als(y, lam, p, niter)
         residual = y - baseline
         return residual
-    #old
 
     @staticmethod
     def baseline_als(y, lam, p, niter=10):
