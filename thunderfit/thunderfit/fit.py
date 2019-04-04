@@ -240,7 +240,7 @@ class Thunder():
             width_bounds = list(zip(l_width_bounds, u_width_bounds))
             bounds['widths'] = width_bounds
 
-        if user_params['bounds']['amps'] or len(user_params['bounds']['amps']) != peaks:
+        if not user_params['bounds']['amps'] or len(user_params['bounds']['amps']) != peaks:
             peak_amps = user_params['peak_amps']
             l_amp_bounds = [amp / tightness['amps_bounds'][0] for amp in peak_amps]
             u_amp_bounds = [amp * tightness['amps_bounds'][1] for amp in peak_amps]
