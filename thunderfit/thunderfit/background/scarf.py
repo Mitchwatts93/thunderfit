@@ -6,8 +6,6 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import matplotlib.pyplot as plt
 
-import scarf
-
 def rcf(A, rad):
     """
     Popular rolling circle filter (RCF) routine as described by James et al.: https://doi.org/10.1366%2F12-06766
@@ -117,7 +115,7 @@ def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label):
 
     while True:
         while True:
-            D = scarf.rcf(data_bg_rm[y_label], rad)
+            D = rcf(data_bg_rm[y_label], rad)
             fig, ax = plt.subplots()
             ax.plot(x_data, D)
             ax.plot(x_data, data_bg_rm[y_label])
@@ -155,7 +153,7 @@ def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label):
         # then apply SG filter to L
         while True:
             try:
-                L_sg = scarf.smooth(L, window_length, poly_order)
+                L_sg = smooth(L, window_length, poly_order)
                 fig, ax = plt.subplots()
                 ax.plot(x_data, L_sg)
                 ax.plot(x_data, data_bg_rm[y_label])

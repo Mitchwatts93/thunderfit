@@ -7,7 +7,7 @@ def peak_finder(data, prominence, height=0, width=0):
     peaks, properties = peak_find(data, prominence=prominence, height=height, width=width)  # find the peak positions in the data
 
     peaks = list(peaks)  # convert to a list
-    amps = list(properties['heights'])  # store the heights
+    amps = list(properties['peak_heights'])  # store the heights
     sorted_indices = np.argsort(amps) # we will sort below in order of amplitudes
 
     peak_info = {'center_indices': sort_lists(sorted_indices, peaks), 'right_edges': sort_lists(sorted_indices, list(properties['right_bases'])),

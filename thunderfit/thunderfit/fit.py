@@ -138,7 +138,7 @@ class Thunder():
         #pass in prominence x2 values
 
         if len(user_params['peak_centres']) == 0 or len(user_params['peak_centres']) < peak_no:
-            if len(user_params['peak_centres']) < peak_no:
+            if len(user_params['peak_centres']) < peak_no and peak_no:
                 logging.warning("you specified less peak centers than peak_numbers."
                      " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             prominence = 1.6
@@ -166,7 +166,7 @@ class Thunder():
 
 
         if len(user_params['peak_amps']) == 0 or len(user_params['peak_amps']) < peak_no:
-            if len(user_params['peak_amps']) < peak_no:
+            if len(user_params['peak_amps']) < peak_no and peak_no:
                 logging.warning("you specified less peak amps than peak_numbers."
                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             center_x_values = user_params['peak_centres']
@@ -177,7 +177,7 @@ class Thunder():
             user_params['peak_amps'] = user_params['peak_amps'][:peak_no]
 
         if len(user_params['peak_widths']) == 0 or len(user_params['peak_widths']) < peak_no:
-            if len(user_params['peak_widths']) < peak_no:
+            if len(user_params['peak_widths']) < peak_no and peak_no:
                 logging.warning("you specified less peak widths than peak_numbers."
                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             center_x_values = user_params['peak_centres']
@@ -191,7 +191,7 @@ class Thunder():
             user_params['peak_widths'] = user_params['peak_widths'][:peak_no]
 
         if len(user_params['peak_types']) == 0 or len(user_params['peak_types']) < peak_no:
-            if len(user_params['peak_types']) < peak_no:
+            if len(user_params['peak_types']) < peak_no and peak_no:
                 logging.warning("you specified less peak types than peak_numbers."
                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             user_params['peak_types'] = ['LorentzianModel' for _ in
