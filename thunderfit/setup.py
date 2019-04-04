@@ -32,5 +32,7 @@ setuptools.setup(
     include_package_data=True,
     test_suite='nose.collector',
     tests_require=['nose'],
-    scripts=['bin/fit-data'],
+    entry_points={
+        "console_scripts": ['ramananalyse = thunderfit.thunderfit:main']},
     )
+

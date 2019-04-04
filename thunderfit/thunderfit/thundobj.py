@@ -352,7 +352,6 @@ class Thunder():
                 self.fit_data[model_no][param_type] = fit_info
 
 
-# TODO move bounds making into a new function in main
 def main(arguments):
     thunder = Thunder(copy.deepcopy(arguments)) # load object
 
