@@ -4,6 +4,7 @@ LOGGER.setLevel(logging.INFO)
 import os
 import json
 import dill
+import pandas as pd
 
 #### tools
 def save_thunder(obj, path, filename='thunder.p'):
