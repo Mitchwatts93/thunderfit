@@ -8,7 +8,7 @@ def peak_finder(data, prominence, height=0, width=0):
 
     peaks = list(peaks)  # convert to a list
     amps = list(properties['peak_heights'])  # store the heights
-    sorted_indices = np.argsort(amps) # we will sort below in order of amplitudes
+    sorted_indices = np.argsort(amps)[::-1] # we will sort below in order of amplitudes
 
     peak_info = {'center_indices': sort_lists(sorted_indices, peaks), 'right_edges': sort_lists(sorted_indices, list(properties['right_bases'])),
                  'left_edges': sort_lists(sorted_indices, list(properties['left_bases'])), 'amps': sort_lists(sorted_indices, amps)}
@@ -31,8 +31,8 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
     matching_indices = find_closest_indices(center_indices, center_list)
 
     if peak_info_key=='widths':
-        peak_properties = ([peak_info['left_edges'][i] for i in matching_indices],
-                           [peak_info['right_edges'][i] for i in matching_indices])
+        peak_properties = ([peak_info['right_edges'][i] for i in matching_indices],
+                           [peak_info['left_edges'][i] for i in matching_indices])
     else:
         peak_properties = [peak_info[peak_info_key][i] for i in matching_indices]
     return peak_properties

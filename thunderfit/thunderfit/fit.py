@@ -2,15 +2,12 @@ import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import os
-import json
-import dill
-import operator
 import difflib
 import re
 from typing import Dict, Union
 import copy
+import time
 
-from scipy.signal import find_peaks as peak_find
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -51,7 +48,7 @@ class Thunder():
         self.plot: plt = None
         self.fit_data: {} = {}
 
-        self.user_params: Dict = {"no_peaks": None , 'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
+        self.user_params: Dict = {"no_peaks": None , 'user_input':None, 'yfit': None, 'background': None, 'peak_types': [], 'peak_centres': [], 'peak_widths':[],
                                 'peak_amps': [], 'chisq': None, 'free_params': None, 'p_value':None, 'tightness':None,
                                 'bounds' : {'centers':None, 'widths':None, 'amps':None}}
 
@@ -99,7 +96,7 @@ class Thunder():
 
     #### background
     @staticmethod
-    def background_finder(y_data, y_label, x_data, x_label, bg, data_bg_rm):
+    def background_finder(y_data, y_label, x_data, x_label, bg, data_bg_rm, user_input):
         if bg == 'no':  # then user doesn't want to make a background
             LOGGER.warning(
                 "Warning: no background specified, so not using a background,"
@@ -109,7 +106,7 @@ class Thunder():
             data_bg_rm[x_label] = x_data
 
         elif bg == 'SCARF':
-            data_bg_rm, bg = scarf.perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label)
+            data_bg_rm, bg = scarf.perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label, user_input)
 
         elif isinstance(bg, np.ndarray):
             assert len(bg) == len(y_data), \
@@ -125,9 +122,6 @@ class Thunder():
         else:  # then it is the incorrect type
             raise TypeError('the background passed is in the incorrect format, please pass as type np array')
 
-        data_bg_rm[y_label], bg = bg_remove.correct_negative_bg(data_bg_rm[y_label], bg) #shift the whole thing up if
-                                                                                        # any negative values
-
         return bg, data_bg_rm
     ##### background end
 
@@ -140,7 +134,7 @@ class Thunder():
         #pass in prominence x2 values
 
         if len(user_params['peak_centres']) == 0 or len(user_params['peak_centres']) < peak_no:
-            if len(user_params['peak_centres']) < peak_no and peak_no:
+            if peak_no and len(user_params['peak_centres']) < peak_no and len(user_params['peak_centres']):
                 logging.warning("you specified less peak centers than peak_numbers."
                      " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             prominence = 1.6
@@ -167,9 +161,8 @@ class Thunder():
             logging.warning("specified more peak centers than no_peaks. cutting the peaks supplied as [:no_peaks]")
             user_params['peak_centres'] = user_params['peak_centres'][:peak_no]
 
-
         if len(user_params['peak_amps']) == 0 or len(user_params['peak_amps']) < peak_no:
-            if len(user_params['peak_amps']) < peak_no and peak_no:
+            if peak_no and len(user_params['peak_amps']) < peak_no and len(user_params['peak_amps']):
                 logging.warning("you specified less peak amps than peak_numbers."
                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             center_x_values = user_params['peak_centres']
@@ -180,7 +173,9 @@ class Thunder():
             user_params['peak_amps'] = user_params['peak_amps'][:peak_no]
 
         if len(user_params['peak_widths']) == 0 or len(user_params['peak_widths']) < peak_no:
-            if len(user_params['peak_widths']) < peak_no and peak_no:
+            if peak_no and len(user_params['peak_widths']) < peak_no and len(user_params['peak_widths']):
+                import ipdb
+                ipdb.set_trace()
                 logging.warning("you specified less peak widths than peak_numbers."
                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             center_x_values = user_params['peak_centres']
@@ -194,7 +189,7 @@ class Thunder():
             user_params['peak_widths'] = user_params['peak_widths'][:peak_no]
 
         if len(user_params['peak_types']) == 0 or len(user_params['peak_types']) < peak_no:
-            if len(user_params['peak_types']) < peak_no and peak_no:
+            if peak_no and len(user_params['peak_types']) < peak_no and len(user_params['peak_types']):
                 logging.warning("you specified less peak types than peak_numbers."
                     " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
             user_params['peak_types'] = ['LorentzianModel' for _ in
@@ -207,8 +202,8 @@ class Thunder():
     ##### peak finding end
 
     ##### peak fitting
-    def fit_peaks(self, data_bg_rm, user_params, y_label, x_label, tightness):
-        user_params['bounds'] = self.make_bounds(user_params, tightness)
+    def fit_peaks(self, data_bg_rm, user_params, y_label, x_label):
+
         specs = self.build_specs(data_bg_rm[x_label].values, data_bg_rm[y_label].values, user_params)
 
         model, peak_params = self.generate_model(specs)
@@ -311,9 +306,9 @@ class Thunder():
     ##### peak fitting end
 
     def plot_all(self):
-        ax = plotting.plot_fits(self.data[self.x_label], self.peaks.eval_components()) # plot each component of the model
-        ax = plotting.plot_background(self.data[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
-        ax = plotting.plot_fit_sum(self.data[self.x_label], self.peaks.best_fit, self.user_params['background'], ax) # plot the fitted data
+        ax = plotting.plot_fits(self.data_bg_rm[self.x_label], self.peaks.eval_components()) # plot each component of the model
+        ax = plotting.plot_background(self.data_bg_rm[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
+        ax = plotting.plot_fit_sum(self.data_bg_rm[self.x_label], self.peaks.best_fit, self.user_params['background'], ax) # plot the fitted data
         try:
             ax = plotting.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
                                          self.peaks.best_fit, ax) #plot a band of uncertainty
@@ -362,62 +357,31 @@ def main(arguments):
     thunder = Thunder(copy.deepcopy(arguments)) # load object
 
     thunder.user_params['background'], thunder.data_bg_rm = thunder.background_finder(thunder.data[thunder.y_label],
-                                                            thunder.y_label, thunder.data[thunder.x_label],
-                                                            thunder.x_label, thunder.user_params['background'],
-                                                                    thunder.data_bg_rm) # then determine the background
+                                thunder.y_label, thunder.data[thunder.x_label],
+                                thunder.x_label, thunder.user_params['background'],
+                                thunder.data_bg_rm, thunder.user_params['user_input']) # then determine the background
 
-    thunder.data_bg_rm[thunder.y_label] = normalisation.svn(thunder.data_bg_rm[thunder.y_label]) # normalise the data
+    #thunder.data_bg_rm[thunder.y_label], (mean_y_data, std_dev) = \
+    #                                        normalisation.svn(thunder.data_bg_rm[thunder.y_label]) # normalise the data
+    #thunder.user_params['background'], _ = normalisation.svn(thunder.user_params['background'],
+    #                                                mean_y_data, std_dev) #normalise with data from bg subtracted data
+    #thunder.data[thunder.y_label], _ = normalisation.svn(thunder.data[thunder.y_label],
+    #                                                mean_y_data, std_dev) #normalise with data from bg subtracted data
 
     thunder.user_params = thunder.peaks_unspecified(thunder.data_bg_rm, thunder.x_label,
                                                     thunder.y_label, thunder.tightness, thunder.user_params)
+    thunder.user_params['bounds'] = thunder.make_bounds(thunder.user_params, thunder.tightness)
 
     # now fit peaks
     thunder.user_params, thunder.specs, thunder.model, thunder.peak_params, thunder.peaks = thunder.fit_peaks(
-                        thunder.data_bg_rm, thunder.user_params, thunder.y_label, thunder.x_label, thunder.tightness)
+                        thunder.data_bg_rm, thunder.user_params, thunder.y_label, thunder.x_label)
+
     thunder.plot_all()
     thunder.fit_report()
 
     return thunder
 
 if __name__ == '__main__':
-    ##### for saving and parsing
-    def parse_args(arg):
-        """
-        convert argparse arguments into a dictionary for consistency later
-        :param arg: argparse parsed args
-        :return: dictionary of parameters
-        """
-        arguments = {}
-        arguments['x_label'] = arg.x_label
-        arguments['y_label'] = arg.y_label
-        arguments['e_label'] = arg.y_label
-        arguments['x_ind'] = arg.x_ind
-        arguments['y_ind'] = arg.y_ind
-        arguments['e_ind'] = arg.e_ind
-        arguments['datapath'] = arg.datapath
-        arguments['user_params'] = arg.user_params
-
-        # TODO: add some checks to user passed data
-
-        return arguments
-
-    def make_dir(dirname, i=1):
-        """
-        function to make a directory, recursively adding _new if that name already exists
-        :param dirname: str: name of directory to create
-        :param i: the run number we are on
-        :return: str: the directory name which was available, and all subsequent data should be saved in
-        """
-        try:
-            os.mkdir(f'{dirname}')
-        except FileExistsError as e:
-            dirname = make_dir(f'{dirname}_new', i + 1)
-            if i == 1:
-                print(e, f'. So I named the file: {dirname}')
-            return dirname
-        return dirname
-    #####
-
     # i.e. called from bash
     import argparse
 
@@ -451,9 +415,10 @@ if __name__ == '__main__':
         arguments = utili.parse_param_file(args.param_file_path) # parse it
     else:
         print('not using params file')
-        arguments = parse_args(args) # else use argparse but put in dictionary form
+        arguments = utili.parse_args(args) # else use argparse but put in dictionary form
 
-    dirname = make_dir('analysed')  # make a dict for the processed data to be saved in
+    curr_time = time.localtime(time.time())
+    dirname = utili.make_dir(f'analysed_{curr_time}')  # make a dict for the processed data to be saved in
 
     thunder = main(arguments)
 

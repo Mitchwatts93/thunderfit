@@ -40,38 +40,24 @@ def parse_param_file(filepath='./params.txt'):
 
 def tightness_setter(tightness):
     tight_dict = {}
+    tight_dict['centre_bounds'] = 1
+    tight_dict['width_bounds'] = (5, 2)
+    tight_dict['amps_bounds'] = (2, 2)
 
-    if tightness == None:
-        #tight_dict['width'] = 10
-        tight_dict['centre_bounds'] = 3
-        tight_dict['width_bounds'] = (10, 3)
-        tight_dict['amps_bounds'] = (10, 3)
-
-    elif tightness == 'low':
-        #tight_dict['width'] = 2
+    if tightness == 'low':
         tight_dict['centre_bounds'] = 10
-        tight_dict['width_bounds'] = (100, 10)
-        tight_dict['amps_bounds'] = (100, 5)
-
-    elif tightness == 'med':
-        #tight_dict['width'] = 10
-        tight_dict['centre_bounds'] = 3
-        tight_dict['width_bounds'] = (10, 3)
-        tight_dict['amps_bounds'] = (10, 3)
-
+        tight_dict['width_bounds'] = (20, 3)
+        tight_dict['amps_bounds'] = (5, 3)
+    elif tightness == "med":
+        pass
     elif tightness == 'high':
-        #tight_dict['width'] = 20
-        tight_dict['centre_bounds'] = 2
-        tight_dict['width_bounds'] = (5, 2)
-        tight_dict['amps_bounds'] = (3, 2)
+        tight_dict['centre_bounds'] = 0.5
+        tight_dict['width_bounds'] = (2, 1)
+        tight_dict['amps_bounds'] = (1.2, 1.2)
 
     else:
         logging.warning(
             'The tightness defined was incorrect format, use low, med or high. Using default med settings')
-        #tight_dict['width'] = 10
-        tight_dict['centre_bounds'] = 3
-        tight_dict['width_bounds'] = (10, 3)
-        tight_dict['amps_bounds'] = (10, 3)
 
     return tight_dict
 ####
@@ -104,4 +90,40 @@ def load_data(datapath, x_ind, y_ind, x_label, y_label, e_ind=None, e_label=None
     data.columns = col_lab   # rename the columns
     data.dropna() # drop any rows with NaN etc in them
     return data
+
+def parse_args(arg):
+    """
+    convert argparse arguments into a dictionary for consistency later
+    :param arg: argparse parsed args
+    :return: dictionary of parameters
+    """
+    arguments = {}
+    arguments['x_label'] = arg.x_label
+    arguments['y_label'] = arg.y_label
+    arguments['e_label'] = arg.y_label
+    arguments['x_ind'] = arg.x_ind
+    arguments['y_ind'] = arg.y_ind
+    arguments['e_ind'] = arg.e_ind
+    arguments['datapath'] = arg.datapath
+    arguments['user_params'] = arg.user_params
+
+    # TODO: add some checks to user passed data
+
+    return arguments
+
+def make_dir(dirname, i=1):
+    """
+    function to make a directory, recursively adding _new if that name already exists
+    :param dirname: str: name of directory to create
+    :param i: the run number we are on
+    :return: str: the directory name which was available, and all subsequent data should be saved in
+    """
+    try:
+        os.mkdir(f'{dirname}')
+    except FileExistsError as e:
+        dirname = make_dir(f'{dirname}_new', i + 1)
+        if i == 1:
+            print(e, f'. So I named the file: {dirname}')
+        return dirname
+    return dirname
 ####
