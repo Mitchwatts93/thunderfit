@@ -1,106 +1,110 @@
-import numpy as np
-import pandas as pd
-from scipy.signal import savgol_filter
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
+import os
+import json
+import dill
 
+#### tools
+def save_thunder(obj, path, filename='thunder.p'):
+    dill.dump(obj, open(os.path.join(path, filename), 'wb'))
 
-def rcf(A, rad):
+def load_thunder(path):
+    obj = dill.load(open(path, 'rb'))
+    return obj
+
+def save_plot(plot, path='.', figname='figure.png'):
+    plot.savefig(os.path.join(path, figname), transparent=True, format='svg')
+
+def save_fit_report(obj, path, filename="report.json"):
+    json.dump(obj, open(os.path.join(path, filename), 'w'))
+
+def parse_param_file(filepath='./params.txt'):
     """
-    Popular rolling circle filter (RCF) routine as described by James et al.: https://doi.org/10.1366%2F12-06766
-    :param A: np matrix of data
-    :param r: radius of circle to filter with
-    :return: L, a numpy array of length len(A) which is the locus of the RCF
+    parse a params file which we assume is a dictionary
+    :param filepath: str: path to params file
+    :return: dictionary of paramters
     """
-    if isinstance(A, pd.core.frame.DataFrame) or isinstance(A, pd.core.series.Series):
-        A = A.values # convert to numpy array
-    elif not isinstance(A, np.ndarray):
-        raise TypeError("Incorrect format passed for A")
+    # maybe use json loads if you end up writing parameter files non-manually
 
-    assert isinstance(rad, int) and abs(rad) == rad, "rad needs to be a positive integer"
-    assert len(A.shape) == 1, "A needs to be a single column"
+    with open(filepath, 'r') as f:
+        arguments = json.load(f)
+        f.close()
 
-    RC = semi_circle_array(rad)
-    n = len(A)
+    # TODO: add some checks to user passed data
+    return arguments
+#### tools
 
-    if len(RC) >= n:
-        print('something has gone wrong')
-        raise RuntimeError("The data has less points than the selected radius!")
+#### parsing user params
+def peak_details(params):
+    cents_specified = len(params['peak_centres'])
+    types_specified = len(params['peak_types'])
+    widths_specified = len(params['peak_widths'])
+    amps_specified = len(params['peak_amps'])
 
-    A_sub, RC_sub = generate_sub_matrices(A, rad, RC, n)
+    return {'cents_specified':cents_specified,
+            'types_specified': types_specified,
+            'widths_specified': widths_specified,
+            'amps_specified': amps_specified}
 
-    D = generate_diff_matrix(A_sub, RC_sub)
+def tightness_setter(tightness):
+    tight_dict = {}
+    if tightness == None:
+        tight_dict['width'] = 10
+        tight_dict['centre_bounds'] = 10
+        tight_dict['width_bounds'] = (10, 3)
 
-    return D
+    elif tightness == 'low':
+        tight_dict['width'] = 2
+        tight_dict['centre_bounds'] = 20
+        tight_dict['width_bounds'] = (100, 10)
 
-def semi_circle_array(rad):
-    """Generate an array of length 2r+1 with values corresponding to points on a semi circle"""
-    RC = np.array([np.sqrt(rad**2 - (i - rad)**2) for i in range(2*rad + 1)])
-    return RC
+    elif tightness == 'med':
+        tight_dict['width'] = 10
+        tight_dict['centre_bounds'] = 10
+        tight_dict['width_bounds'] = (10, 3)
 
-def generate_sub_matrices(A, rad, RC, n):
+    elif tightness == 'high':
+        tight_dict['width'] = 20
+        tight_dict['centre_bounds'] = 5
+        tight_dict['width_bounds'] = (5, 2)
+
+    else:
+        logging.warning(
+            'The tightness defined was incorrect format, use low, med or high. Using default med settings')
+        tight_dict['width'] = 10
+        tight_dict['centre_bounds'] = 10
+        tight_dict['width_bounds'] = (10, 3)
+
+    return tight_dict
+####
+#### loading data
+def load_data(datapath, x_ind, y_ind, x_label, y_label, e_ind=None, e_label=None):
     """
-    Generate the sub matrices used in RCF routine
-    :param A: Data matrix, length n
-    :param rad: radius of RCF filter
-    :param RC: np array of length 2r+1 with
-    :param n:
-    :return: A_sub, RC_sub, lists of same dimensions, sampled according to paper: https://doi.org/10.1366%2F12-06766
+    load in data as a pandas df - save by modifying self.data, use object params to load
+    :return: None
     """
-    ni = n
-    A_sub = []
-    RC_sub = []
-
-    for i in range(len(A)): # vectorise this when you can be bothered
-        if i < (rad + 1):
-            a_sub = A[:(i + rad + 1)]
-            rc_sub = RC[(rad - i):(2*rad + 1)]
-            A_sub.append(a_sub)
-            RC_sub.append(rc_sub)
-
-        elif (rad + 1) <= i <= (n - (rad + 1)):
-            a_sub = A[(i - rad):(i + rad + 1)]
-            rc_sub = RC
-            A_sub.append(a_sub)
-            RC_sub.append(rc_sub)
-
-        elif i > (n - (rad + 1)):
-            a_sub = A[(i - rad):(n + 1)]
-            rc_sub = RC[:(rad + (n - i))]
-            A_sub.append(a_sub)
-            RC_sub.append(rc_sub)
-
+    if '.h5' in datapath: # if the data is already stored as a pandas df
+        store = pd.HDFStore(datapath)
+        keys = store.keys()
+        if len(keys) > 1:
+            LOGGER.warning("Too many keys in the hdfstore, will assume all should be concated")
+            LOGGER.warning("not sure this concat works yet")
+            data = store.concat([store[key] for key in keys]) # not sure this will work! concat all keys dfs together
         else:
-            print('something has gone wrong')
-            import ipdb
-            ipdb.set_trace()
-            raise RuntimeError("Something has gone wrong and I don't know why")
+            data = store[keys[0]] # if only one key then we use it as the datafile
+    else: # its a txt or csv file
+        data = pd.read_csv(datapath, header=None, sep='\t') # load in, works for .txt and .csv
+        # this needs to be made more flexible/user defined
 
-    return A_sub, RC_sub
-
-def generate_diff_matrix(A_sub, RC_sub):
-    """
-    Generate a difference matrix, which will be len(A_sub)=len(RC_sub). Each element will be the minimum of matrix
-    formed by the difference of AC_sub_i and RC_sub_i at each i (element).
-    :param A_sub: List of np arrays
-    :param RC_sub: List of np arrays
-    :return: D, Difference matrix of shape (len(A_sub),), elements as described above
-    """
-    D = []
-    for i in range(len(A_sub)):
-        diff = A_sub[i] - RC_sub[i]
-        D.append(np.min(diff))
-
-    D = np.array(D)
-    return D
-
-def smooth(L, window_length, polyorder):
-    """
-    Savgol filter applied to data
-    :param L: the data to be smoothed
-    :param window_length: positive odd integer
-    :param polyorder: must be less than window length
-    :return:
-    """
-    return savgol_filter(L, window_length, polyorder, mode='mirror')
+    col_ind = [x_ind, y_ind]
+    col_lab = [x_label, y_label]
+    if e_ind: # if we have specified this column then we use it, otherwise just x and y
+        assert (len(data.columns) >= 2), "You have specified an e_ind but there are less than 3 columns in the data"
+        col_ind.append(e_ind)
+        col_lab.append(e_label)
+    data = data[col_ind]  # keep only these columns, don't want to waste memory
+    data.columns = col_lab   # rename the columns
+    data.dropna() # drop any rows with NaN etc in them
+    return data
+####

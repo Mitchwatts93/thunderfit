@@ -21,7 +21,9 @@ import matplotlib.pyplot as plt
 import lmfit
 from lmfit import models
 
+import scarf
 import utilities as utili
+import plotting
 
 
 # TODO: need to fail if peak fitting doesn't work!
@@ -60,12 +62,12 @@ class Thunder():
         else:
             raise TypeError('Cannot convert input to Thunder object')
 
-        self.data = self.load_data(self.datapath, self.x_ind, self.y_ind, self.x_label, self.y_label, self.e_ind,
+        self.data = utili.load_data(self.datapath, self.x_ind, self.y_ind, self.x_label, self.y_label, self.e_ind,
                                    self.e_label) # load the data
 
-        self.tightness = self.tightness_setter(self.user_params['tightness'])
+        self.tightness = utili.tightness_setter(self.user_params['tightness'])
 
-    #### loading data and thunder object
+    #### loading thunder object
     def overwrite_thunder(self, inp):
         thun = inp
         self.x_ind = thun.x_ind
@@ -93,68 +95,6 @@ class Thunder():
         except KeyError as e:
             LOGGER.info(f"KeyError: Missing field in the data dictionary: {e}")
         self.user_params = inp.get('fit_params', self.user_params)
-
-    @staticmethod
-    def load_data(datapath, x_ind, y_ind, x_label, y_label, e_ind=None, e_label=None):
-        """
-        load in data as a pandas df - save by modifying self.data, use object params to load
-        :return: None
-        """
-        if '.h5' in datapath: # if the data is already stored as a pandas df
-            store = pd.HDFStore(datapath)
-            keys = store.keys()
-            if len(keys) > 1:
-                LOGGER.warning("Too many keys in the hdfstore, will assume all should be concated")
-                LOGGER.warning("not sure this concat works yet")
-                data = store.concat([store[key] for key in keys]) # not sure this will work! concat all keys dfs together
-            else:
-                data = store[keys[0]] # if only one key then we use it as the datafile
-        else: # its a txt or csv file
-            data = pd.read_csv(datapath, header=None, sep='\t') # load in, works for .txt and .csv
-            # this needs to be made more flexible/user defined
-
-        col_ind = [x_ind, y_ind]
-        col_lab = [x_label, y_label]
-        if e_ind: # if we have specified this column then we use it, otherwise just x and y
-            assert (len(data.columns) >= 2), "You have specified an e_ind but there are less than 3 columns in the data"
-            col_ind.append(e_ind)
-            col_lab.append(e_label)
-        data = data[col_ind]  # keep only these columns, don't want to waste memory
-        data.columns = col_lab   # rename the columns
-        data.dropna() # drop any rows with NaN etc in them
-        return data
-
-    @staticmethod
-    def tightness_setter(tightness):
-        tight_dict = {}
-        if tightness == None:
-            tight_dict['width'] = 10
-            tight_dict['centre_bounds'] = 10
-            tight_dict['width_bounds'] = (10, 3)
-
-        elif tightness == 'low':
-            tight_dict['width'] = 2
-            tight_dict['centre_bounds'] = 20
-            tight_dict['width_bounds'] = (100, 10)
-
-        elif tightness == 'med':
-            tight_dict['width'] = 10
-            tight_dict['centre_bounds'] = 10
-            tight_dict['width_bounds'] = (10, 3)
-
-        elif tightness == 'high':
-            tight_dict['width'] = 20
-            tight_dict['centre_bounds'] = 5
-            tight_dict['width_bounds'] = (5, 2)
-
-        else:
-            logging.warning(
-                'The tightness defined was incorrect format, use low, med or high. Using default med settings')
-            tight_dict['width'] = 10
-            tight_dict['centre_bounds'] = 10
-            tight_dict['width_bounds'] = (10, 3)
-
-        return tight_dict
     #### end loading
 
     #### background
@@ -184,7 +124,7 @@ class Thunder():
 
             while True:
                 while True:
-                    D = utili.rcf(data_bg_rm[y_label], rad)
+                    D = scarf.rcf(data_bg_rm[y_label], rad)
                     fig, ax = plt.subplots()
                     ax.plot(x_data, D)
                     ax.plot(x_data, data_bg_rm[y_label])
@@ -222,7 +162,7 @@ class Thunder():
                 # then apply SG filter to L
                 while True:
                     try:
-                        L_sg = utili.smooth(L, window_length, poly_order)
+                        L_sg = scarf.smooth(L, window_length, poly_order)
                         fig, ax = plt.subplots()
                         ax.plot(x_data, L_sg)
                         ax.plot(x_data, data_bg_rm[y_label])
@@ -278,7 +218,7 @@ class Thunder():
             data_bg_rm[x_label] = x_data
 
         elif bg == 'OLD':
-            bg = self.find_background(y_data) # find a background the old way
+            bg = self.find_background(y_data, self.residual_baseline, self.baseline_als) # find a background the old way
             data_bg_rm[y_label] = y_data - bg  # subtract background from the data
             data_bg_rm[x_label] = x_data
 
@@ -294,23 +234,28 @@ class Thunder():
         self.data_bg_rm = data_bg_rm
 
     # old
-    def find_background(self, data):
-        params = np.array([0.01, 10 ** 5])
+    @staticmethod
+    def find_background(data, residual_baseline_func, baseline_als_func):
+        params = (np.array([0.01, 10 ** 5]), baseline_als_func)
         bounds = [np.array([0.001, 10 ** 5]), np.array([0.1, 10 ** 9])]
-        baseline_values = least_squares(self.residual_baseline, params[:], args=(data.values,),
+        baseline_values = least_squares(residual_baseline_func, params, args=(data.values,),
                                   bounds=bounds)
 
         p, lam = baseline_values['x']
-        baseline_values = self.baseline_als(data.values, lam, p, niter=10)
+        baseline_values = baseline_als_func(data.values, lam, p, niter=10)
         return baseline_values
+
     # old
-    def residual_baseline(self, params, y):
+    @staticmethod
+    def residual_baseline(params, y):
+        baseline_als_func, params = params
         p, lam = params
         niter = 10
-        baseline = self.baseline_als(y, lam, p, niter)
+        baseline = baseline_als_func(y, lam, p, niter)
         residual = y - baseline
         return residual
     #old
+
     @staticmethod
     def baseline_als(y, lam, p, niter=10):
         L = len(y)
@@ -508,87 +453,25 @@ class Thunder():
         return composite_model, params
     ##### peak fitting end
 
-    ##### plotting
-    #todo fix the assertions in these
-    @staticmethod
-    def plot_data(x, y, ax=False, line='r-', linethickness=0.5):
-        if ax:
-            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                 " an axes object"
-        else:
-            fig, ax = plt.subplots()
-
-        ax.plot(x, y, line, linewidth=linethickness, alpha=0.5)
-        return ax
-
-    @staticmethod
-    def plot_fits(x, peaks, ax=False, linethickness=0.5):
-        if ax:
-            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                " an axes object"
-        else:
-            fig, ax = plt.subplots()
-
-        for i, peak in enumerate(peaks):
-            ax.plot(x, peaks[peak], linewidth=linethickness)
-        return ax
-
-    @staticmethod
-    def plot_background(x, background_data, ax=False, line='b--', linethickness=0.5):
-        if ax:
-            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                 " an axes object"
-        else:
-            fig, ax = plt.subplots()
-
-        ax.plot(x, background_data, line, linewidth=linethickness)
-        return ax
-
-    @staticmethod
-    def plot_fit_sum(x, peak_sum, background, ax=False, line='k-', linethickness=0.5): # option of including background
-        if ax:
-            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                 " an axes object"
-        else:
-            fig, ax = plt.subplots()
-
-        sum = peak_sum + background
-
-        ax.plot(x, sum, line, linewidth=linethickness)
-        return ax
-
-    @staticmethod
-    def plot_uncertainty_curve(x, eval_unc, peak_sum, ax=False, color="#ABABAB"):
-        if ax:
-            #assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \
-                                                                 " an axes object"
-        else:
-            fig, ax = plt.subplots()
-
-        ax.fill_between(x, peak_sum - eval_unc, peak_sum + eval_unc, color=color) #plot a grey band of uncertainty
-
-        return ax
-
     def plot_all(self):
-        ax = self.plot_fits(self.data[self.x_label], self.peaks.eval_components()) # plot each component of the model
-        ax = self.plot_background(self.data[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
-        ax = self.plot_fit_sum(self.data[self.x_label], self.peaks.best_fit, self.user_params['background'], ax) # plot the fitted data
+        ax = plotting.plot_fits(self.data[self.x_label], self.peaks.eval_components()) # plot each component of the model
+        ax = plotting.plot_background(self.data[self.x_label], self.user_params['background'], ax) #plot the background supplied by user
+        ax = plotting.plot_fit_sum(self.data[self.x_label], self.peaks.best_fit, self.user_params['background'], ax) # plot the fitted data
         try:
-            ax = self.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
+            ax = plotting.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
                                          self.peaks.best_fit, ax) #plot a band of uncertainty
         except TypeError:
             logging.warning('There are not uncertainties available for some reason - '
                          'try lowering the tightness of automatic bounds')
-        ax = self.plot_data(self.data[self.x_label], self.data[self.y_label], ax)  # plot the raw data
+        ax = plotting.plot_data(self.data[self.x_label], self.data[self.y_label], ax)  # plot the raw data
 
         ax.minorticks_on()
         ax.grid(which='minor', alpha=0.2)
         ax.grid(which='major', alpha=0.5)
 
         self.plot = plt
-    ##### plotting end
 
-
+    #this needs some fixing
     def fit_report(self):
         self.fit_data = {mod_no:{} for mod_no in range(len(self.user_params['peak_types']))}
 
@@ -617,17 +500,6 @@ class Thunder():
                 self.fit_data[model_no][param_type] = fit_info
 
 
-def peak_details(params):
-    cents_specified = len(params['peak_centres'])
-    types_specified = len(params['peak_types'])
-    widths_specified = len(params['peak_widths'])
-    amps_specified = len(params['peak_amps'])
-
-    return {'cents_specified':cents_specified,
-            'types_specified': types_specified,
-            'widths_specified': widths_specified,
-            'amps_specified': amps_specified}
-
 # TODO move bounds making into a new function in main
 def main(arguments):
     thunder = Thunder(copy.deepcopy(arguments)) # load object
@@ -635,7 +507,7 @@ def main(arguments):
     thunder.background_finder() # then determine the background
     thunder.data_bg_rm[thunder.y_label] = thunder.normalisation(thunder.data_bg_rm[thunder.y_label]) # normalise the data
 
-    specified_dict = peak_details(thunder.user_params)
+    specified_dict = utili.peak_details(thunder.user_params)
     thunder.peaks_unspecified(specified_dict)
 
     # now fit peaks
@@ -644,38 +516,6 @@ def main(arguments):
     thunder.fit_report()
 
     return thunder
-
-
-#### tools
-def save_thunder(obj, path, filename='thunder.p'):
-    dill.dump(obj, open(os.path.join(path, filename), 'wb'))
-
-def load_thunder(path):
-    obj = dill.load(open(path, 'rb'))
-    return obj
-
-def save_plot(plot, path='.', figname='figure.png'):
-    plot.savefig(os.path.join(path, figname), transparent=True, format='svg')
-
-def save_fit_report(obj, path, filename="report.json"):
-    json.dump(obj, open(os.path.join(path, filename), 'w'))
-
-def parse_param_file(filepath='./params.txt'):
-    """
-    parse a params file which we assume is a dictionary
-    :param filepath: str: path to params file
-    :return: dictionary of paramters
-    """
-    # maybe use json loads if you end up writing parameter files non-manually
-
-    with open(filepath, 'r') as f:
-        arguments = json.load(f)
-        f.close()
-
-    # TODO: add some checks to user passed data
-    return arguments
-#### tools
-
 
 if __name__ == '__main__':
     ##### for saving and parsing
@@ -746,7 +586,7 @@ if __name__ == '__main__':
 
     if args.param_file_path: # if there is a params file then use it
         LOGGER.info('Using params file')
-        arguments = parse_param_file(args.param_file_path) # parse it
+        arguments = utili.parse_param_file(args.param_file_path) # parse it
     else:
         print('not using params file')
         arguments = parse_args(args) # else use argparse but put in dictionary form
@@ -757,6 +597,6 @@ if __name__ == '__main__':
 
     # save a plot of the figure and the thunder object
     dataname = os.path.basename(arguments['datapath'])
-    save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
-    save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
-    save_fit_report(thunder.fit_data, path=dirname, filename=f"{dataname}_report.json")
+    utili.save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
+    utili.save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
+    utili.save_fit_report(thunder.fit_data, path=dirname, filename=f"{dataname}_report.json")

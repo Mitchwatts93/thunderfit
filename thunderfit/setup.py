@@ -1,8 +1,8 @@
 import setuptools
 
-
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+def readme():
+    with open("README.rst") as f:
+        return f.read()
 
 
 setuptools.setup(
@@ -10,8 +10,7 @@ setuptools.setup(
     python_requires='>3.6',
     version='1.0.7.4',
     description='Thunderfit fitting code',
-    long_description='Routines to allow robust fitting to data. Mainly built for Raman analysis but flexible enough for '
-                     'most data types',
+    long_description=readme(),
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
@@ -30,4 +29,8 @@ setuptools.setup(
         'matplotlib>=2.2.3',
         'pandas>=0.23.4',
         'lmfit>=0.9.11'],
-    include_package_data=True)
+    include_package_data=True,
+    test_suite='nose.collector',
+    tests_require=['nose'],
+    scripts=['bin/fit-data'],
+    )
