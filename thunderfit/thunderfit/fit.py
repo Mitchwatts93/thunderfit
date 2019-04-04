@@ -132,8 +132,10 @@ class Thunder():
     ##### background end
 
     ##### peak finding
+    # maybe tidy this up a bit?
     @staticmethod
     def peaks_unspecified(data_bg_rm, x_label, y_label, tightness, user_params):
+
         peak_no = user_params["no_peaks"]
         #pass in prominence x2 values
 
@@ -153,6 +155,7 @@ class Thunder():
                 user_params['peak_centres'] = data_bg_rm[x_label][center_indices].values
                 user_params['peak_amps'] = peak_amps
                 user_params['peak_widths'] = peak_widths
+                user_params["no_peaks"] = len(center_indices)
 
             else: # just find the centers
                 center_indices = peak_finding.find_cents(prominence, data_bg_rm[y_label])
@@ -204,45 +207,47 @@ class Thunder():
     ##### peak finding end
 
     ##### peak fitting
-    def fit_peaks(self):
-        self.user_params = self.make_bounds(self.data_bg_rm, self.user_params, self.y_label)
-        self.specs = self.build_specs(self.data_bg_rm[self.x_label].values, self.data_bg_rm[self.y_label].values, self.user_params)
+    def fit_peaks(self, data_bg_rm, user_params, y_label, x_label, tightness):
+        user_params['bounds'] = self.make_bounds(user_params, tightness)
+        specs = self.build_specs(data_bg_rm[x_label].values, data_bg_rm[y_label].values, user_params)
 
-        self.model, self.peak_params = self.generate_model(self.specs)
-        self.peaks = self.model.fit(self.specs['y_bg_rm'], self.peak_params, x=self.specs['x_bg_rm'])
-        if not self.peaks.success:
+        model, peak_params = self.generate_model(specs)
+        peaks = model.fit(specs['y_bg_rm'], peak_params, x=specs['x_bg_rm'])
+        if not peaks.success:
             logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
                          'inputting a background, peak bounds and peak info.')
-        self.peak_params = self.peaks.best_values
+        peak_params = peaks.best_values
 
-    def make_bounds(self, data_bg_rm, user_params, y_label):
-        if user_params['bounds']['centers'] is None:
-            l_cent_bounds = [cent - self.tightness['centre_bounds'] *
+        return user_params, specs, model, peak_params, peaks
+
+    @staticmethod
+    def make_bounds(user_params, tightness):
+        bounds = {}
+        peaks = len(user_params['no_peaks'])
+
+        if len(user_params['bounds']['centers']) != peaks:
+            l_cent_bounds = [cent - tightness['centre_bounds'] *
                              user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
-            u_cent_bounds = [cent + self.tightness['centre_bounds'] *
+            u_cent_bounds = [cent + tightness['centre_bounds'] *
                              user_params['peak_widths'][i] for i, cent in enumerate(user_params['peak_centres'])]
             cent_bounds = list(zip(l_cent_bounds, u_cent_bounds))
-            user_params['bounds']['centers'] = cent_bounds
+            bounds['centers'] = cent_bounds
 
-        if user_params['bounds']['widths'] is None:
+        if len(user_params['bounds']['widths']) != peaks:
             peak_widths = user_params['peak_widths']
-            l_width_bounds = [width / self.tightness['width_bounds'][0] for width in peak_widths]
-            u_width_bounds = [width * self.tightness['width_bounds'][1] for width in peak_widths]
+            l_width_bounds = [width / tightness['width_bounds'][0] for width in peak_widths]
+            u_width_bounds = [width * tightness['width_bounds'][1] for width in peak_widths]
             width_bounds = list(zip(l_width_bounds, u_width_bounds))
-            user_params['bounds']['widths'] = width_bounds
+            bounds['widths'] = width_bounds
 
-        if user_params['bounds']['amps'] is None:
+        if len(user_params['bounds']['amps']) != peaks:
             peak_amps = user_params['peak_amps']
-            amps_lb = data_bg_rm[y_label].mean() # maybe change this to min
-            amps_ub = data_bg_rm[y_label].max()
-            l_amp_bounds = [amps_lb for _ in peak_amps]
-            u_amp_bounds = [amps_ub for _ in peak_amps]
+            l_amp_bounds = [amp / tightness['amps_bounds'][0] for amp in peak_amps]
+            u_amp_bounds = [amp * tightness['amps_bounds'][1] for amp in peak_amps]
             amp_bounds = list(zip(l_amp_bounds, u_amp_bounds))
-            user_params['bounds']['amps'] = amp_bounds
+            bounds['amps'] = amp_bounds
 
-        # todo currently our bounds are set by the data ranges. It may make sense to define
-        # narrower ranges around the peaks themselves
-        return user_params
+        return bounds
 
     @staticmethod
     def build_specs(x_bg_rm, y_bg_rm, user_params):
@@ -281,7 +286,7 @@ class Thunder():
 
                 model.set_param_hint('sigma', min=w_min, max=w_max)
                 model.set_param_hint('center', min=x_min, max=x_max)
-                model.set_param_hint('height', min=y_min, max=1.1 * y_max)
+                model.set_param_hint('height', min=y_min, max=y_max)
                 model.set_param_hint('amplitude', min=1e-6)
 
                 # default guess is horrible!! do not use guess()
@@ -304,7 +309,6 @@ class Thunder():
 
         return composite_model, params
     ##### peak fitting end
-
 
     def plot_all(self):
         ax = plotting.plot_fits(self.data[self.x_label], self.peaks.eval_components()) # plot each component of the model
@@ -368,7 +372,8 @@ def main(arguments):
                                                     thunder.y_label, thunder.tightness, thunder.user_params)
 
     # now fit peaks
-    thunder.fit_peaks()
+    thunder.user_params, thunder.specs, thunder.model, thunder.peak_params, thunder.peaks = thunder.fit_peaks(
+                        thunder.data_bg_rm, thunder.user_params, thunder.y_label, thunder.x_label, thunder.tightness)
     thunder.plot_all()
     thunder.fit_report()
 

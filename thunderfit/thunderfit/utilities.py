@@ -40,32 +40,38 @@ def parse_param_file(filepath='./params.txt'):
 
 def tightness_setter(tightness):
     tight_dict = {}
+
     if tightness == None:
-        tight_dict['width'] = 10
-        tight_dict['centre_bounds'] = 10
+        #tight_dict['width'] = 10
+        tight_dict['centre_bounds'] = 3
         tight_dict['width_bounds'] = (10, 3)
+        tight_dict['amps_bounds'] = (10, 3)
 
     elif tightness == 'low':
-        tight_dict['width'] = 2
-        tight_dict['centre_bounds'] = 20
+        #tight_dict['width'] = 2
+        tight_dict['centre_bounds'] = 10
         tight_dict['width_bounds'] = (100, 10)
+        tight_dict['amps_bounds'] = (100, 5)
 
     elif tightness == 'med':
-        tight_dict['width'] = 10
-        tight_dict['centre_bounds'] = 10
+        #tight_dict['width'] = 10
+        tight_dict['centre_bounds'] = 3
         tight_dict['width_bounds'] = (10, 3)
+        tight_dict['amps_bounds'] = (10, 3)
 
     elif tightness == 'high':
-        tight_dict['width'] = 20
-        tight_dict['centre_bounds'] = 5
+        #tight_dict['width'] = 20
+        tight_dict['centre_bounds'] = 2
         tight_dict['width_bounds'] = (5, 2)
+        tight_dict['amps_bounds'] = (3, 2)
 
     else:
         logging.warning(
             'The tightness defined was incorrect format, use low, med or high. Using default med settings')
-        tight_dict['width'] = 10
-        tight_dict['centre_bounds'] = 10
+        #tight_dict['width'] = 10
+        tight_dict['centre_bounds'] = 3
         tight_dict['width_bounds'] = (10, 3)
+        tight_dict['amps_bounds'] = (10, 3)
 
     return tight_dict
 ####
