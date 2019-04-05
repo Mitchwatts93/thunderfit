@@ -107,21 +107,21 @@ def smooth(L, window_length, polyorder):
     """
     return savgol_filter(L, window_length, polyorder, mode='mirror')
 
-def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label, user_input=False):
+def perform_scarf(x_data, y_data, scarf_params=False):
     bg = np.array([0 for _ in y_data], dtype=np.float64)
     rad = 70
     b = 90
     window_length, poly_order = 51, 3
     L_sg = 0
-    data_bg_rm[y_label] = y_data
+    data_bg_rm_y = y_data #.copy????
 
-    if not user_input:
+    if not scarf_params:
         while True:
             while True:
-                D = rcf(data_bg_rm[y_label], rad)
+                D = rcf(data_bg_rm_y, rad)
                 fig, ax = plt.subplots()
                 ax.plot(x_data, D)
-                ax.plot(x_data, data_bg_rm[y_label])
+                ax.plot(x_data, data_bg_rm_y)
                 print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
                 plt.show(block=True)
                 ans = input("If you are happy with the plot, type y. if not then please type a new rad")
@@ -137,7 +137,7 @@ def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label, user_input=False
             while True:  # now estimate a baseline to add to D to get L
                 fig, ax = plt.subplots()
                 ax.plot(x_data, L)
-                ax.plot(x_data, data_bg_rm[y_label])
+                ax.plot(x_data, data_bg_rm_y)
                 print(f"Please look at the following bg with a shift={b}")
                 plt.show(block=True)
                 ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
@@ -159,7 +159,7 @@ def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label, user_input=False
                     L_sg = smooth(L, window_length, poly_order)
                     fig, ax = plt.subplots()
                     ax.plot(x_data, L_sg)
-                    ax.plot(x_data, data_bg_rm[y_label])
+                    ax.plot(x_data, data_bg_rm_y)
                     print(f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
                           f"{window_length}, {poly_order}")
                     plt.show(block=True)
@@ -184,14 +184,14 @@ def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label, user_input=False
             # final question before exiting
             fig, ax = plt.subplots()
             ax.plot(x_data, L)
-            ax.plot(x_data, data_bg_rm[y_label])
+            ax.plot(x_data, data_bg_rm_y)
             print(f"Please look at the following bg with selected parameters")
             plt.show(block=True)
             ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
                         "typing repeat will add an additional bg subtraction to this one")
             if ans == 'y':
                 bg += L
-                data_bg_rm[y_label] -= L
+                data_bg_rm_y -= L
                 break
             elif ans == 'n':
                 pass
@@ -199,18 +199,17 @@ def perform_scarf(data_bg_rm, y_data, y_label, x_data, x_label, user_input=False
                 bg += L
                 print("apply two bg removal steps, this will mean the background just specified will be removed "
                       "from the data")
-                data_bg_rm[y_label] -= L  # remove the bg found here from the original data and go again
+                data_bg_rm_y -= L  # remove the bg found here from the original data and go again
             else:
                 print("You entered an incorrect answer! Trying whole fitting routine again...")
 
     else:
         rad, b, window_length, poly_order = \
-            user_input['rad'], user_input['b'], user_input['window_length'], user_input['poly_order']
-        D = rcf(data_bg_rm[y_label], rad)
+            scarf_params['rad'], scarf_params['b'], scarf_params['window_length'], scarf_params['poly_order']
+        D = rcf(data_bg_rm_y, rad)
         L = D + b
         L = smooth(L, window_length, poly_order)
         bg += L
-        data_bg_rm[y_label] -= L
+        data_bg_rm_y -= L
 
-    data_bg_rm[x_label] = x_data
-    return data_bg_rm, bg
+    return data_bg_rm_y, bg

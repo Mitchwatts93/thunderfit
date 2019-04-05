@@ -20,24 +20,15 @@ def save_plot(plot, path='.', figname='figure.png'):
 def save_fit_report(obj, path, filename="report.json"):
     json.dump(obj, open(os.path.join(path, filename), 'w'))
 
-def parse_param_file(filepath='./params.txt'):
-    """
-    parse a params file which we assume is a dictionary
-    :param filepath: str: path to params file
-    :return: dictionary of paramters
-    """
-    # maybe use json loads if you end up writing parameter files non-manually
 
-    with open(filepath, 'r') as f:
-        arguments = json.load(f)
-        f.close()
 
-    # TODO: add some checks to user passed data
-    return arguments
+def find_closest_indices(list1, list2):
+    list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(list1[i] - cent))
+                                for cent in list2]
+    return list_of_matching_indices
 #### tools
 
-#### parsing user params
-
+### user inputs and loading etc
 def tightness_setter(tightness):
     tight_dict = {}
     tight_dict['centre_bounds'] = 1
@@ -60,9 +51,8 @@ def tightness_setter(tightness):
             'The tightness defined was incorrect format, use low, med or high. Using default med settings')
 
     return tight_dict
-####
-#### loading data
-def load_data(datapath, x_ind, y_ind, x_label, y_label, e_ind=None, e_label=None):
+
+def load_data(datapath, x_ind, y_ind, e_ind=None):
     """
     load in data as a pandas df - save by modifying self.data, use object params to load
     :return: None
@@ -80,16 +70,33 @@ def load_data(datapath, x_ind, y_ind, x_label, y_label, e_ind=None, e_label=None
         data = pd.read_csv(datapath, header=None, sep='\t') # load in, works for .txt and .csv
         # this needs to be made more flexible/user defined
 
-    col_ind = [x_ind, y_ind]
-    col_lab = [x_label, y_label]
     if e_ind: # if we have specified this column then we use it, otherwise just x and y
         assert (len(data.columns) >= 2), "You have specified an e_ind but there are less than 3 columns in the data"
-        col_ind.append(e_ind)
-        col_lab.append(e_label)
-    data = data[col_ind]  # keep only these columns, don't want to waste memory
-    data.columns = col_lab   # rename the columns
+        e_data = data[e_ind].values
+    else:
+        e_data = None
+
     data.dropna() # drop any rows with NaN etc in them
-    return data
+
+    x_data = data[x_ind].values
+    y_data = data[y_ind].values
+
+    return x_data, y_data, e_data
+
+def parse_param_file(filepath='./params.txt'):
+    """
+    parse a params file which we assume is a dictionary
+    :param filepath: str: path to params file
+    :return: dictionary of paramters
+    """
+    # maybe use json loads if you end up writing parameter files non-manually
+
+    with open(filepath, 'r') as f:
+        arguments = json.load(f)
+        f.close()
+
+    # TODO: add some checks to user passed data
+    return arguments
 
 def parse_args(arg):
     """
@@ -98,17 +105,21 @@ def parse_args(arg):
     :return: dictionary of parameters
     """
     arguments = {}
-    arguments['x_label'] = arg.x_label
-    arguments['y_label'] = arg.y_label
-    arguments['e_label'] = arg.y_label
     arguments['x_ind'] = arg.x_ind
     arguments['y_ind'] = arg.y_ind
     arguments['e_ind'] = arg.e_ind
     arguments['datapath'] = arg.datapath
-    arguments['user_params'] = arg.user_params
+    arguments['no_peaks'] = arg.no_peaks
+    arguments['background'] = arg.background
+    arguments['scarf_params'] = arg.scarf_params
+    arguments['peak_types'] = arg.peak_types
+    arguments['peak_centres'] = arg.peak_centres
+    arguments['peak_widths'] = arg.peak_widths
+    arguments['peak_amps'] = arg.peak_amps
+    arguments['tightness'] = arg.tightness
+    arguments['bounds'] = arg.bounds
 
     # TODO: add some checks to user passed data
-
     return arguments
 
 def make_dir(dirname, i=1):
@@ -127,3 +138,4 @@ def make_dir(dirname, i=1):
         return dirname
     return dirname
 ####
+
