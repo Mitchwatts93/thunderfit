@@ -95,19 +95,20 @@ def main():
     else:
         print('not using params file')
         arguments = utili.parse_args(args)  # else use argparse but put in dictionary form
-    import ipdb
-    ipdb.set_trace()
 
     curr_time = time.localtime(time.time())  # reformat this so its nice
     dirname = utili.make_dir(f'analysed_{curr_time}')  # make a dict for the processed data to be saved in
 
     thunder = thundobj.main(arguments) # create a Thunder object
+
     import ipdb
     ipdb.set_trace()
 
     thunder.background, thunder.y_data_bg_rm = bg_remove.background_finder(thunder.x_data, thunder.y_data,
                                                                            thunder.background, thunder.scarf_params)
                                                                            # determine the background
+    import ipdb
+    ipdb.set_trace()
     if args.normalise:
         thunder.y_data_bg_rm, thunder.background, thunder.y_data_norm = \
                                                  normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
