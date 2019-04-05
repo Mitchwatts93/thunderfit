@@ -4,15 +4,15 @@ LOGGER.setLevel(logging.INFO)
 import difflib
 import re
 from typing import Dict, Union
+from typing import NewType
+nparray = NewType('nparray', np.ndarray)
+from typing import AnyStr
 import copy
 
 import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from typing import NewType
-nparray = NewType('nparray', np.ndarray)
-
 
 import lmfit
 
@@ -43,7 +43,7 @@ class Thunder():
         self.datapath: str = './data.txt'
 
         self.no_peaks: int = 0
-        self.background: Union[str, nparray] = "SCARF"
+        self.background: Union[AnyStr, nparray] = "SCARF"
         self.scarf_params: Union[None, Dict] = None
         self.peak_types: Union[None, list] = []
         self.peak_centres: Union[None, list] = []

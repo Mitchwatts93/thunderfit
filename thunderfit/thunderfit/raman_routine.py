@@ -3,11 +3,12 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import os
 import time
-from typing import Union, Dict
 import numpy as np
 
+from typing import Union, Dict
 from typing import NewType
 nparray = NewType('nparray', np.ndarray)
+from typing import AnyStr
 
 from . import utilities as utili
 from . import thundobj
@@ -35,7 +36,7 @@ def parse_user_args():
     parser.add_argument('--no_peaks', type=int, default=None,
                         help='the number of peaks you would like fitted. If you have specified bounds or peak infomation'
                              '\n e.g. centres then please make sure this is the same length as that list')
-    parser.add_argument('--background', type=Union[str, nparray], default="SCARF",
+    parser.add_argument('--background', type=Union[AnyStr, nparray], default="SCARF",
                         help="The stype of background you'd like to fit. 'SCARF' is a rolling ball solgay_filter "
                              "background subtraction. \n 'OLD' uses a soon-to-be not implemented numerical method"
                              "which doesn't work too well. \n 'no' specifies that you would like no background fitted."

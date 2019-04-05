@@ -42,7 +42,8 @@ Be sure to install python >=3.6
 		ii. (Do this step whenever you're finished using thunderfit) to deactivate just type ::conda deactivate 
 
 Now with you environment active (if using one) type::
-	pip install thunderfit
+	conda skeleton pypi thunderfit
+	conda build thunderfit
 
 You can check the correct script for ramananalyse (or any other script in future releases) is present by typing::
 	command -v ramananalyse
