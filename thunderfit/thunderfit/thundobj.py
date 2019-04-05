@@ -6,9 +6,6 @@ import re
 import numpy as np
 
 from typing import Dict, Union
-from typing import NewType
-nparray = NewType('nparray', np.ndarray)
-from typing import AnyStr
 import copy
 
 import matplotlib
@@ -44,7 +41,7 @@ class Thunder():
         self.datapath: str = './data.txt'
 
         self.no_peaks: int = 0
-        self.background: Union[AnyStr, nparray] = "SCARF"
+        self.background: str = "SCARF"
         self.scarf_params: Union[None, Dict] = None
         self.peak_types: Union[None, list] = []
         self.peak_centres: Union[None, list] = []
@@ -120,6 +117,7 @@ class Thunder():
 
         self.no_peaks = inp.get('no_peaks', self.no_peaks)
         self.background = inp.get('background', self.background)
+        # do some check on background here to set it to an np array
         self.scarf_params = inp.get('scarf_params', self.scarf_params)
         self.peak_types = inp.get('peak_types', self.peak_types)
         self.peak_centres = inp.get('peak_centres', self.peak_centres)

@@ -6,10 +6,6 @@ import time
 import numpy as np
 
 from typing import Union, Dict, List
-from typing import TyperVar
-T = TypeVar('T')
-from typing import AnyStr
-Array = Union[AnyStr[T], np.ndarray[T]]
 
 from . import utilities as utili
 from . import thundobj
@@ -37,11 +33,11 @@ def parse_user_args():
     parser.add_argument('--no_peaks', type=int, default=None,
                         help='the number of peaks you would like fitted. If you have specified bounds or peak infomation'
                              '\n e.g. centres then please make sure this is the same length as that list')
-    parser.add_argument('--background', type=Array, default="SCARF",
+    parser.add_argument('--background', type=str, default="SCARF",
                         help="The stype of background you'd like to fit. 'SCARF' is a rolling ball solgay_filter "
                              "background subtraction. \n 'OLD' uses a soon-to-be not implemented numerical method"
                              "which doesn't work too well. \n 'no' specifies that you would like no background fitted."
-                             " An np array of background can also be passed, but please note that it must be the same"
+                             "NOT IMPLEMENTED YET: An np array of background can also be passed by passing the path to the file, but please note that it must be the same"
                              "length as the datafile (once rows containing nan values have been removed).")
     parser.add_argument('--scarf_params', type=Union[None, Dict], default=None,
                         help='a dictionary (or None) of parameters for scarf algorithm. If none an interactive routine'
