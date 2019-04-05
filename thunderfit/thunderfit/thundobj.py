@@ -3,13 +3,14 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import difflib
 import re
+import numpy as np
+
 from typing import Dict, Union
 from typing import NewType
 nparray = NewType('nparray', np.ndarray)
 from typing import AnyStr
 import copy
 
-import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
