@@ -132,7 +132,7 @@ class Thunder():
         ax = plotting.plot_background(self.x_data, self.background, ax) #plot the background supplied by user
         ax = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax) # plot the fitted data
         try:
-            ax = plotting.plot_uncertainty_curve(self.data[self.x_label], self.peaks.eval_uncertainty(sigma=3),
+            ax = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
                                          self.peaks.best_fit, ax) #plot a band of uncertainty
         except TypeError:
             logging.warning('There are not uncertainties available for some reason - '
@@ -145,7 +145,7 @@ class Thunder():
 
         self.plot = plt
 
-    def fit_report(self):
+    def gen_fit_report(self):
         self.fit_report = {mod_no:{} for mod_no in range(len(self.peak_types))}
 
         ## total fit data

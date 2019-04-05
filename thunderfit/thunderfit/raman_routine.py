@@ -101,20 +101,15 @@ def main():
 
     thunder = thundobj.main(arguments) # create a Thunder object
 
-    import ipdb
-    ipdb.set_trace()
-
     thunder.background, thunder.y_data_bg_rm = bg_remove.background_finder(thunder.x_data, thunder.y_data,
                                                                            thunder.background, thunder.scarf_params)
                                                                            # determine the background
-    import ipdb
-    ipdb.set_trace()
     if args.normalise:
         thunder.y_data_bg_rm, thunder.background, thunder.y_data_norm = \
                                                  normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
 
-    thunder.peak_no, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types = \
-                   peak_finding.peaks_unspecified(thunder.x_data, thunder.y_data_bg_rm, thunder.peak_no,
+    thunder.no_peaks, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types = \
+                   peak_finding.peaks_unspecified(thunder.x_data, thunder.y_data_bg_rm, thunder.no_peaks,
                                                   thunder.peak_centres, thunder.peak_amps, thunder.peak_widths,
                                                   thunder.peak_types) # find peaks/use them if supplied
 
@@ -130,7 +125,7 @@ def main():
     thunder.free_params = round(thunder.chi_sq / reduced_chi_sq)
 
     thunder.plot_all() # plot the data in full and save as an object
-    thunder.fit_report() # generate a fit report
+    thunder.gen_fit_report() # generate a fit report
 
     # save a plot of the figure and the thunder object
     dataname = os.path.basename(arguments['datapath'])
