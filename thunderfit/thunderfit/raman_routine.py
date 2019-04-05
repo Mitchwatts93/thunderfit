@@ -13,6 +13,11 @@ from .background import background_removal as bg_remove
 from . import peak_finding
 from . import peak_fitting
 
+def str_or_none(value):
+    try:
+        return str(value)
+    except:
+        return None
 
 def parse_user_args():
     import argparse
@@ -20,20 +25,20 @@ def parse_user_args():
     parser = argparse.ArgumentParser(
         description='fit peaks and background to the given data given a set of parameter'
     )
-    parser.add_argument('--param_file_path', type=Union[AnyStr, None], default=None,
+    parser.add_argument('--param_file_path', type=str_or_none, default=None,
                         help='input filepath to param file, if you want to use it')
-    parser.add_argument('--datapath', type=Union[AnyStr, None], default=None,
+    parser.add_argument('--datapath', type=str_or_none, default=None,
                         help='relative path to the datafile from where python script is called')
-    parser.add_argument('--x_ind', type=Union[AnyStr, None], default=None,
+    parser.add_argument('--x_ind', type=str_or_none, default=None,
                         help='the column in data which is the independent data')
-    parser.add_argument('--y_ind', type=Union[AnyStr, None], default=None,
+    parser.add_argument('--y_ind', type=str_or_none, default=None,
                         help='the column in data which is the dependent data')
     parser.add_argument('--e_ind', type=Union[int, None], default=None,
                         help='NOT IMPLEMENTED YET. the column in data which is the independent data uncertainties')
     parser.add_argument('--no_peaks', type=int, default=None,
                         help='the number of peaks you would like fitted. If you have specified bounds or peak infomation'
                              '\n e.g. centres then please make sure this is the same length as that list')
-    parser.add_argument('--background', type=AnyStr, default="SCARF",
+    parser.add_argument('--background', type=str, default="SCARF",
                         help="The stype of background you'd like to fit. 'SCARF' is a rolling ball solgay_filter "
                              "background subtraction. \n 'OLD' uses a soon-to-be not implemented numerical method"
                              "which doesn't work too well. \n 'no' specifies that you would like no background fitted."
