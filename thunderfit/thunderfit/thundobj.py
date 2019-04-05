@@ -17,12 +17,13 @@ import matplotlib.pyplot as plt
 import lmfit
 from lmfit import models
 
-from thunderfit.background import scarf as scarf
-from thunderfit import utilities as utili
-from thunderfit import plotting
-from thunderfit.background import background_removal as bg_remove
-from thunderfit import normalisation
-from thunderfit import peak_finding
+from thunderfit import background
+from background import scarf
+from . import utilities as utili
+from . import plotting
+from background import background_removal as bg_remove
+from . import normalisation
+from . import peak_finding
 
 
 # TODO: need to fail if peak fitting doesn't work!
