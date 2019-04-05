@@ -17,11 +17,10 @@ import matplotlib.pyplot as plt
 import lmfit
 from lmfit import models
 
-from thunderfit import background
-from background import scarf
+from thunderfit.thunderfit.background import scarf
 from . import utilities as utili
 from . import plotting
-from background import background_removal as bg_remove
+from thunderfit.thunderfit.background import background_removal as bg_remove
 from . import normalisation
 from . import peak_finding
 
