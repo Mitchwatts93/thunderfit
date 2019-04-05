@@ -20,13 +20,13 @@ def parse_user_args():
     parser = argparse.ArgumentParser(
         description='fit peaks and background to the given data given a set of parameter'
     )
-    parser.add_argument('--param_file_path', type=str, default='./params.txt',
+    parser.add_argument('--param_file_path', type=Union[str, None], default=None,
                         help='input filepath to param file, if you want to use it')
-    parser.add_argument('--datapath', type=str, default='./data.txt',
+    parser.add_argument('--datapath', type=Union[str, None], default=None,
                         help='relative path to the datafile from where python script is called')
-    parser.add_argument('--x_ind', type=int, default=0,
+    parser.add_argument('--x_ind', type=Union[str, None], default=None,
                         help='the column in data which is the independent data')
-    parser.add_argument('--y_ind', type=int, default=1,
+    parser.add_argument('--y_ind', type=Union[str, None], default=None,
                         help='the column in data which is the dependent data')
     parser.add_argument('--e_ind', type=Union[int, None], default=None,
                         help='NOT IMPLEMENTED YET. the column in data which is the independent data uncertainties')
@@ -86,6 +86,7 @@ def main():
     if args.param_file_path:  # if there is a params file then use it
         LOGGER.info('Using params file')
         arguments = utili.parse_param_file(args.param_file_path)  # parse it
+        arguments['datapath'] = args.datapath
     else:
         print('not using params file')
         arguments = utili.parse_args(args)  # else use argparse but put in dictionary form
