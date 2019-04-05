@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+from typing import NewType
 
 import lmfit
 
@@ -40,7 +41,7 @@ class Thunder():
         self.datapath: str = './data.txt'
 
         self.no_peaks: int = 0
-        self.background: Union[str, np.ndarray] = "SCARF"
+        self.background: Union[str, type(np.ndarray)] = "SCARF"
         self.scarf_params: Union[None, Dict] = None
         self.peak_types: Union[None, list] = []
         self.peak_centres: Union[None, list] = []
