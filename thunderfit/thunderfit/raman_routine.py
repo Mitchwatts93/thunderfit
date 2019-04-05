@@ -96,7 +96,7 @@ def main():
         print('not using params file')
         arguments = utili.parse_args(args)  # else use argparse but put in dictionary form
 
-    curr_time = time.localtime(time.time())  # reformat this so its nice
+    curr_time = time.strftime('%d_%m_%Y_%l:%M%p') #name directory with the current time
     dirname = utili.make_dir(f'analysed_{curr_time}')  # make a dict for the processed data to be saved in
 
     thunder = thundobj.main(arguments) # create a Thunder object
