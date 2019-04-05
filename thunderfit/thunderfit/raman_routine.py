@@ -5,10 +5,11 @@ import os
 import time
 import numpy as np
 
-from typing import Union, Dict
-from typing import NewType
-nparray = NewType('nparray', np.ndarray)
+from typing import Union, Dict, List
+from typing import TyperVar
+T = TyperVar('T')
 from typing import AnyStr
+Array = Union[AnyStr[T], np.ndarray[T]]
 
 from . import utilities as utili
 from . import thundobj
@@ -36,7 +37,7 @@ def parse_user_args():
     parser.add_argument('--no_peaks', type=int, default=None,
                         help='the number of peaks you would like fitted. If you have specified bounds or peak infomation'
                              '\n e.g. centres then please make sure this is the same length as that list')
-    parser.add_argument('--background', type=Union[AnyStr, nparray], default="SCARF",
+    parser.add_argument('--background', type=Array, default="SCARF",
                         help="The stype of background you'd like to fit. 'SCARF' is a rolling ball solgay_filter "
                              "background subtraction. \n 'OLD' uses a soon-to-be not implemented numerical method"
                              "which doesn't work too well. \n 'no' specifies that you would like no background fitted."
@@ -47,16 +48,16 @@ def parse_user_args():
                              'will be used. if the dictionary is specified it should be of the form: \n'
                              '{"rad":70, "b":90, "window_length":51, "poly_order":3}'
                              '\n where window length must be odd and greater than poly_order, and all must be integers')
-    parser.add_argument('--peak_types', type=Union[None, list], default=None,
+    parser.add_argument('--peak_types', type=Union[None, List], default=None,
                         help='a list (or none) or the types of peak to be fitted. '
                              '\n e.g. ["LorentzianModel", "GaussianModel"] as strings! they must be implemented in lmfit')
-    parser.add_argument('--peak_centres', type=Union[None, list], default=None,
+    parser.add_argument('--peak_centres', type=Union[None, List], default=None,
                         help='a list (or none) or the centres values (x values) of the peaks to be fitted. '
                              '\n e.g. [488, 365] as integers!')
-    parser.add_argument('--peak_widths', type=Union[None, list], default=None,
+    parser.add_argument('--peak_widths', type=Union[None, List], default=None,
                         help='a list (or none) or the width values (x values) of the peaks to be fitted. '
                              '\n e.g. [10, 1] as integers!')
-    parser.add_argument('--peak_amps', type=Union[None, list], default=None,
+    parser.add_argument('--peak_amps', type=Union[None, List], default=None,
                         help='a list (or none) or the amplitude values (x values) of the peaks to be fitted. '
                              '\n e.g. [10, 5] as integers!')
     parser.add_argument('--tightness', type=str, default="med",
