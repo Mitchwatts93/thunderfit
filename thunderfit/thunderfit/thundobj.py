@@ -31,9 +31,6 @@ class Thunder():
         self.y_ind: int = 1
         self.e_ind: Union[int, None] = None
 
-        import ipdb
-        ipdb.set_trace()
-
         self.x_data: Union[None, np.ndarray] = None
         self.y_data: Union[None, np.ndarray] = None
         self.e_data: Union[None, np.ndarray] = None
@@ -68,12 +65,9 @@ class Thunder():
         else:
             raise TypeError('Cannot convert input to Thunder object')
 
-        import ipdb
-        ipdb.set_trace()
-        if not self.x_data and self.y_data:
+        if not self.x_data and not self.y_data:
             self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind, self.y_ind) # load the data
-        import ipdb
-        ipdb.set_trace()
+
         self.tightness = utili.tightness_setter(self.tightness)
 
     def overwrite_thunder(self, inp):
