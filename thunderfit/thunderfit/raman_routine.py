@@ -7,7 +7,7 @@ import numpy as np
 
 from typing import Union, Dict, List
 from typing import TyperVar
-T = TyperVar('T')
+T = TypeVar('T')
 from typing import AnyStr
 Array = Union[AnyStr[T], np.ndarray[T]]
 
