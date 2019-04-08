@@ -1,0 +1,7 @@
+todo
+
+1. fix data plot at the end, looks like its plotting y_data_bg_rm
+3. move bound making into peak finding
+4. generate model should be made more generic so a function can be passed and used.
+5. sort out the multi_obj class
+6. write a routine for map scans - things like using peak params from last fit etc.

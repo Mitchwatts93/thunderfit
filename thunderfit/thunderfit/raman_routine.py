@@ -5,7 +5,6 @@ import os
 import time
 
 from typing import Union, Dict, List
-from typing import AnyStr
 
 from . import utilities as utili
 from . import thundobj
