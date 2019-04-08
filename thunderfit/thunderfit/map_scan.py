@@ -7,7 +7,7 @@ import time
 from typing import Union, Dict, List
 
 from . import utilities as utili
-from . import thundobj
+from . import multi_obj
 from .background import background_removal as bg_remove
 from . import peak_finding
 from . import peak_fitting
@@ -98,36 +98,42 @@ def main():
     curr_time = time.strftime('%d_%m_%Y_%l:%M%p') #name directory with the current time
     dirname = utili.make_dir(f'analysed_{curr_time}')  # make a dict for the processed data to be saved in
 
-    thunder = thundobj.main(arguments) # create a Thunder object
+    bag = multi_obj.main(arguments) # create a Thunder object
 
-    thunder.background, thunder.y_data_bg_rm = bg_remove.background_finder(thunder.x_data, thunder.y_data,
-                                                                           thunder.background, thunder.scarf_params)
-                                                                           # determine the background
+
+    bag.bag_iterator(bag.thunder_bag, bg_remove.background_finder, ('x_data', 'y_data',
+                                                                   'background', 'scarf_params'), ('background', 'y_data_bg_rm', 'params')) # determine the background
+
     if args.normalise:
-        thunder.y_data_bg_rm, thunder.background, thunder.y_data_norm = \
-                                                 normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
+        bag.bag_iterator(bag.thunder_bag, normalise_all, ('y_data_bg_rm', 'background', 'y_data'), ('y_data_bg_rm', 'background', 'y_data_norm'))
 
-    thunder.no_peaks, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types = \
-                   peak_finding.peaks_unspecified(thunder.x_data, thunder.y_data_bg_rm, thunder.no_peaks,
-                                                  thunder.peak_centres, thunder.peak_amps, thunder.peak_widths,
-                                                  thunder.peak_types) # find peaks/use them if supplied
+    import ipdb
+    ipdb.set_trace()
+    bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
+                                                  'peak_centres', 'peak_amps', 'peak_widths',
+                                                  'peak_types'), ('no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types', 'prominence')) # find peaks/use them if supplied
 
-    thunder.bounds = peak_fitting.make_bounds(thunder.tightness, thunder.no_peaks, thunder.bounds, thunder.peak_widths,
-                                              thunder.peak_centres, thunder.peak_amps) # make bounds
+    import ipdb
+    ipdb.set_trace()
+    bag.bag_iterator(bag.thunder_bag, peak_fitting.make_bounds, 'tightness', 'no_peaks', 'bounds', 'peak_widths',
+                                              'peak_centres', 'peak_amps') # make bounds
 
-    thunder.specs, thunder.model, thunder.peak_params, thunder.peaks = \
-        peak_fitting.fit_peaks(thunder.x_data, thunder.y_data_bg_rm, thunder.peak_types, thunder.peak_centres,
-                               thunder.peak_amps, thunder.peak_widths, thunder.bounds) # fit peaks
+    import ipdb
+    ipdb.set_trace()
+    bag.bag_iterator(bag.thunder_bag, peak_fitting.fit_peaks, 'x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
+                               'peak_amps', 'peak_widths', 'bounds') # fit peaks
 
-    thunder.chi_sq = thunder.peaks.chisqr # set the stats from the fits
-    reduced_chi_sq = thunder.peaks.redchi
-    thunder.free_params = round(thunder.chi_sq / reduced_chi_sq)
+    import ipdb
+    ipdb.set_trace()
+    bag.chi_sq = bag.peaks.chisqr # set the stats from the fits
+    reduced_chi_sq = bag.peaks.redchi
+    bag.free_params = round(bag.chi_sq / reduced_chi_sq)
 
-    thunder.plot_all() # plot the data in full and save as an object
-    thunder.gen_fit_report() # generate a fit report
+    bag.plot_all() # plot the data in full and save as an object
+    bag.gen_fit_report() # generate a fit report
 
     # save a plot of the figure and the thunder object
     dataname = os.path.basename(arguments['datapath'])
-    utili.save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
-    utili.save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
-    utili.save_fit_report(thunder.fit_report, path=dirname, filename=f"{dataname}_report.json")
+    utili.save_plot(bag.plot, path=dirname, figname=f"{dataname}.svg")
+    utili.save_thunder(bag, path=dirname, filename=f"{dataname}.p")
+    utili.save_fit_report(bag.fit_report, path=dirname, filename=f"{dataname}_report.json")

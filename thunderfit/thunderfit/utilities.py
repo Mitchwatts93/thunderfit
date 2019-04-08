@@ -5,6 +5,7 @@ import os
 import json
 import dill
 import pandas as pd
+import numpy as np
 
 #### tools
 def save_thunder(obj, path, filename='thunder.p'):
@@ -82,6 +83,23 @@ def load_data(datapath, x_ind, y_ind, e_ind=None):
     y_data = data[y_ind].values
 
     return x_data, y_data, e_data
+
+def map_unique_coords(x_data, y_data, x_coords, y_coords):
+    data = np.vstack((x_coords, y_coords, x_data, y_data)).transpose() # now have columns as the data
+    df = pd.DataFrame(data=data, columns=['x_coords', 'y_coords', 'x_data', 'y_data'])
+    unique_dict = dict(tuple(df.groupby(['x_coords', 'y_coords']))) # get a dictionary of the unique values for
+                                        # coordinates (as tuples of (x,y)) and then the whole df rows for these values
+
+    x_data, y_data, x_coords, y_coords = [], [], [], []
+    for key in unique_dict.keys():
+        x_data_ = unique_dict[key]['x_data'].values # get the x_data
+        x_data.append(x_data_)
+        y_data_ = unique_dict[key]['y_data'].values
+        y_data.append(y_data_)
+        x_coords.append(key[0])
+        y_coords.append(key[1])
+
+    return x_data, y_data, x_coords, y_coords
 
 def parse_param_file(filepath='./params.txt'):
     """

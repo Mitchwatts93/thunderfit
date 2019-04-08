@@ -1,8 +1,16 @@
-from obj import *
+import logging
+LOGGER = logging.getLogger(__name__)
+LOGGER.setLevel(logging.INFO)
+
 import glob
 import copy
 import pandas
 from tqdm import tqdm
+import ast
+
+from .thundobj import Thunder
+from . import utilities as utili
+
 
 ############## NOT IMPLEMENTED!
 # TODO
@@ -13,54 +21,57 @@ class ThunderBag():
     def __init__(self, input):
         # initialise everything first
         self.thunder_bag: {} = {}
+        self.coordinates: {} = {}
 
         if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
-            self.overwrite_thunder(input)  # add all the details in depending on args
+            self.thunder_bag[0] = Thunder(input)  # add all the details in depending on args
         elif isinstance(input, dict):
             self.create_bag(input)  # add all the details in depending on args
         else:
-            raise TypeError('Cannot convert input to Thunder object')
-
-    def overwite_thunder(self, inp):
-        thun = inp
-        self.x_ind = thun.x_ind
-        self.y_ind = thun.y_ind
-        self.e_ind = thun.e_ind
-        self.x_label = thun.x_label
-        self.y_label = thun.y_label
-        self.datapath = thun.datapath
+            raise TypeError('Cannot convert input to ThunderBag object')
 
     def create_bag(self, inp):
-        self.x_label = inp['x_label']
-        self.y_label = inp['y_label']
-        self.e_label = inp['e_label']
-        self.x_ind =  inp['x_ind']
-        self. y_ind = inp['y_ind']
-        self.e_ind = inp['e_ind']
-        self.img_path = inp['imgpath']
+        self.x_ind =  inp.get('x_ind', None)
+        self. y_ind = inp.get('y_ind', None)
+        self.e_ind = inp.get('e_ind', None)
+        self.img_path = inp.get('imgpath', None)
+        self.coordinates = inp.get('coords', {})
 
-        assert isinstance(inp['datapath'], list), "Wrong format for datapath, should be a list"
-        self.datapath = inp['datapath']
+        self.map = inp.get('map', None) # if user passes map as True then the file will be treated as a map file
+
+        data_paths = inp.get('datapath', None)
+        self.datapath = ast.literal_eval(data_paths) # this is a bit dangerous!!!!!
 
         for i, data in tqdm(enumerate(self.datapath)):
             if isinstance(data, Thunder):
                 self.thunder_bag[i] = data
             elif isinstance(data, str):
                 # then read the data file
-                if '*' in data:
+                if self.map == True:
+                    self.x_coord_ind, self.y_coord_ind = inp.get('x_coord_ind', 0), inp.get('y_coord_ind', 1)
+                    map_path = glob.glob(data)[0] # save the filepath to the mapscan as self.map for later
+                    x_data, y_data, x_coords, y_coords = self.read_map(map_path, self.x_ind, self.y_ind, self.x_coord_ind, self.y_coord_ind)
+
+                    self.coordinates[f'{i}'] = list(zip(x_coords, y_coords)) # for each i we will have a list of tuples of
+                                                                            # x and y coords
+                    for j in range(len(x_data)): # go through the list of x_data
+                        x_data_, y_data_ = x_data[j], y_data[j] # the x and y data for each coordinate set
+                        self.thunder_bag[f'{i}_{j}'] = Thunder(inp, x_data=x_data_, y_data=y_data_) # make a thunder obj
+                                                                                                    # with this data
+                elif '*' in data:
                     filematches = glob.glob(data)
                     for j, file in enumerate(filematches):
                         try:
                             self.thunder_bag[f'{i}_{j}'] = self.create_thunder(file, inp) # make a thunder object for each file
                         except pandas.errors.ParserError as e:
-                            logging.warn(f"A Thunder object could not be created for the datafile: {file}, skipping")
+                            logging.warning(f"A Thunder object could not be created for the datafile: {file}, skipping")
                 else:
                     try:
                         self.thunder_bag[str(i)] = self.create_thunder(data, inp)
                     except pandas.errors.ParserError as e:
-                        logging.warn(f"A Thunder object could not be created for the datafile: {file}, skipping")
+                        logging.warning(f"A Thunder object could not be created for the datafile: {file}, skipping")
             else:
-                logging.warn(f"wrong format in data list detected for {i}th element: {data}. Skipping element")
+                logging.warning(f"wrong format in data list detected for {i}th element: {data}. Skipping element")
                 pass
 
     @staticmethod
@@ -69,6 +80,15 @@ class ThunderBag():
         arguments['datapath'] = file
         thund_obj = Thunder(arguments)
         return thund_obj
+
+    @staticmethod
+    def read_map(file_address, x_ind, y_ind, x_coord_ind, y_coord_ind):
+        x_data, y_data, _ = utili.load_data(file_address, x_ind, y_ind)  # load the data. note these drop nan rows but
+                                    # does that for the whole filepath so will be consistent for data and coordinates
+        x_coords, y_coords, _ = utili.load_data(file_address, x_coord_ind, y_coord_ind)  # load the coordinates
+        x_data, y_data, x_coords, y_coords = utili.map_unique_coords(x_data, y_data, x_coords, y_coords) #
+
+        return x_data, y_data, x_coords, y_coords
 
     @staticmethod
     def fit_bag(bag_dict):
@@ -84,29 +104,15 @@ class ThunderBag():
 
         return bag_dict
 
+    @staticmethod
+    def bag_iterator(bag, func, input_args, sett_args):
+        for key in bag.keys():
+            thund = bag[key] # get the thunder object
+            kwargs_ = [getattr(thund, arg) for arg in input_args]
+            val = func(*kwargs_)
+            for i, arg in enumerate(sett_args):
+                setattr(thund, arg, val[i])
+
 def main(arguments):
-
     bag = ThunderBag(copy.deepcopy(arguments)) # load object
-
-    bag.fit_bag(bag.thunder_bag)
-    import ipdb
-    ipdb.set_trace()
-
-
     return bag
-
-
-def parse_param_file(filepath='./bag_params.txt'):
-    """
-    parse a params file which we assume is a dictionary
-    :param filepath: str: path to params file
-    :return: dictionary of paramters
-    """
-    # maybe use json loads if you end up writing parameter files non-manually
-
-    with open(filepath, 'r') as f:
-        arguments = json.load(f)
-        f.close()
-
-    # TODO: add some checks to user passed data
-    return arguments

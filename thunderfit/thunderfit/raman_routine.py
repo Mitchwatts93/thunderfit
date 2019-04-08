@@ -6,11 +6,12 @@ import time
 
 from typing import Union, Dict, List
 
-from . import utilities as utili
 from . import thundobj
+from . import utilities as utili
 from .background import background_removal as bg_remove
 from . import peak_finding
 from . import peak_fitting
+
 
 def str_or_none(value):
     try:
@@ -90,7 +91,8 @@ def main():
     if args.param_file_path:  # if there is a params file then use it
         LOGGER.info('Using params file')
         arguments = utili.parse_param_file(args.param_file_path)  # parse it
-        arguments['datapath'] = args.datapath
+        if args.datapath:
+            arguments['datapath'] = args.datapath
     else:
         print('not using params file')
         arguments = utili.parse_args(args)  # else use argparse but put in dictionary form
@@ -100,14 +102,14 @@ def main():
 
     thunder = thundobj.main(arguments) # create a Thunder object
 
-    thunder.background, thunder.y_data_bg_rm = bg_remove.background_finder(thunder.x_data, thunder.y_data,
+    thunder.background, thunder.y_data_bg_rm, _ = bg_remove.background_finder(thunder.x_data, thunder.y_data,
                                                                            thunder.background, thunder.scarf_params)
                                                                            # determine the background
     if args.normalise:
         thunder.y_data_bg_rm, thunder.background, thunder.y_data_norm = \
                                                  normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
 
-    thunder.no_peaks, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types = \
+    thunder.no_peaks, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types, _ = \
                    peak_finding.peaks_unspecified(thunder.x_data, thunder.y_data_bg_rm, thunder.no_peaks,
                                                   thunder.peak_centres, thunder.peak_amps, thunder.peak_widths,
                                                   thunder.peak_types) # find peaks/use them if supplied
@@ -127,7 +129,7 @@ def main():
     thunder.gen_fit_report() # generate a fit report
 
     # save a plot of the figure and the thunder object
-    dataname = os.path.basename(arguments['datapath'])
+    dataname = os.path.basename(arguments['datapath']).split('.')[0]
     utili.save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
     utili.save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
     utili.save_fit_report(thunder.fit_report, path=dirname, filename=f"{dataname}_report.json")

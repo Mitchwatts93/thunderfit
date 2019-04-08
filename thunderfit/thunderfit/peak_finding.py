@@ -2,7 +2,11 @@ import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 from scipy.signal import find_peaks as peak_find
+from scipy.signal import peak_widths as peak_width_func
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 from . import utilities as utili
 
@@ -29,6 +33,26 @@ def find_cents(prominence, y_data, find_all=False):
     center_indices = peak_info['center_indices']
     return center_indices
 
+def interactive_peakfinder(prominence, x_data, y_data):
+    while True:
+        peak_info = find_cents(prominence, y_data, find_all=True)
+        fig, ax = plt.subplots()
+        ax.plot(x_data, y_data)
+        peak_coordinates = [x_data[ind] for ind in peak_info['center_indices']]
+        for xc in peak_coordinates:
+            plt.axvline(x=xc)
+        print(f"Peak finder requires user input, please look at the following plot with prominence={prominence}")
+        plt.show(block=True)
+        ans = input("If you are happy with the plot, type y. if not then please type a new prominence")
+        if ans == 'y':
+            break
+        else:
+            try:
+                prominence = float(ans)
+            except ValueError:
+                print("You entered an incorrect answer! Trying again...")
+    return peak_info, prominence
+
 def find_peak_properties(prominence, center_list, y_data, peak_info_key):
     peak_info = peak_finder(y_data, prominence, height=0, width=0)
     center_indices = peak_info['center_indices']
@@ -36,27 +60,31 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
     matching_indices = utili.find_closest_indices(center_indices, center_list)
 
     if peak_info_key=='widths':
-        peak_properties = ([peak_info['right_edges'][i] for i in matching_indices],
-                           [peak_info['left_edges'][i] for i in matching_indices])
+        center_list = [center_indices[i] for i in matching_indices]
+        peak_properties = peak_width_func(y_data, center_list, rel_height=0.6)
+        peak_properties = ([int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]])
     else:
         peak_properties = [peak_info[peak_info_key][i] for i in matching_indices]
     return peak_properties
 
 #THIS NEEDS A BIT OF TIDYING UP?
 def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types):
-    #todo: pass in prominence x2 values
+    prominence = None
     if len(peak_centres) == 0 or len(peak_centres) < peak_no:
         if peak_no and len(peak_centres) < peak_no and len(peak_centres):
             logging.warning("you specified less peak centers than peak_numbers."
                  " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        prominence = 1.6
+        prominence = 1
         if not peak_no: # then they don't know so we can find everything in one go and save some time
-            peak_info = find_cents(prominence, y_data, find_all=True)
+            #peak_info = find_cents(prominence, y_data, find_all=True)
+            peak_info, prominence = interactive_peakfinder(prominence, x_data, y_data)
             center_indices = peak_info['center_indices']
             peak_amps = peak_info['amps']
-            peak_left_edges, peak_right_edges = peak_info['left_edges'], peak_info['left_edges']
-            peak_widths = x_data[peak_right_edges] - x_data[peak_left_edges] # the xvalues can be
+            peak_properties = peak_width_func(y_data, center_indices, rel_height=0.7)
+            peak_left_edges, peak_right_edges = [int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]]
+            peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges]) # the xvalues can be
                                                                                             # indexed from the data
+
             peak_centres = x_data[center_indices]
             peak_no = len(center_indices)
         else: # just find the centers
@@ -95,4 +123,4 @@ def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         logging.warning("specified more peak types than no_peaks. cutting the peaks supplied as [:no_peaks]")
         peak_types = peak_widths[:peak_no]
 
-    return peak_no, peak_centres, peak_amps, peak_widths, peak_types
+    return peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence

@@ -24,16 +24,16 @@ class Thunder():
     """
     thunder object with all the methods we love inside it. Name generated using WuTang Clan name generator.
     """
-    def __init__(self, input):
+    def __init__(self, input, x_data=None, y_data=None, e_data=None):
         self.input: Union[Thunder, Dict] = input
 
         self.x_ind: int = 0
         self.y_ind: int = 1
         self.e_ind: Union[int, None] = None
 
-        self.x_data: Union[None, np.ndarray] = None
-        self.y_data: Union[None, np.ndarray] = None
-        self.e_data: Union[None, np.ndarray] = None
+        self.x_data: Union[None, np.ndarray] = x_data
+        self.y_data: Union[None, np.ndarray] = y_data
+        self.e_data: Union[None, np.ndarray] = e_data
 
         self.y_data_bg_rm = None
         self.y_data_norm = None
@@ -65,8 +65,11 @@ class Thunder():
         else:
             raise TypeError('Cannot convert input to Thunder object')
 
-        if not self.x_data and not self.y_data:
+        if isinstance(self.x_data, np.ndarray) and isinstance(self.y_data, np.ndarray):
+            pass # they're already loaded as they've been passed
+        else:
             self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind, self.y_ind) # load the data
+
 
         self.tightness = utili.tightness_setter(self.tightness)
 

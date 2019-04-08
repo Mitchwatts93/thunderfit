@@ -8,7 +8,7 @@ def readme():
 setuptools.setup(
     name='thunderfit',
     python_requires='>3.6',
-    version='1.2',
+    version='1.2.2',
     description='Thunderfit fitting code',
     long_description=readme(),
     classifiers=[
@@ -28,11 +28,13 @@ setuptools.setup(
         'numpy>=1.16.2',
         'matplotlib>=2.2.3',
         'pandas>=0.23.4',
-        'lmfit>=0.9.11'],
+        'lmfit>=0.9.11',
+        'tqdm>=4.31.1',
+        ],
     include_package_data=True,
     test_suite='nose.collector',
     tests_require=['nose'],
     entry_points={
-        "console_scripts": ['ramananalyse = thunderfit.raman_routine:main']},
+        "console_scripts": ['ramananalyse = thunderfit.raman_routine:main', 'mapscan = thunderfit.map_scan:main']},
     )
 

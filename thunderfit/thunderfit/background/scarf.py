@@ -113,9 +113,10 @@ def perform_scarf(x_data, y_data, scarf_params=False):
     b = 90
     window_length, poly_order = 51, 3
     L_sg = 0
-    data_bg_rm_y = y_data #.copy????
+    data_bg_rm_y = y_data.copy()
+    params = []
 
-    if not scarf_params:
+    if isinstance(scarf_params, bool) and not scarf_params:
         while True:
             while True:
                 D = rcf(data_bg_rm_y, rad)
@@ -192,6 +193,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
             if ans == 'y':
                 bg += L
                 data_bg_rm_y -= L
+                params.append({'r': rad, 'b': b, 'window': window_length, 'poly': poly_order})
                 break
             elif ans == 'n':
                 pass
@@ -200,16 +202,40 @@ def perform_scarf(x_data, y_data, scarf_params=False):
                 print("apply two bg removal steps, this will mean the background just specified will be removed "
                       "from the data")
                 data_bg_rm_y -= L  # remove the bg found here from the original data and go again
+                params.append({'r':rad, 'b':b, 'window':window_length, 'poly':poly_order})
             else:
                 print("You entered an incorrect answer! Trying whole fitting routine again...")
-
-    else:
-        rad, b, window_length, poly_order = \
-            scarf_params['rad'], scarf_params['b'], scarf_params['window_length'], scarf_params['poly_order']
+    elif isinstance(scarf_params, bool):
+        # the user has passed True! recall this function and change it to false
+        logging.warning('scarf has been passed the True bool value for scarf params. This is invalid, assuming you meant '
+                        'False as no parameters were specified.')
+        data_bg_rm_y, bg, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=False)
+        params += params_ # params_ is a list of one dictionary
+        return data_bg_rm_y, bg
+    elif isinstance(scarf_params, dict):
+        rad, window_length, poly_order = \
+            scarf_params['rad'],  scarf_params['window_length'], scarf_params['poly_order']
         D = rcf(data_bg_rm_y, rad)
+        L = smooth(D, window_length, poly_order)
+        try:
+            b = scarf_params['b'] #  if passed then use it
+        except KeyError: # otherwise find it
+            b = min(y_data - L) # whats the smallest difference between D and b? shift it up by that
         L = D + b
-        L = smooth(L, window_length, poly_order)
         bg += L
         data_bg_rm_y -= L
+        params.append({'r': rad, 'b': b, 'window': window_length, 'poly': poly_order})
+    elif isinstance(scarf_params, list):
+        # the user wants multiple runs. call the function for each set of params, passing the new y data each time
+        for param_dict in scarf_params:
+            data_bg_rm_y, bg_, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=param_dict)
+            bg += bg_
+            params += params_ # params_ is a list of a dictionary so use += here
+    else:
+        logging.warning(
+            'an unexpected parameter has been passed as a scarf value, running interactively.')
+        data_bg_rm_y, bg, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=False)
+        params += params_
+        return data_bg_rm_y, bg
 
-    return data_bg_rm_y, bg
+    return data_bg_rm_y, bg, params
