@@ -4,6 +4,7 @@ LOGGER.setLevel(logging.INFO)
 import os
 import time
 
+
 from typing import Union, Dict, List
 
 from . import utilities as utili
@@ -85,6 +86,14 @@ def normalise_all(y_bg_rem, bg, y_raw):
     return y_data_bg_rm, background, y_data_norm
 
 def main():
+    from pathos.multiprocessing import ProcessPool
+    pool = ProcessPool()
+    import matplotlib
+    matplotlib.use('TkAgg')
+    import matplotlib.pyplot as plt
+    import tkinter
+    tkinter.NoDefaultRoot()
+
     args = parse_user_args()
 
     if args.param_file_path:  # if there is a params file then use it
@@ -100,38 +109,100 @@ def main():
 
     bag = multi_obj.main(arguments) # create a Thunder object
 
+    ###### clip the data if weird edges
+    if arguments.get('clip_data', False):
+        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        clip_left, clip_right = utili.clip_data(first_thunder.x_data, first_thunder.y_data)
+        for thund in bag.thunder_bag.values():
+            setattr(thund, 'x_data', first_thunder.x_data[clip_left:clip_right])
+            setattr(thund, 'y_data', first_thunder.y_data[clip_left:clip_right])
 
-    bag.bag_iterator(bag.thunder_bag, bg_remove.background_finder, ('x_data', 'y_data',
-                                                                   'background', 'scarf_params'), ('background', 'y_data_bg_rm', 'params')) # determine the background
-
+    ###### remove background
+    if arguments.get('bg_first_only', False):
+        # add step to find bg parameters for first one and use for the rest.
+        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        _, _, params = bg_remove.background_finder(first_thunder.x_data, first_thunder.y_data, first_thunder.background, first_thunder.scarf_params)
+        [param.pop('b', None) for param in params]
+        for thund in bag.thunder_bag.values():
+            setattr(thund, 'scarf_params', params) # set all the values to this
+    pool = bag.bag_iterator(bag.thunder_bag, bg_remove.background_finder, ('x_data', 'y_data',
+                                                                   'background', 'scarf_params'), ('background', 'y_data_bg_rm', 'params'), pool) # determine the background
+    pool.restart()
+    ###### normalisation
     if args.normalise:
-        bag.bag_iterator(bag.thunder_bag, normalise_all, ('y_data_bg_rm', 'background', 'y_data'), ('y_data_bg_rm', 'background', 'y_data_norm'))
+        pool = bag.bag_iterator(bag.thunder_bag, normalise_all, ('y_data_bg_rm', 'background', 'y_data'), ('y_data_bg_rm', 'background', 'y_data_norm'), pool)
+        pool.restart()
 
-    import ipdb
-    ipdb.set_trace()
-    bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
+    ###### find peaks
+    if arguments.get('peakf_first_only', False):
+        # add step to find bg parameters for first one and use for the rest.
+        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
+            peak_finding.peaks_unspecified(first_thunder.x_data, first_thunder.y_data_bg_rm, first_thunder.no_peaks,
+                                           first_thunder.peak_centres, first_thunder.peak_amps, first_thunder.peak_widths,
+                                           first_thunder.peak_types, plt)
+        for thund in bag.thunder_bag.values(): # set these first values for all of them
+            setattr(thund, 'no_peaks', no_peaks)  # set values
+            setattr(thund, 'peak_centres', peak_centres)  # set values
+            setattr(thund, 'peak_amps', peak_amps)  # set values
+            setattr(thund, 'peak_widths', peak_widths)  # set values
+            setattr(thund, 'peak_types', peak_types)  # set values
+            setattr(thund, 'prominence', prominence)  # set values
+    else:
+        pool = bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
                                                   'peak_centres', 'peak_amps', 'peak_widths',
                                                   'peak_types'), ('no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types', 'prominence')) # find peaks/use them if supplied
+        pool.restart()
+
+    ###### find bounds
+    if arguments.get('peakf_first_only', False):
+        # add step to find bg parameters for first one and use for the rest.
+        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        bounds = peak_fitting.make_bounds(first_thunder.tightness, first_thunder.no_peaks, first_thunder.bounds,
+                                          first_thunder.peak_widths, first_thunder.peak_centres, first_thunder.peak_amps)
+        for thund in bag.thunder_bag.values():  # set these first values for all of them
+            setattr(thund, 'bounds', bounds)  # set values
+    else:
+        bag.bag_iterator(bag.thunder_bag, peak_fitting.make_bounds, ('tightness', 'no_peaks', 'bounds', 'peak_widths',
+                                              'peak_centres', 'peak_amps'), ('bounds')) # make bounds
+
+    ###### fit peaks
+    print('fitting')
+    pool = bag.bag_iterator(bag.thunder_bag, peak_fitting.fit_peaks, ('x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
+                               'peak_amps', 'peak_widths', 'bounds'), ('specs', 'model', 'peak_params', 'peaks'), pool) # fit peaks
+    pool.restart()
+    print('fitted')
 
     import ipdb
     ipdb.set_trace()
-    bag.bag_iterator(bag.thunder_bag, peak_fitting.make_bounds, 'tightness', 'no_peaks', 'bounds', 'peak_widths',
-                                              'peak_centres', 'peak_amps') # make bounds
+    # this will for now assume the same types of peak for all fits!
+    fit_params = {}
+    first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+    params = list(first_thunder.peak_params.keys())[: len(first_thunder.peak_params) // first_thunder.no_peaks] # what are the peak params for the first peak
+    params = [param.split('_')[1] for param in params] # keep only the type of param
+    for param in params:
+        fit_params[param] = {} # e.g. 'center'
+        for key in bag.thunder_bag.keys():
+            fit_details = bag.thunder_bag[key].peak_params
+            import ipdb
+            ipdb.set_trace()
+            fit_details = [fit_details[key_] for key_ in fit_details.keys() if key_ in params]
+            fit_params[param][key] = fit_details
+    ###### fetch stats etc
+    stats = {'chisq':{}, 'reduced_chi_sq':{}, 'free_params':{}}
+    for key in bag.thunder_bag.keys():
+        chisq = bag.thunder_bag[key].peaks.chisq
+        reduced_chi_sq = bag.thunder_bag[key].peaks.redchi
+        free_params = round(chisq / reduced_chi_sq)
+        import ipdb
+        ipdb.set_trace()
+        stats['chisq'][key] = chisq
+        stats['reduced_chi_sq'][key] = reduced_chi_sq
+        stats['free_params'][key] = free_params
 
-    import ipdb
-    ipdb.set_trace()
-    bag.bag_iterator(bag.thunder_bag, peak_fitting.fit_peaks, 'x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
-                               'peak_amps', 'peak_widths', 'bounds') # fit peaks
+    ############## here call a map scan plot to plot details from all the plot, e.g. the widths on each coordinate
 
-    import ipdb
-    ipdb.set_trace()
-    bag.chi_sq = bag.peaks.chisqr # set the stats from the fits
-    reduced_chi_sq = bag.peaks.redchi
-    bag.free_params = round(bag.chi_sq / reduced_chi_sq)
-
-    bag.plot_all() # plot the data in full and save as an object
-    bag.gen_fit_report() # generate a fit report
-
+    ############## figure out what to save
     # save a plot of the figure and the thunder object
     dataname = os.path.basename(arguments['datapath'])
     utili.save_plot(bag.plot, path=dirname, figname=f"{dataname}.svg")

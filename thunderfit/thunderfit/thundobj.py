@@ -8,9 +8,7 @@ import numpy as np
 from typing import Dict, Union
 import copy
 
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
+
 
 import lmfit
 
@@ -53,6 +51,7 @@ class Thunder():
         self.peaks: lmfit.model.ModelResult
         self.plot: plt = None
         self.fit_report: {} = {}
+        peak_params: {} = {}
 
         self.free_params: int = 0
         self.p_value: int = 0
@@ -163,7 +162,7 @@ class Thunder():
             param_type = param_info[difflib.get_close_matches(parameter, param_info.keys())[0]]
 
             if param_type:
-                value =param_obj.value
+                value = param_obj.value
                 err = param_obj.stderr
                 type = self.peak_types[model_no]
                 bounds = self.bounds[param_type][model_no]

@@ -10,8 +10,9 @@ def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, 
     model, peak_params = generate_model(model_specs)
     peaks = model.fit(y_data, peak_params, x=x_data)
     if not peaks.success:
-        logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
-                        'inputting a background, peak bounds and peak info.')
+        print('peaks failed to fit')
+        #logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
+        #                'inputting a background, peak bounds and peak info.')
     peak_params = peaks.best_values
 
     return model_specs, model, peak_params, peaks

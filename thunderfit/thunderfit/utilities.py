@@ -6,6 +6,9 @@ import json
 import dill
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 #### tools
 def save_thunder(obj, path, filename='thunder.p'):
@@ -20,8 +23,6 @@ def save_plot(plot, path='.', figname='figure.png'):
 
 def save_fit_report(obj, path, filename="report.json"):
     json.dump(obj, open(os.path.join(path, filename), 'w'))
-
-
 
 def find_closest_indices(list1, list2):
     list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(list1[i] - cent))
@@ -155,5 +156,41 @@ def make_dir(dirname, i=1):
             print(e, f'. So I named the file: {dirname}')
         return dirname
     return dirname
+
+def clip_data(x_data, y_data):
+
+    clip_left, clip_right = 0, len(x_data) - 1
+    while True:
+        fig, ax = plt.subplots()
+        ax.plot(x_data[clip_left:clip_right], y_data[clip_left:clip_right])
+        print(f"Removing background, please type two x values seperated by a space for the clips. \n"
+              f"current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
+              f"PLEASE MAKE SURE YOU ENTER IN THE SAME ORDER AS HERE. i.e. if first value is larger than right then the "
+              f"first value will be the large x_clip second small")
+        plt.show(block=True)
+        ans = input("If you are happy with the clips type y. if not then please type a new pair of values")
+        if ans == 'y':
+            break
+        else:
+            try:
+                ans = ans.split(' ')
+                if len(ans) != 2:
+                    raise ValueError("The tuple was more than two elements long")
+                clip_left = float(ans[0])
+                clip_left = find_closest_indices(list(x_data), [clip_left])[0]
+                clip_right = float(ans[1])
+                clip_right = find_closest_indices(list(x_data), [clip_right])[0]
+            except ValueError:
+                print("You entered an incorrect answer! Trying again...")
+
+    plt.close()
+    return clip_left, clip_right
+
+def apply_func(key_kwargs_, func):
+    key = key_kwargs_[0]
+    kwargs_ = key_kwargs_[1]
+    val = func(*kwargs_)
+    return key, val
 ####
+
 

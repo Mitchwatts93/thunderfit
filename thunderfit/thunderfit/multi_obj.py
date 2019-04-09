@@ -7,6 +7,7 @@ import copy
 import pandas
 from tqdm import tqdm
 import ast
+from functools import partial
 
 from .thundobj import Thunder
 from . import utilities as utili
@@ -52,12 +53,12 @@ class ThunderBag():
                     map_path = glob.glob(data)[0] # save the filepath to the mapscan as self.map for later
                     x_data, y_data, x_coords, y_coords = self.read_map(map_path, self.x_ind, self.y_ind, self.x_coord_ind, self.y_coord_ind)
 
-                    self.coordinates[f'{i}'] = list(zip(x_coords, y_coords)) # for each i we will have a list of tuples of
-                                                                            # x and y coords
                     for j in range(len(x_data)): # go through the list of x_data
                         x_data_, y_data_ = x_data[j], y_data[j] # the x and y data for each coordinate set
                         self.thunder_bag[f'{i}_{j}'] = Thunder(inp, x_data=x_data_, y_data=y_data_) # make a thunder obj
                                                                                                     # with this data
+                        x_coords_, y_coords_ = x_coords[j], y_coords[j]
+                        self.coordinates[f'{i}_{j}'] = (x_coords_, y_coords_)  # for each i we will have a list of tuples of x and y coords
                 elif '*' in data:
                     filematches = glob.glob(data)
                     for j, file in enumerate(filematches):
@@ -105,14 +106,39 @@ class ThunderBag():
         return bag_dict
 
     @staticmethod
-    def bag_iterator(bag, func, input_args, sett_args):
-        for key in bag.keys():
-            thund = bag[key] # get the thunder object
-            kwargs_ = [getattr(thund, arg) for arg in input_args]
-            val = func(*kwargs_)
+    def bag_iterator(bag, func, input_args, sett_args, pool):
+        print(func)
+        #from pathos.multiprocessing import ProcessPool
+        #pool = ProcessPool()
+
+        # we are using parallel processing here so set it up
+        bag_keys = bag.keys()
+        thunds = {key:bag[key] for key in bag_keys} # get the thunder object
+        kwargs_ = {key: [getattr(thund, arg) for arg in input_args] for key, thund in thunds.items()}
+
+        # run the func in parallel and save list of (key, output) tuples from func
+        vals = dict(pool.imap(partial(apply_func, func=func), kwargs_.items()))
+        print(func)
+        pool.close()
+        pool.join()
+
+
+        #assign the values
+        for key in bag_keys:
+            thund = thunds[key]
+            val = vals[key]
             for i, arg in enumerate(sett_args):
                 setattr(thund, arg, val[i])
+
+        return pool
 
 def main(arguments):
     bag = ThunderBag(copy.deepcopy(arguments)) # load object
     return bag
+
+def apply_func(key_kwargs_, func):
+    key = key_kwargs_[0]
+    kwargs_ = key_kwargs_[1]
+    val = func(*kwargs_)
+    print(key)
+    return key, val

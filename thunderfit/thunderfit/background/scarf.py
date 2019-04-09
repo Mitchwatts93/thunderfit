@@ -108,9 +108,9 @@ def smooth(L, window_length, polyorder):
     return savgol_filter(L, window_length, polyorder, mode='mirror')
 
 def perform_scarf(x_data, y_data, scarf_params=False):
+
     bg = np.array([0 for _ in y_data], dtype=np.float64)
     rad = 70
-    b = 90
     window_length, poly_order = 51, 3
     L_sg = 0
     data_bg_rm_y = y_data.copy()
@@ -118,6 +118,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
 
     if isinstance(scarf_params, bool) and not scarf_params:
         while True:
+            #rcf step
             while True:
                 D = rcf(data_bg_rm_y, rad)
                 fig, ax = plt.subplots()
@@ -134,8 +135,9 @@ def perform_scarf(x_data, y_data, scarf_params=False):
                     except ValueError:
                         print("You entered an incorrect answer! Trying again...")
 
-            L = D + b
-            while True:  # now estimate a baseline to add to D to get L
+            L = D
+            # used to ask user for bg but now just calculate it after the smoothing step
+            """while True:  # now estimate a baseline to add to D to get L
                 fig, ax = plt.subplots()
                 ax.plot(x_data, L)
                 ax.plot(x_data, data_bg_rm_y)
@@ -152,7 +154,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
                         b = int(ans)
                         L = D + b
                     except ValueError:
-                        print("You entered an incorrect answer! Trying again...")
+                        print("You entered an incorrect answer! Trying again...")"""
 
             # then apply SG filter to L
             while True:
@@ -182,6 +184,10 @@ def perform_scarf(x_data, y_data, scarf_params=False):
                     except ValueError:
                         print("You entered an incorrect answer! Trying again...")
 
+            # get the bg shift up automatically
+            b = min(data_bg_rm_y - L)  # whats the smallest difference between D and b? shift it up by that
+            L = D + b
+
             # final question before exiting
             fig, ax = plt.subplots()
             ax.plot(x_data, L)
@@ -193,7 +199,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
             if ans == 'y':
                 bg += L
                 data_bg_rm_y -= L
-                params.append({'r': rad, 'b': b, 'window': window_length, 'poly': poly_order})
+                params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
                 break
             elif ans == 'n':
                 pass
@@ -202,7 +208,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
                 print("apply two bg removal steps, this will mean the background just specified will be removed "
                       "from the data")
                 data_bg_rm_y -= L  # remove the bg found here from the original data and go again
-                params.append({'r':rad, 'b':b, 'window':window_length, 'poly':poly_order})
+                params.append({'rad':rad, 'b':b, 'window_length':window_length, 'poly_order':poly_order})
             else:
                 print("You entered an incorrect answer! Trying whole fitting routine again...")
     elif isinstance(scarf_params, bool):
@@ -224,7 +230,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
         L = D + b
         bg += L
         data_bg_rm_y -= L
-        params.append({'r': rad, 'b': b, 'window': window_length, 'poly': poly_order})
+        params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
     elif isinstance(scarf_params, list):
         # the user wants multiple runs. call the function for each set of params, passing the new y data each time
         for param_dict in scarf_params:
@@ -236,6 +242,6 @@ def perform_scarf(x_data, y_data, scarf_params=False):
             'an unexpected parameter has been passed as a scarf value, running interactively.')
         data_bg_rm_y, bg, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=False)
         params += params_
-        return data_bg_rm_y, bg
-
+        return data_bg_rm_y, bg, params
+    plt.close()
     return data_bg_rm_y, bg, params
