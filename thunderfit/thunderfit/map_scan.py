@@ -3,9 +3,14 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 import os
 import time
-
-
+import numpy as np
 from typing import Union, Dict, List
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+from scipy import sparse
 
 from . import utilities as utili
 from . import multi_obj
@@ -86,14 +91,6 @@ def normalise_all(y_bg_rem, bg, y_raw):
     return y_data_bg_rm, background, y_data_norm
 
 def main():
-    from pathos.multiprocessing import ProcessPool
-    pool = ProcessPool()
-    import matplotlib
-    matplotlib.use('TkAgg')
-    import matplotlib.pyplot as plt
-    import tkinter
-    tkinter.NoDefaultRoot()
-
     args = parse_user_args()
 
     if args.param_file_path:  # if there is a params file then use it
@@ -107,6 +104,7 @@ def main():
     curr_time = time.strftime('%d_%m_%Y_%l:%M%p') #name directory with the current time
     dirname = utili.make_dir(f'analysed_{curr_time}')  # make a dict for the processed data to be saved in
 
+
     bag = multi_obj.main(arguments) # create a Thunder object
 
     ###### clip the data if weird edges
@@ -114,8 +112,11 @@ def main():
         first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
         clip_left, clip_right = utili.clip_data(first_thunder.x_data, first_thunder.y_data)
         for thund in bag.thunder_bag.values():
-            setattr(thund, 'x_data', first_thunder.x_data[clip_left:clip_right])
-            setattr(thund, 'y_data', first_thunder.y_data[clip_left:clip_right])
+            setattr(thund, 'x_data', thund.x_data[clip_left:clip_right])
+            setattr(thund, 'y_data', thund.y_data[clip_left:clip_right])
+
+    ###### cosmic ray removal goes here
+    ####################################################################################################################
 
     ###### remove background
     if arguments.get('bg_first_only', False):
@@ -125,9 +126,9 @@ def main():
         [param.pop('b', None) for param in params]
         for thund in bag.thunder_bag.values():
             setattr(thund, 'scarf_params', params) # set all the values to this
-    pool = bag.bag_iterator(bag.thunder_bag, bg_remove.background_finder, ('x_data', 'y_data',
-                                                                   'background', 'scarf_params'), ('background', 'y_data_bg_rm', 'params'), pool) # determine the background
-    pool.restart()
+    bag.bag_iterator(bag.thunder_bag, bg_remove.background_finder, ('x_data', 'y_data',
+                                                                   'background', 'scarf_params'), ('background', 'y_data_bg_rm', 'params')) # determine the background
+
     ###### normalisation
     if args.normalise:
         pool = bag.bag_iterator(bag.thunder_bag, normalise_all, ('y_data_bg_rm', 'background', 'y_data'), ('y_data_bg_rm', 'background', 'y_data_norm'), pool)
@@ -140,7 +141,7 @@ def main():
         no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
             peak_finding.peaks_unspecified(first_thunder.x_data, first_thunder.y_data_bg_rm, first_thunder.no_peaks,
                                            first_thunder.peak_centres, first_thunder.peak_amps, first_thunder.peak_widths,
-                                           first_thunder.peak_types, plt)
+                                           first_thunder.peak_types)
         for thund in bag.thunder_bag.values(): # set these first values for all of them
             setattr(thund, 'no_peaks', no_peaks)  # set values
             setattr(thund, 'peak_centres', peak_centres)  # set values
@@ -149,10 +150,9 @@ def main():
             setattr(thund, 'peak_types', peak_types)  # set values
             setattr(thund, 'prominence', prominence)  # set values
     else:
-        pool = bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
+        bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
                                                   'peak_centres', 'peak_amps', 'peak_widths',
                                                   'peak_types'), ('no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types', 'prominence')) # find peaks/use them if supplied
-        pool.restart()
 
     ###### find bounds
     if arguments.get('peakf_first_only', False):
@@ -167,14 +167,12 @@ def main():
                                               'peak_centres', 'peak_amps'), ('bounds')) # make bounds
 
     ###### fit peaks
-    print('fitting')
-    pool = bag.bag_iterator(bag.thunder_bag, peak_fitting.fit_peaks, ('x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
-                               'peak_amps', 'peak_widths', 'bounds'), ('specs', 'model', 'peak_params', 'peaks'), pool) # fit peaks
-    pool.restart()
-    print('fitted')
+    bag.bag_iterator(bag.thunder_bag, peak_fitting.fit_peaks, ('x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
+                               'peak_amps', 'peak_widths', 'bounds'), ('specs', 'model', 'peak_params', 'peaks')) # fit peaks
 
-    import ipdb
-    ipdb.set_trace()
+    ###### store important values of fits in dicts
+    # store all the peak parameters in a dictionary, so the keys are e.g. sigma, center, amplitude, and the values are
+    # dictionaries with keys as the run number with values as lists of values for all the peaks for that run
     # this will for now assume the same types of peak for all fits!
     fit_params = {}
     first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
@@ -184,27 +182,89 @@ def main():
         fit_params[param] = {} # e.g. 'center'
         for key in bag.thunder_bag.keys():
             fit_details = bag.thunder_bag[key].peak_params
-            import ipdb
-            ipdb.set_trace()
-            fit_details = [fit_details[key_] for key_ in fit_details.keys() if key_ in params]
+            fit_details = [fit_details[key_] for key_ in fit_details.keys() if param in key_]
             fit_params[param][key] = fit_details
+
     ###### fetch stats etc
     stats = {'chisq':{}, 'reduced_chi_sq':{}, 'free_params':{}}
     for key in bag.thunder_bag.keys():
-        chisq = bag.thunder_bag[key].peaks.chisq
+        chisq = bag.thunder_bag[key].peaks.chisqr
         reduced_chi_sq = bag.thunder_bag[key].peaks.redchi
         free_params = round(chisq / reduced_chi_sq)
-        import ipdb
-        ipdb.set_trace()
         stats['chisq'][key] = chisq
         stats['reduced_chi_sq'][key] = reduced_chi_sq
         stats['free_params'][key] = free_params
 
-    ############## here call a map scan plot to plot details from all the plot, e.g. the widths on each coordinate
+    ###### plot map scan
+    def shift_map_matr(coordinates_array):
+        coordinates_array[:,0] = coordinates_array[:,0] - min(coordinates_array[:,0])
+        coordinates_array[:, 1] = coordinates_array[:, 1] - min(coordinates_array[:, 1])
+        return coordinates_array
+    def map_scan_plot(coordinates, values):
+        no_fits = len(list(values.values())[0])
+        figs = []
+        data = []
+        for i in range(no_fits):
+            X = []
+            Y = []
+            Z = []
+            for key in values.keys():
+                x, y = coordinates[key]
+                z = values[key][i]
+                X.append(x)
+                Y.append(y)
+                Z.append(z)
+            x_step = np.unique(X)[1] - np.unique(X)[0]
+            xx = (X/x_step).astype(int)
+            y_step = np.unique(Y)[1] - np.unique(Y)[0]
+            yy = (Y / y_step).astype(int)
+            data_ = sparse.coo_matrix((Z, (xx, yy))).toarray()
+            data.append(data_)
+            f = plt.figure()
+            ax = plt.gca()
+            im = plt.imshow(data_, cmap='magma', extent=[min(X), max(X), max(Y), min(Y)], vmin=data_.min(), vmax=data_.max())
+            plt.xlabel('x coordinates')
+            plt.ylabel('y coordinates')
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            plt.colorbar(im, cax=cax)
+            f.tight_layout()
+            figs.append(f)
+        return figs
+
+    coordinates_array = np.array(list(bag.coordinates.values())) # convert coordinates for each point into an array
+    coordinates_array = shift_map_matr(coordinates_array) # shift so that each coordinate starts at 0, not normalised
+    for i, key in enumerate(bag.coordinates):
+        bag.coordinates[key] = coordinates_array.tolist()[i] # reassign in the correct format
+    p = ''
+    plot = None
+    while True:
+        ans = input("making map scans, please input which property you would like to scan. options are:"
+              f"\n {[p_ for p_ in fit_params.keys()]}. or type s to save or type y to exit")
+        if ans == 'y':
+            break
+        elif ans == 's' and not isinstance(plot, bool):
+            try:
+                for i, pt in enumerate(plot):
+                    utili.save_plot(pt, path=dirname, figname=f"{p}_{i}.svg")
+            except AttributeError:
+                print('you havent generated a plot yet, I cant save anything!')
+        else:
+            try:
+                p = ans
+                plot = map_scan_plot(bag.coordinates, fit_params[p])
+                for pt in plot:
+                    pt.suptitle(f'{p}_heatmap')
+            except KeyError:
+                p = ''
+                print('wrong answer entered, trying again!')
+
+    ###### put here some code for cluster analysis and pca
+    ####################################################################################################################
+
 
     ############## figure out what to save
     # save a plot of the figure and the thunder object
     dataname = os.path.basename(arguments['datapath'])
-    utili.save_plot(bag.plot, path=dirname, figname=f"{dataname}.svg")
-    utili.save_thunder(bag, path=dirname, filename=f"{dataname}.p")
-    utili.save_fit_report(bag.fit_report, path=dirname, filename=f"{dataname}_report.json")
+    utili.save_fit_report(stats, path=dirname, filename=f"{dataname}_report.json")
+    utili.save_fit_report(fit_params, path=dirname, filename=f"{dataname}_peak_info.json")

@@ -1,18 +1,11 @@
-import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 from lmfit import models
 
 def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, bounds):
-
     model_specs = build_specs(peak_types, peak_centres, peak_amps, peak_widths, bounds)
-
     model, peak_params = generate_model(model_specs)
     peaks = model.fit(y_data, peak_params, x=x_data)
     if not peaks.success:
         print('peaks failed to fit')
-        #logging.warning('The fitting routine failed! exiting programme. Try lowering tightness settings or manually '
-        #                'inputting a background, peak bounds and peak info.')
     peak_params = peaks.best_values
 
     return model_specs, model, peak_params, peaks

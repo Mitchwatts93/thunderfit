@@ -4,11 +4,9 @@ LOGGER.setLevel(logging.INFO)
 from scipy.signal import find_peaks as peak_find
 from scipy.signal import peak_widths as peak_width_func
 import numpy as np
-"""import matplotlib
-import tkinter
-tkinter.NoDefaultRoot()
+import matplotlib
+import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt"""
 
 from . import utilities as utili
 
@@ -35,7 +33,7 @@ def find_cents(prominence, y_data, find_all=False):
     center_indices = peak_info['center_indices']
     return center_indices
 
-def interactive_peakfinder(prominence, x_data, y_data, plt):
+def interactive_peakfinder(prominence, x_data, y_data):
     while True:
         peak_info = find_cents(prominence, y_data, find_all=True)
         plt.plot(x_data, y_data)
@@ -70,7 +68,7 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
     return peak_properties
 
 #THIS NEEDS A BIT OF TIDYING UP?
-def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types, plt=False):
+def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types):
     prominence = None
     if len(peak_centres) == 0 or len(peak_centres) < peak_no:
         if peak_no and len(peak_centres) < peak_no and len(peak_centres):
@@ -79,7 +77,7 @@ def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         prominence = 1
         if not peak_no: # then they don't know so we can find everything in one go and save some time
             #peak_info = find_cents(prominence, y_data, find_all=True)
-            peak_info, prominence = interactive_peakfinder(prominence, x_data, y_data, plt)
+            peak_info, prominence = interactive_peakfinder(prominence, x_data, y_data)
             center_indices = peak_info['center_indices']
             peak_amps = peak_info['amps']
             peak_properties = peak_width_func(y_data, center_indices, rel_height=0.7)

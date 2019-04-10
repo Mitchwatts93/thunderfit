@@ -20,25 +20,26 @@ New features:
 
 Multiobj:
 Done - add method to read map scan file and store that info also, maybe add variables for storing map scan parameters/details
--add method to do user guided background for first fit, and then use those scarf parameters for all else, except background shift which will be calculated for each case
--find peaks for first fit by user guided/normal way, if not supplied, and then use those peaks parameters for all other fits
--make a method to extract a peak value from each location which is consistent, or null if not available. E.g. find the peak position corresponding to that peak in the first location
--make a fit report for the whole bag of objects, e.g. the parameters used, the fit details at each, scarf parameters, chi sq and p value etc
+Done -add method to do user guided background for first fit, and then use those scarf parameters for all else, except background shift which will be calculated for each case
+Done -find peaks for first fit by user guided/normal way, if not supplied, and then use those peaks parameters for all other fits
+Done kinf of -make a method to extract a peak value from each location which is consistent, or null if not available. E.g. find the peak position corresponding to that peak in the first location
+Done -make a fit report for the whole bag of objects, e.g. the parameters used, the fit details at each, scarf parameters, chi sq and p value etc
 
 Plotting:
--make a method for map scans given a parameter for each location, e.g. width
+Done -make a method for map scans given a parameter for each location, e.g. width
 -method for plotting grid over an image
 
 Make a map scan routine:
--create a multiobj
--background substraction on each location based on the first fit or parameters
--find peaks for all based in first location/parameters
--fit peaks to each location and store their info
--plot some variable from each location on a map
+Done -create a multiobj
+Done -background substraction on each location based on the first fit or parameters
+Done -find peaks for all based in first location/parameters
+Done -fit peaks to each location and store their info
+Done -plot some variable from each location on a map
 -create and save a fit report
 -save the bag of objects
 
-
+- currently passing a bg as an np array doesn't work
+- need to be ableto pass custom functions to lmfit, or other lm fit types
 
 TESTING NEEDED:
 
