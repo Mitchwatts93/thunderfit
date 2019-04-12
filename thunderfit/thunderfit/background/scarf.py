@@ -137,24 +137,6 @@ def perform_scarf(x_data, y_data, scarf_params=False):
 
             L = D
             # used to ask user for bg but now just calculate it after the smoothing step
-            """while True:  # now estimate a baseline to add to D to get L
-                fig, ax = plt.subplots()
-                ax.plot(x_data, L)
-                ax.plot(x_data, data_bg_rm_y)
-                print(f"Please look at the following bg with a shift={b}")
-                plt.show(block=True)
-                ans = input("If you are happy with the plot, type y. if not then please type a new background value. \n"
-                            "Please note that the background should NOT intercept the data. Ideally it would pass through"
-                            "the mean of the noise for the correct bg already fit")
-                if ans == 'y':
-                    L = D + b
-                    break
-                else:
-                    try:
-                        b = int(ans)
-                        L = D + b
-                    except ValueError:
-                        print("You entered an incorrect answer! Trying again...")"""
 
             # then apply SG filter to L
             while True:
