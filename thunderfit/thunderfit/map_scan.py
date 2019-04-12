@@ -102,7 +102,10 @@ def main():
         arguments = utili.parse_args(args)  # else use argparse but put in dictionary form
 
     curr_time = time.strftime('%d_%m_%Y_%l:%M%p') #name directory with the current time
-    file_name = os.path.basename(ast.literal_eval(arguments['datapath'])[0]) # the name
+    if isinstance(ast.literal_eval(arguments['datapath']), list):
+        file_name = os.path.basename(ast.literal_eval(arguments['datapath'])[0]) # the name
+    else:
+        file_name = os.path.basename(arguments['datapath'])
     file_name = file_name.split('.')[0] # the name of the file
     dirname = utili.make_dir(f'{file_name}_analysed_{curr_time}')  # make a dict for the processed data to be saved in
 
@@ -242,7 +245,7 @@ def main():
     while True:
         ans = input("making map scans, please input which property you would like to scan. options are:"
               f"\n {[p_ for p_ in fit_params.keys()]}. or type e to exit")
-        if ans == 'y':
+        if ans == 'e':
             break
         else:
             try:
