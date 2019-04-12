@@ -98,7 +98,7 @@ class ThunderBag():
         for baglabel, thund in tqdm(bag_dict.items()):
             thund.background_finder()  # then determine the background
             specified_dict = peak_details(thund.user_params)
-            thund.peaks_unspecified(specified_dict)
+            thund.find_peak_details(specified_dict)
 
             # now fit peaks
             thund.fit_peaks()
@@ -111,7 +111,7 @@ class ThunderBag():
     @staticmethod
     def bag_iterator(bag, func, input_args, sett_args):
         bagkeys = tqdm(bag.keys())
-        t.set_description(f"Operating with: {func}, to find: {sett_args}")
+        bagkeys.set_description(f"Operating with: {func.__name__}, to find: {sett_args}")
         for key in bagkeys:
             thund = bag[key]
             kwargs_ = [getattr(thund, arg) for arg in input_args]

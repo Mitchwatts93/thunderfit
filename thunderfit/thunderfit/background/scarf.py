@@ -195,7 +195,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
             print(f"Please look at the following bg with selected parameters")
             plt.show(block=True)
             ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
-                        "typing repeat will add an additional bg subtraction to this one")
+                        "Typing repeat will add an additional bg subtraction to this one ")
             if ans == 'y':
                 bg += L
                 data_bg_rm_y -= L

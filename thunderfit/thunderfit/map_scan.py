@@ -144,14 +144,14 @@ def main():
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
         no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
-            peak_finding.peaks_unspecified(first_thunder.x_data, first_thunder.y_data_bg_rm, first_thunder.no_peaks,
+            peak_finding.find_peak_details(first_thunder.x_data, first_thunder.y_data_bg_rm, first_thunder.no_peaks,
                                            first_thunder.peak_centres, first_thunder.peak_amps, first_thunder.peak_widths,
                                            first_thunder.peak_types)
         for thund in bag.thunder_bag.values(): # set these first values for all of them
             setattr(thund, 'no_peaks', no_peaks)  # set values
             setattr(thund, 'peak_centres', peak_centres)  # set values
             setattr(thund, 'peak_types', peak_types)  # set values
-    bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
+    bag.bag_iterator(bag.thunder_bag, peak_finding.find_peak_details, ('x_data', 'y_data_bg_rm', 'no_peaks',
                                                   'peak_centres', 'peak_amps', 'peak_widths',
                                                   'peak_types'), ('no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types', 'prominence')) # find peaks/use them if supplied
 
@@ -229,7 +229,7 @@ def main():
             divider = make_axes_locatable(ax)
             cax = divider.append_axes("right", size="5%", pad=0.05)
             plt.colorbar(im, cax=cax)
-            f.tight_layout()
+            #f.tight_layout()
             figs.append(f)
         return figs
 
@@ -248,8 +248,13 @@ def main():
             try:
                 p = ans
                 plot = map_scan_plot(bag.coordinates, fit_params[p])
-                for pt in plot:
-                    pt.suptitle(f'{p}_heatmap')
+                for i, pt in enumerate(plot):
+                    try:
+                        cents = next(iter(fit_params['center'].values()))
+                        pt.suptitle(f'{p}_{i}_heatmap. peak {i} is centered at: {cents[i]}')
+                    except KeyError:
+                        print("tried to add label for peak centers onto graph, but couldn't fetch the right variable")
+                        pt.suptitle(f'{p}_{i}_heatmap')
             except KeyError:
                 p = ''
                 print('wrong answer entered, trying again!')

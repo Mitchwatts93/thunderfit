@@ -164,11 +164,11 @@ def clip_data(x_data, y_data):
         fig, ax = plt.subplots()
         ax.plot(x_data[clip_left:clip_right], y_data[clip_left:clip_right])
         print(f"Removing background, please type two x values seperated by a space for the clips. \n"
-              f"current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
+              f"Current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
               f"PLEASE MAKE SURE YOU ENTER IN THE SAME ORDER AS HERE. i.e. if first value is larger than right then the "
               f"first value will be the large x_clip second small")
         plt.show(block=True)
-        ans = input("If you are happy with the clips type y. if not then please type a new pair of values")
+        ans = input("If you are happy with the clips type y. If not then please type a new pair of values ")
         if ans == 'y':
             break
         else:

@@ -42,7 +42,7 @@ def interactive_peakfinder(prominence, x_data, y_data):
             plt.axvline(x=xc)
         print(f"Peak finder requires user input, please look at the following plot with prominence={prominence}")
         plt.show()
-        ans = input("If you are happy with the plot, type y. if not then please type a new prominence")
+        ans = input("If you are happy with the plot, type y. If not then please type a new prominence ")
         if ans == 'y':
             break
         else:
@@ -68,7 +68,7 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
     return peak_properties
 
 #THIS NEEDS A BIT OF TIDYING UP?
-def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types):
+def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types):
     prominence = None
     if len(peak_centres) == 0 or len(peak_centres) < peak_no:
         if peak_no and len(peak_centres) < peak_no and len(peak_centres):

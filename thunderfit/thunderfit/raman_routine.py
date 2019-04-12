@@ -112,7 +112,7 @@ def main():
                                                  normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
 
     thunder.no_peaks, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types, _ = \
-                   peak_finding.peaks_unspecified(thunder.x_data, thunder.y_data_bg_rm, thunder.no_peaks,
+                   peak_finding.find_peak_details(thunder.x_data, thunder.y_data_bg_rm, thunder.no_peaks,
                                                   thunder.peak_centres, thunder.peak_amps, thunder.peak_widths,
                                                   thunder.peak_types) # find peaks/use them if supplied
 
