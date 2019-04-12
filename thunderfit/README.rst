@@ -123,3 +123,11 @@ The ramananalyse script
 
 Currently this script processes user inputs and parses everything, it then creates a new directory in the current directory named analysed_{time}. This will contain all the analysis data (and in a future version also a log file - currently logs are output directly to user). Then it creates a Thunder object based on input and params file. The background and the data with the background removed are then saved as variables in the object. Currenly it doesn't normalise but in the future there will be an option to perform normalisation on the background subtracted data, and then on the generated background and original data in order to make a nice plot at the end (currently only svn normalisation is implemented and bg and original data use the mean and stddev from the background subtracted data).  Then it determines if peak information has been passed by the user, and finds the peak information automatically or just uses the information if correct. Then bounds are either used or generated for these peaks. Then peaks are fitted to the data using the peak information and the bounds information (and of course the y data with the bg removed). Then the original data, fitted peaks, background, the fit sum and the uncertainties on the fitted peaks (if available - will be improved in future release) are all plotted using matplot lib and the plot object returned. A fit report is then generated. The plots are then saved in the generated directory from earlier, as is the fit report and the Thunder object (using dill).
 
+The map_scan script
+~~~~~~~~~~~~~~~~~~~
+
+Further details coming soon. Run in the same way as:
+
+ mapscan --param_file_path ../bag_params.txt --datapath "['./map.txt',]"
+
+ where the list within quotes at the end should contain a comma seperated list of files to analyse. It will assume a map so currently only works with one file which is a map file from Raman.
