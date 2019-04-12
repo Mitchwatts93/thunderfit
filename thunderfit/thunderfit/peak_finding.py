@@ -109,7 +109,7 @@ def peaks_unspecified(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
             logging.warning("you specified less peak widths than peak_numbers."
                 " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
         peak_left_edges, peak_right_edges = find_peak_properties(1, peak_centres, y_data, 'widths') # get edge indices
-        peak_widths = x_data[peak_right_edges] - x_data[peak_left_edges]
+        peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges])
     elif len(peak_widths) > peak_no:
         logging.warning("specified more peak widths than no_peaks. cutting the peaks supplied as [:no_peaks]")
         peak_widths = peak_widths[:peak_no]

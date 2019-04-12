@@ -110,35 +110,20 @@ class ThunderBag():
 
     @staticmethod
     def bag_iterator(bag, func, input_args, sett_args):
-        """
-        from functools import partial
-        from pathos.multiprocessing import ProcessingPool as Pool
-        This parallel implementation breaks because matplotlib backends don't like parallel threads and crash
-        pool = Pool()
-        # we are using parallel processing here so set it up
-        bag_keys = bag.keys()
-        thunds = {key:bag[key] for key in bag_keys} # get the thunder object
-        kwargs_ = {key: [getattr(thund, arg) for arg in input_args] for key, thund in thunds.items()}
-
-        # run the func in parallel and save list of (key, output) tuples from func
-        vals = dict(pool.imap(partial(utili.apply_func, func=func), kwargs_.items()))
-        pool.close()
-        pool.join()
-        pool.clear()
-        #assign the values
-        for key in bag_keys:
-            thund = thunds[key]
-            val = vals[key]
-            for i, arg in enumerate(sett_args):
-                setattr(thund, arg, val[i])
-        """
-        for key in tqdm(bag.keys()):
+        bagkeys = tqdm(bag.keys())
+        t.set_description(f"Operating with: {func}, to find: {sett_args}")
+        for key in bagkeys:
             thund = bag[key]
             kwargs_ = [getattr(thund, arg) for arg in input_args]
             _, val = utili.apply_func((key, kwargs_), func)
             for i, arg in enumerate(sett_args):
-                setattr(thund, arg, val[i])
-
+                try:
+                    setattr(thund, arg, val[i])
+                except KeyError as e:
+                    if isinstance(val, dict):
+                        setattr(thund, arg, val)
+                    else:
+                        print(f'Weird KeyError encountered: {e}')
 
 def main(arguments):
     bag = ThunderBag(copy.deepcopy(arguments)) # load object

@@ -8,8 +8,6 @@ import numpy as np
 from typing import Dict, Union
 import copy
 
-
-
 import lmfit
 
 from . import utilities as utili
@@ -130,16 +128,16 @@ class Thunder():
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
     def plot_all(self):
-        ax = plotting.plot_fits(self.x_data, self.peaks.eval_components()) # plot each component of the model
-        ax = plotting.plot_background(self.x_data, self.background, ax) #plot the background supplied by user
-        ax = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax) # plot the fitted data
+        ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components()) # plot each component of the model
+        ax, plt = plotting.plot_background(self.x_data, self.background, ax) #plot the background supplied by user
+        ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax) # plot the fitted data
         try:
-            ax = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
+            ax, plt = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
                                          self.peaks.best_fit, ax) #plot a band of uncertainty
         except TypeError:
             logging.warning('There are not uncertainties available for some reason - '
                          'try lowering the tightness of automatic bounds')
-        ax = plotting.plot_data(self.x_data, self.y_data, ax)  # plot the raw data
+        ax, plt = plotting.plot_data(self.x_data, self.y_data, ax)  # plot the raw data
 
         ax.minorticks_on()
         ax.grid(which='minor', alpha=0.2)

@@ -150,17 +150,13 @@ def main():
         for thund in bag.thunder_bag.values(): # set these first values for all of them
             setattr(thund, 'no_peaks', no_peaks)  # set values
             setattr(thund, 'peak_centres', peak_centres)  # set values
-            #setattr(thund, 'peak_amps', peak_amps)  # set values
-            #setattr(thund, 'peak_widths', peak_widths)  # set values
             setattr(thund, 'peak_types', peak_types)  # set values
-            #setattr(thund, 'prominence', prominence)  # set values
-    else:
-        bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
+    bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
                                                   'peak_centres', 'peak_amps', 'peak_widths',
                                                   'peak_types'), ('no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types', 'prominence')) # find peaks/use them if supplied
 
     ###### find bounds
-    if arguments.get('peakf_first_only', False):
+    if arguments.get('bounds_first_only', False):
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
         bounds = peak_fitting.make_bounds(first_thunder.tightness, first_thunder.no_peaks, first_thunder.bounds,
@@ -169,7 +165,7 @@ def main():
             setattr(thund, 'bounds', bounds)  # set values
     else:
         bag.bag_iterator(bag.thunder_bag, peak_fitting.make_bounds, ('tightness', 'no_peaks', 'bounds', 'peak_widths',
-                                              'peak_centres', 'peak_amps'), ('bounds')) # make bounds
+                                              'peak_centres', 'peak_amps'), ('bounds',)) # make bounds
 
     ###### fit peaks
     bag.bag_iterator(bag.thunder_bag, peak_fitting.fit_peaks, ('x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
@@ -271,4 +267,4 @@ def main():
     # save a plot of the figure and the bag object
     utili.save_fit_report(stats, path=dirname, filename=f"{file_name}_report.json")
     utili.save_fit_report(fit_params, path=dirname, filename=f"{file_name}_peak_info.json")
-    utili.save_thunder(bag, path=dirname, filename=f"{file_name}.p")
+    utili.save_thunder(bag, path=dirname, filename=f"{file_name}.d")
