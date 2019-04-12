@@ -110,6 +110,10 @@ def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         peak_properties = peak_width_func(y_data, center_indices, rel_height=0.6)
         peak_left_edges, peak_right_edges = [int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]]
         peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges])
+        for i in range(len(peak_widths)):
+            if peak_widths[i] == 0:
+                peak_widths[i] = 1
+
     elif len(peak_widths) > peak_no:
         logging.warning("specified more peak widths than no_peaks. cutting the peaks supplied as [:no_peaks]")
         peak_widths = peak_widths[:peak_no]
