@@ -11,7 +11,7 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 #### tools
-def save_thunder(obj, path, filename='thunder.p'):
+def save_thunder(obj, path, filename='thunder.d'):
     dill.dump(obj, open(os.path.join(path, filename), 'wb'))
 
 def load_thunder(path):

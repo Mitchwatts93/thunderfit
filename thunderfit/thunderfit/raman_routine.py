@@ -133,5 +133,5 @@ def main():
     # save a plot of the figure and the thunder object
     dataname = os.path.basename(arguments['datapath']).split('.')[0]
     utili.save_plot(thunder.plot, path=dirname, figname=f"{dataname}.svg")
-    utili.save_thunder(thunder, path=dirname, filename=f"{dataname}.p")
+    utili.save_thunder(thunder, path=dirname, filename=f"{dataname}.d")
     utili.save_fit_report(thunder.fit_report, path=dirname, filename=f"{dataname}_report.json")

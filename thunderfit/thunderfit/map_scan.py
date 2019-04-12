@@ -241,15 +241,9 @@ def main():
     plot = None
     while True:
         ans = input("making map scans, please input which property you would like to scan. options are:"
-              f"\n {[p_ for p_ in fit_params.keys()]}. or type s to save or type y to exit")
+              f"\n {[p_ for p_ in fit_params.keys()]}. or type e to exit")
         if ans == 'y':
             break
-        elif ans == 's' and not isinstance(plot, bool):
-            try:
-                for i, pt in enumerate(plot):
-                    utili.save_plot(pt, path=dirname, figname=f"{p}_{i}.svg")
-            except AttributeError:
-                print('you havent generated a plot yet, I cant save anything!')
         else:
             try:
                 p = ans
@@ -259,13 +253,18 @@ def main():
             except KeyError:
                 p = ''
                 print('wrong answer entered, trying again!')
+            try:
+                for i, pt in enumerate(plot):
+                    utili.save_plot(pt, path=dirname, figname=f"{p}_{i}.svg")
+            except AttributeError:
+                print("Tried to save plot but there is no plot yet! Somethuing wen't wrong in making the plot")
 
     ###### put here some code for cluster analysis and pca
     ####################################################################################################################
 
 
     ############## figure out what to save
-    # save a plot of the figure and the thunder object
-    dataname = os.path.basename(arguments['datapath'])
-    utili.save_fit_report(stats, path=dirname, filename=f"{dataname}_report.json")
-    utili.save_fit_report(fit_params, path=dirname, filename=f"{dataname}_peak_info.json")
+    # save a plot of the figure and the bag object
+    utili.save_fit_report(stats, path=dirname, filename=f"{file_name}_report.json")
+    utili.save_fit_report(fit_params, path=dirname, filename=f"{file_name}_peak_info.json")
+    utili.save_thunder(bag, path=dirname, filename=f"{file_name}.p")
