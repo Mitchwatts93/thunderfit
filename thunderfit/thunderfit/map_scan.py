@@ -150,10 +150,10 @@ def main():
         for thund in bag.thunder_bag.values(): # set these first values for all of them
             setattr(thund, 'no_peaks', no_peaks)  # set values
             setattr(thund, 'peak_centres', peak_centres)  # set values
-            setattr(thund, 'peak_amps', peak_amps)  # set values
-            setattr(thund, 'peak_widths', peak_widths)  # set values
+            #setattr(thund, 'peak_amps', peak_amps)  # set values
+            #setattr(thund, 'peak_widths', peak_widths)  # set values
             setattr(thund, 'peak_types', peak_types)  # set values
-            setattr(thund, 'prominence', prominence)  # set values
+            #setattr(thund, 'prominence', prominence)  # set values
     else:
         bag.bag_iterator(bag.thunder_bag, peak_finding.peaks_unspecified, ('x_data', 'y_data_bg_rm', 'no_peaks',
                                                   'peak_centres', 'peak_amps', 'peak_widths',

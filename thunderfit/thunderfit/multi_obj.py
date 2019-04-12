@@ -132,7 +132,7 @@ class ThunderBag():
             for i, arg in enumerate(sett_args):
                 setattr(thund, arg, val[i])
         """
-        for key in bag.keys():
+        for key in tqdm(bag.keys()):
             thund = bag[key]
             kwargs_ = [getattr(thund, arg) for arg in input_args]
             _, val = utili.apply_func((key, kwargs_), func)
