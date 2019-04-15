@@ -3,11 +3,16 @@ todo
 Fitting/finding:
 - move bound making into peak finding
 - generate model should be made more generic so a function can be passed and used.
+- some peaks are failing to fit, ensure that when they fail a good value is saved as parameter values so that map can still be trusted, and save the plots that fail for user inspection - if its due to widths or amplitude bounds then investigate how to fix
 
 Plotting:
 - method for plotting grid over an image
 
 Background:
 - currently passing a bg as an np array doesn't work
+- check that scarf is always moothing, some mapscan results seem like it isn't
+
+Give opportunity to choose a spectrum other than the first to choose background and peaak centres etc.
+
 
 TESTING needed:

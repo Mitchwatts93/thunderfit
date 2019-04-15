@@ -5,10 +5,12 @@ import os
 import time
 import numpy as np
 from typing import Union, Dict, List
+
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 import ast
 from scipy import sparse
 
@@ -112,9 +114,30 @@ def main():
 
     bag = multi_obj.main(arguments) # create a Thunder object
 
+    ###### choose which spectrum to base everything off of
+    first = 0
+    first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[first]]
+    if  arguments.get('clip_data', False) or arguments.get('bg_first_only', False) or arguments.get('peakf_first_only', False) or arguments.get('bounds_first_only', False):
+        # then we have to choose which spectrum we want
+        while True:
+            first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[first]]
+            fig, ax = plt.subplots()
+            ax.plot(first_thunder.x_data, first_thunder.y_data)
+            print(f"Need a decision on which plot is representitive of data, the following is for index {first}")
+            plt.show(block=True)
+            ans = input("If you are happy with using this data file, type y, otherwise enter a new index")
+            if ans == 'y':
+                break
+            else:
+                try:
+                    first = int(ans)
+                except ValueError:
+                    print("You entered an incorrect answer! Trying again...")
+
+
     ###### clip the data if weird edges
     if arguments.get('clip_data', False):
-        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        #first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[first]]
         clip_left, clip_right = utili.clip_data(first_thunder.x_data, first_thunder.y_data)
         for thund in bag.thunder_bag.values():
             setattr(thund, 'x_data', thund.x_data[clip_left:clip_right])
@@ -126,7 +149,7 @@ def main():
     ###### remove background
     if arguments.get('bg_first_only', False):
         # add step to find bg parameters for first one and use for the rest.
-        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        #first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[first]]
         _, _, params = bg_remove.background_finder(first_thunder.x_data, first_thunder.y_data, first_thunder.background, first_thunder.scarf_params)
         [param.pop('b', None) for param in params]
         for thund in bag.thunder_bag.values():
@@ -142,7 +165,7 @@ def main():
     ###### find peaks
     if arguments.get('peakf_first_only', False):
         # add step to find bg parameters for first one and use for the rest.
-        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        #first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
         no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
             peak_finding.find_peak_details(first_thunder.x_data, first_thunder.y_data_bg_rm, first_thunder.no_peaks,
                                            first_thunder.peak_centres, first_thunder.peak_amps, first_thunder.peak_widths,
@@ -158,7 +181,7 @@ def main():
     ###### find bounds
     if arguments.get('bounds_first_only', False):
         # add step to find bg parameters for first one and use for the rest.
-        first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+        #first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
         bounds = peak_fitting.make_bounds(first_thunder.tightness, first_thunder.no_peaks, first_thunder.bounds,
                                           first_thunder.peak_widths, first_thunder.peak_centres, first_thunder.peak_amps)
         for thund in bag.thunder_bag.values():  # set these first values for all of them
@@ -176,7 +199,7 @@ def main():
     # dictionaries with keys as the run number with values as lists of values for all the peaks for that run
     # this will for now assume the same types of peak for all fits!
     fit_params = {}
-    first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
+    #first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
     params = list(first_thunder.peak_params.keys())[: len(first_thunder.peak_params) // first_thunder.no_peaks] # what are the peak params for the first peak
     params = [param.split('_')[1] for param in params] # keep only the type of param
     for param in params:
