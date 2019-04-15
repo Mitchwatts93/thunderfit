@@ -25,8 +25,12 @@ def save_fit_report(obj, path, filename="report.json"):
     json.dump(obj, open(os.path.join(path, filename), 'w'))
 
 def find_closest_indices(list1, list2):
-    list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(list1[i] - cent))
+    try:
+        list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(list1[i] - cent))
                                 for cent in list2]
+    except ValueError:
+        print('this dataset has no peaks!')
+        return
     return list_of_matching_indices
 #### tools
 

@@ -115,12 +115,18 @@ def main():
     bag = multi_obj.main(arguments) # create a Thunder object
 
     ###### choose which spectrum to base everything off of
-    first = 0
-    first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[first]]
+    first = list(bag.thunder_bag.keys())[0]
+    first_thunder = bag.thunder_bag[first]
     if  arguments.get('clip_data', False) or arguments.get('bg_first_only', False) or arguments.get('peakf_first_only', False) or arguments.get('bounds_first_only', False):
         # then we have to choose which spectrum we want
+        first = list(bag.thunder_bag.keys())[0]
         while True:
-            first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[first]]
+            try:
+                first_thunder = bag.thunder_bag[first]
+            except IndexError:
+                print('incorrect key, please enter a lower index value')
+                first = list(bag.thunder_bag.keys())[0]
+                first_thunder = bag.thunder_bag[first]
             fig, ax = plt.subplots()
             ax.plot(first_thunder.x_data, first_thunder.y_data)
             print(f"Need a decision on which plot is representitive of data, the following is for index {first}")
@@ -130,10 +136,9 @@ def main():
                 break
             else:
                 try:
-                    first = int(ans)
+                    first = str(ans)
                 except ValueError:
                     print("You entered an incorrect answer! Trying again...")
-
 
     ###### clip the data if weird edges
     if arguments.get('clip_data', False):

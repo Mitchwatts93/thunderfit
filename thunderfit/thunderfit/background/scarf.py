@@ -168,7 +168,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
 
             # get the bg shift up automatically
             b = min(data_bg_rm_y - L)  # whats the smallest difference between D and b? shift it up by that
-            L = D + b
+            L = L + b
 
             # final question before exiting
             fig, ax = plt.subplots()
