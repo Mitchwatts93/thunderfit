@@ -93,10 +93,10 @@ def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         peak_centres = peak_centres[:peak_no]
 
     if len(peak_amps) == 0 or len(peak_amps) < peak_no:
-        if peak_no and len(peak_amps) < peak_no and len(peak_amps):
+        if peak_no and len(peak_amps) and len(peak_amps) < peak_no:
             logging.warning("you specified less peak amps than peak_numbers."
                 " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        center_indices = utili.find_closest_indices(peak_centres, x_data)
+        center_indices = utili.find_closest_indices(x_data, peak_centres)
         peak_amps = find_peak_properties(prominence, center_indices, y_data, 'amps')
     elif len(peak_amps) > peak_no:
         logging.warning("specified more peak amps than no_peaks. cutting the peaks supplied as [:no_peaks]")
@@ -106,7 +106,7 @@ def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         if peak_no and len(peak_widths) < peak_no and len(peak_widths):
             logging.warning("you specified less peak widths than peak_numbers."
                 " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        center_indices = utili.find_closest_indices(peak_centres, x_data)
+        center_indices = utili.find_closest_indices(x_data, peak_centres)
         peak_properties = peak_width_func(y_data, center_indices, rel_height=0.6)
         peak_left_edges, peak_right_edges = [int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]]
         peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges])

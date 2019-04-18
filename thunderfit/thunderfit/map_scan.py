@@ -10,6 +10,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import LogNorm
 
 import ast
 from scipy import sparse
@@ -123,7 +124,7 @@ def main():
         while True:
             try:
                 first_thunder = bag.thunder_bag[first]
-            except IndexError:
+            except KeyError:
                 print('incorrect key, please enter a lower index value')
                 first = list(bag.thunder_bag.keys())[0]
                 first_thunder = bag.thunder_bag[first]
@@ -184,6 +185,7 @@ def main():
                                                   'peak_types'), ('no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types', 'prominence')) # find peaks/use them if supplied
 
     ###### find bounds
+    bounds = arguments.get('bounds_first_only', {'amps':False, 'centers':False, 'widths':False})
     if arguments.get('bounds_first_only', False):
         # add step to find bg parameters for first one and use for the rest.
         #first_thunder = bag.thunder_bag[sorted(bag.thunder_bag.keys())[0]]
@@ -192,7 +194,9 @@ def main():
         for thund in bag.thunder_bag.values():  # set these first values for all of them
             setattr(thund, 'bounds', bounds)  # set values
     else:
-        bag.bag_iterator(bag.thunder_bag, peak_fitting.make_bounds, ('tightness', 'no_peaks', 'bounds', 'peak_widths',
+        for thund in bag.thunder_bag.values():
+            setattr(thund, 'bounds', bounds)
+    bag.bag_iterator(bag.thunder_bag, peak_fitting.make_bounds, ('tightness', 'no_peaks', 'bounds', 'peak_widths',
                                               'peak_centres', 'peak_amps'), ('bounds',)) # make bounds
 
     ###### fit peaks
@@ -244,14 +248,14 @@ def main():
                 Y.append(y)
                 Z.append(z)
             x_step = np.unique(X)[1] - np.unique(X)[0]
-            xx = (X/x_step).astype(int)
+            xx = (np.round(X/x_step)).astype(int)
             y_step = np.unique(Y)[1] - np.unique(Y)[0]
-            yy = (Y / y_step).astype(int)
+            yy = np.round((Y / y_step)).astype(int)
             data_ = sparse.coo_matrix((Z, (xx, yy))).toarray()
             data.append(data_)
             f = plt.figure()
             ax = plt.gca()
-            im = plt.imshow(data_, cmap='magma', extent=[min(X), max(X), max(Y), min(Y)], vmin=data_.min(), vmax=data_.max())
+            im = plt.imshow(data_, cmap='magma', extent=[min(X), max(X), max(Y), min(Y)], norm=LogNorm(vmin=data_.min(), vmax=data_.max()))#, vmin=data_.min(), vmax=data_.max())
             plt.xlabel('x coordinates')
             plt.ylabel('y coordinates')
             divider = make_axes_locatable(ax)
