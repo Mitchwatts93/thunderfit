@@ -1,14 +1,14 @@
-import setuptools
+from setuptools import setup, find_packages
 
 def readme():
     with open("README.rst") as f:
         return f.read()
 
 
-setuptools.setup(
+setup(
     name='thunderfit',
     python_requires='>3.6',
-    version='1.3.18',
+    version='1.3.21',
     description='Thunderfit fitting code',
     long_description=readme(),
     classifiers=[
@@ -21,7 +21,7 @@ setuptools.setup(
     author='https://github.com/Mitchwatts93',
     author_email='',
     license='MIT',
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     install_requires = ['jsonschema==2.6.0',
         'dill==0.2.9',
         'scipy==1.2.1',

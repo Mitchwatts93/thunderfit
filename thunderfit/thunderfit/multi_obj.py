@@ -2,11 +2,11 @@ import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 
-import glob
-import copy
-import pandas
+from glob import glob
+from copy import deepcopy
+from pandas.errors import ParserError
 from tqdm import tqdm
-import ast
+from ast import literal_eval
 
 
 from .thundobj import Thunder
@@ -40,7 +40,7 @@ class ThunderBag():
         self.map = inp.get('map', None) # if user passes map as True then the file will be treated as a map file
 
         data_paths = inp.get('datapath', None)
-        self.datapath = ast.literal_eval(data_paths) # this is a bit dangerous!!!!!
+        self.datapath = literal_eval(data_paths) # this is a bit dangerous!!!!!
 
         for i, data in tqdm(enumerate(self.datapath)):
             if len(self.datapath):
@@ -52,7 +52,7 @@ class ThunderBag():
                 if self.map == True:
                     prefix = ''
                     self.x_coord_ind, self.y_coord_ind = inp.get('x_coord_ind', 0), inp.get('y_coord_ind', 1)
-                    map_path = glob.glob(data)[0] # save the filepath to the mapscan as self.map for later
+                    map_path = glob(data)[0] # save the filepath to the mapscan as self.map for later
                     x_data, y_data, x_coords, y_coords = self.read_map(map_path, self.x_ind, self.y_ind, self.x_coord_ind, self.y_coord_ind)
 
                     for j in range(len(x_data)): # go through the list of x_data
@@ -62,16 +62,16 @@ class ThunderBag():
                         x_coords_, y_coords_ = x_coords[j], y_coords[j]
                         self.coordinates[f'{prefix}{j}'] = (x_coords_, y_coords_)  # for each i we will have a list of tuples of x and y coords
                 elif '*' in data:
-                    filematches = glob.glob(data)
+                    filematches = glob(data)
                     for j, file in enumerate(filematches):
                         try:
                             self.thunder_bag[f'{prefix}{j}'] = self.create_thunder(file, inp) # make a thunder object for each file
-                        except pandas.errors.ParserError as e:
+                        except ParserError as e:
                             logging.warning(f"A Thunder object could not be created for the datafile: {file}, skipping")
                 else:
                     try:
                         self.thunder_bag[str(i)] = self.create_thunder(data, inp)
-                    except pandas.errors.ParserError as e:
+                    except ParserError as e:
                         logging.warning(f"A Thunder object could not be created for the datafile: {file}, skipping")
             else:
                 logging.warning(f"wrong format in data list detected for {i}th element: {data}. Skipping element")
@@ -79,7 +79,7 @@ class ThunderBag():
 
     @staticmethod
     def create_thunder(file, inp):
-        arguments = copy.deepcopy(inp)
+        arguments = deepcopy(inp)
         arguments['datapath'] = file
         thund_obj = Thunder(arguments)
         return thund_obj
@@ -92,21 +92,6 @@ class ThunderBag():
         x_data, y_data, x_coords, y_coords = utili.map_unique_coords(x_data, y_data, x_coords, y_coords) #
 
         return x_data, y_data, x_coords, y_coords
-
-    """@staticmethod
-    def fit_bag(bag_dict):
-        for baglabel, thund in tqdm(bag_dict.items()):
-            thund.background_finder()  # then determine the background
-            specified_dict = peak_details(thund.user_params)
-            thund.find_peak_details(specified_dict)
-
-            # now fit peaks
-            thund.fit_peaks()
-            #thund.plot_all()
-            thund.fit_report()
-
-        return bag_dict
-    """
 
     @staticmethod
     def bag_iterator(bag, func, input_args, sett_args):
@@ -125,6 +110,7 @@ class ThunderBag():
                     else:
                         print(f'Weird KeyError encountered: {e}')
 
+
 def main(arguments):
-    bag = ThunderBag(copy.deepcopy(arguments)) # load object
+    bag = ThunderBag(deepcopy(arguments)) # load object
     return bag

@@ -1,28 +1,34 @@
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
-import os
-import json
-import dill
+from os.path import join
+from os import mkdir
+from json import dump as j_dump
+from json import load as j_load
+from dill import dump as d_dump
+from dill import load as d_load
 import pandas as pd
-import numpy as np
+from numpy import vstack
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
+from . import normalisation
+
+
 #### tools
 def save_thunder(obj, path, filename='thunder.d'):
-    dill.dump(obj, open(os.path.join(path, filename), 'wb'))
+    d_dump(obj, open(join(path, filename), 'wb'))
 
 def load_thunder(path):
-    obj = dill.load(open(path, 'rb'))
+    obj = d_load(open(path, 'rb'))
     return obj
 
 def save_plot(plot, path='.', figname='figure.png'):
-    plot.savefig(os.path.join(path, figname), transparent=True, format='svg')
+    plot.savefig(join(path, figname), transparent=True, format='svg')
 
 def save_fit_report(obj, path, filename="report.json"):
-    json.dump(obj, open(os.path.join(path, filename), 'w'))
+    j_dump(obj, open(join(path, filename), 'w'))
 
 def find_closest_indices(list1, list2):
     try:
@@ -32,6 +38,13 @@ def find_closest_indices(list1, list2):
         print('this dataset has no peaks!')
         return
     return list_of_matching_indices
+
+def normalise_all(y_bg_rem, bg, y_raw):
+    y_data_bg_rm, (mean_y_data, std_dev) = normalisation.svn(y_bg_rem) # normalise the data
+    background, _ = normalisation.svn(bg, mean_y_data, std_dev) #normalise with data from bg subtracted data
+    y_data_norm, _ = normalisation.svn(y_raw, mean_y_data, std_dev) #normalise with data from bg subtracted data
+
+    return y_data_bg_rm, background, y_data_norm
 #### tools
 
 ### user inputs and loading etc
@@ -90,7 +103,7 @@ def load_data(datapath, x_ind, y_ind, e_ind=None):
     return x_data, y_data, e_data
 
 def map_unique_coords(x_data, y_data, x_coords, y_coords):
-    data = np.vstack((x_coords, y_coords, x_data, y_data)).transpose() # now have columns as the data
+    data = vstack((x_coords, y_coords, x_data, y_data)).transpose() # now have columns as the data
     df = pd.DataFrame(data=data, columns=['x_coords', 'y_coords', 'x_data', 'y_data'])
     unique_dict = dict(tuple(df.groupby(['x_coords', 'y_coords']))) # get a dictionary of the unique values for
                                         # coordinates (as tuples of (x,y)) and then the whole df rows for these values
@@ -115,7 +128,7 @@ def parse_param_file(filepath='./params.txt'):
     # maybe use json loads if you end up writing parameter files non-manually
 
     with open(filepath, 'r') as f:
-        arguments = json.load(f)
+        arguments = j_load(f)
         f.close()
 
     # TODO: add some checks to user passed data
@@ -153,7 +166,7 @@ def make_dir(dirname, i=1):
     :return: str: the directory name which was available, and all subsequent data should be saved in
     """
     try:
-        os.mkdir(f'{dirname}')
+        mkdir(f'{dirname}')
     except FileExistsError as e:
         dirname = make_dir(f'{dirname}_new', i + 1)
         if i == 1:

@@ -1,18 +1,31 @@
 todo
+====
 
 Fitting/finding:
-- move bound making into peak finding
 - generate model should be made more generic so a function can be passed and used.
-- some peaks are failing to fit, ensure that when they fail a good value is saved as parameter values so that map can still be trusted, and save the plots that fail for user inspection - if its due to widths or amplitude bounds then investigate how to fix
+- If using user-supplied params, give the option to tweak them so that bounds can still be automatically found. i.e. for peaks do peakfinder and choose the closest to those numbers? 
 
 Plotting:
-- method for plotting grid over an image
+- method for plotting grid over an image of the mapscan
 
 Background:
 - currently passing a bg as an np array doesn't work
-- check that scarf is always moothing, some mapscan results seem like it isn't
 
-Give opportunity to choose a spectrum other than the first to choose background and peaak centres etc.
+Misc:
+- Tidy up mapscan and move some functions into the bag object/make a new module with all the specific mapscan functions in it
+- move logging to a log file which is saved and change all prints to logging
+- replace all dictionary fetching with getattr with a correct default value!
+- tidy up imports to only be what is needed
+- init all values for multiobj and thunderobj
 
 
-TESTING needed:
+TESTING needed
+==============
+
+- some peaks are failing to fit, ensure that when they fail a good value is saved as parameter values so that map can still be trusted : using best_values from fitting routine, should maybe just be using none???
+
+- close plots on mapscan when done
+
+- when a model fails to fit, record the number in a dict and save that dict to the bag object. at the end plot all the failed fits...
+
+- move bound making into peak finding

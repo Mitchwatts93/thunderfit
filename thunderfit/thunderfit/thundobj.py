@@ -1,14 +1,13 @@
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
-import difflib
-import re
-import numpy as np
-
+from difflib import get_close_matches
+from re import findall
+from numpy import ndarray
 from typing import Dict, Union
-import copy
+from copy import deepcopy
 
-import lmfit
+from lmfit.model import ModelResult
 
 from . import utilities as utili
 from . import plotting
@@ -27,9 +26,9 @@ class Thunder():
         self.y_ind: int = 1
         self.e_ind: Union[int, None] = None
 
-        self.x_data: Union[None, np.ndarray] = x_data
-        self.y_data: Union[None, np.ndarray] = y_data
-        self.e_data: Union[None, np.ndarray] = e_data
+        self.x_data: Union[None, ndarray] = x_data
+        self.y_data: Union[None, ndarray] = y_data
+        self.e_data: Union[None, ndarray] = e_data
 
         self.y_data_bg_rm = None
         self.y_data_norm = None
@@ -62,7 +61,7 @@ class Thunder():
         else:
             raise TypeError('Cannot convert input to Thunder object')
 
-        if isinstance(self.x_data, np.ndarray) and isinstance(self.y_data, np.ndarray):
+        if isinstance(self.x_data, ndarray) and isinstance(self.y_data, ndarray):
             pass # they're already loaded as they've been passed
         else:
             self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind, self.y_ind) # load the data
@@ -156,8 +155,8 @@ class Thunder():
         ## individual parameter data
         param_info = {"center":"centers", "amplitude":"amps", "sigma":"widths", "fwhm":False, "height":False}
         for parameter, param_obj in self.peaks.params.items():
-            model_no = int(re.findall(r'\d+', parameter)[0])
-            param_type = param_info[difflib.get_close_matches(parameter, param_info.keys())[0]]
+            model_no = int(findall(r'\d+', parameter)[0])
+            param_type = param_info[get_close_matches(parameter, param_info.keys())[0]]
 
             if param_type:
                 value = param_obj.value
@@ -174,5 +173,5 @@ class Thunder():
 
 
 def main(arguments):
-    thunder = Thunder(copy.deepcopy(arguments)) # load object
+    thunder = Thunder(deepcopy(arguments)) # load object
     return thunder

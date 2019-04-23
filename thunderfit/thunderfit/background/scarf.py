@@ -1,9 +1,10 @@
-import numpy as np
-import pandas as pd
-from scipy.signal import savgol_filter
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
+from numpy import ndarray, sqrt, array, min, float64
+from pandas.core.frame import DataFrame
+from pandas.core.series import Series
+from scipy.signal import savgol_filter
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -15,9 +16,9 @@ def rcf(A, rad):
     :param r: radius of circle to filter with
     :return: L, a numpy array of length len(A) which is the locus of the RCF
     """
-    if isinstance(A, pd.core.frame.DataFrame) or isinstance(A, pd.core.series.Series):
+    if isinstance(A, DataFrame) or isinstance(A, Series):
         A = A.values # convert to numpy array
-    elif not isinstance(A, np.ndarray):
+    elif not isinstance(A, ndarray):
         raise TypeError("Incorrect format passed for A")
 
     assert isinstance(rad, int) and abs(rad) == rad, "rad needs to be a positive integer"
@@ -38,7 +39,7 @@ def rcf(A, rad):
 
 def semi_circle_array(rad):
     """Generate an array of length 2r+1 with values corresponding to points on a semi circle"""
-    RC = np.array([np.sqrt(rad**2 - (i - rad)**2) for i in range(2*rad + 1)])
+    RC = array([sqrt(rad**2 - (i - rad)**2) for i in range(2*rad + 1)])
     return RC
 
 def generate_sub_matrices(A, rad, RC, n):
@@ -75,8 +76,6 @@ def generate_sub_matrices(A, rad, RC, n):
 
         else:
             print('something has gone wrong')
-            import ipdb
-            ipdb.set_trace()
             raise RuntimeError("Something has gone wrong and I don't know why")
 
     return A_sub, RC_sub
@@ -92,9 +91,9 @@ def generate_diff_matrix(A_sub, RC_sub):
     D = []
     for i in range(len(A_sub)):
         diff = A_sub[i] - RC_sub[i]
-        D.append(np.min(diff))
+        D.append(min(diff))
 
-    D = np.array(D)
+    D = array(D)
     return D
 
 def smooth(L, window_length, polyorder):
@@ -109,7 +108,7 @@ def smooth(L, window_length, polyorder):
 
 def perform_scarf(x_data, y_data, scarf_params=False):
 
-    bg = np.array([0 for _ in y_data], dtype=np.float64)
+    bg = array([0 for _ in y_data], dtype=float64)
     rad = 70
     window_length, poly_order = 51, 3
     L_sg = 0

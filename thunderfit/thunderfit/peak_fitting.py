@@ -1,4 +1,5 @@
 from lmfit import models
+from numpy import nan
 
 def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, bounds):
     model_specs = build_specs(peak_types, peak_centres, peak_amps, peak_widths, bounds)
@@ -6,6 +7,13 @@ def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, 
     peaks = model.fit(y_data, peak_params, x=x_data)
     if not peaks.success:
         print('peaks failed to fit')
+        # here it may be a good idea to set the values for a failed fit to some default values, or none. Currently
+        # it is setting to the best values which could be very bad?
+        # add lines below and delete the line immediately following these comments
+        # peak_params = peaks.best_values
+        # peak_params = {key:nan for key in peak_params} # make sure this is properly handled later!
+    #else:
+    #   peak_params = peaks.best_values
     peak_params = peaks.best_values
 
     return model_specs, model, peak_params, peaks

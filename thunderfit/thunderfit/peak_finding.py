@@ -3,7 +3,7 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
 from scipy.signal import find_peaks as peak_find
 from scipy.signal import peak_widths as peak_width_func
-import numpy as np
+from numpy import argsort
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
@@ -17,7 +17,7 @@ def peak_finder(data, prominence, height=0, width=0):
 
     peaks = list(peaks)  # convert to a list
     amps = list(properties['peak_heights'])  # store the heights
-    sorted_indices = np.argsort(amps)[::-1] # we will sort below in order of amplitudes
+    sorted_indices = argsort(amps)[::-1] # we will sort below in order of amplitudes
 
     peak_info = {'center_indices': sort_lists(sorted_indices, peaks), 'right_edges': sort_lists(sorted_indices, list(properties['right_bases'])),
                  'left_edges': sort_lists(sorted_indices, list(properties['left_bases'])), 'amps': sort_lists(sorted_indices, amps)}
@@ -65,16 +65,13 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
         peak_properties = [peak_info[peak_info_key][i] for i in matching_indices]
     return peak_properties
 
-def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types):
-    prominence = 1
+def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence=1):
 
     if len(peak_centres) == 0 or len(peak_centres) < peak_no:
         if peak_no and len(peak_centres) < peak_no and len(peak_centres):
             logging.warning("you specified less peak centers than peak_numbers."
                  " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        prominence = 1
         if not peak_no: # then they don't know so we can find everything in one go and save some time
-            #peak_info = find_cents(prominence, y_data, find_all=True)
             peak_info, prominence = interactive_peakfinder(prominence, x_data, y_data)
             center_indices = peak_info['center_indices']
             peak_amps = peak_info['amps']
@@ -128,3 +125,27 @@ def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         peak_types = peak_widths[:peak_no]
 
     return peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence
+
+
+def make_bounds(tightness, no_peaks, bounds_dict, peak_widths, peak_centres, peak_amps):
+    bounds = {}
+
+    if not bounds_dict['centers'] or len(bounds_dict['centers']) != no_peaks:
+        l_cent_bounds = [cent - tightness['centre_bounds'] * peak_widths[i] for i, cent in enumerate(peak_centres)]
+        u_cent_bounds = [cent + tightness['centre_bounds'] * peak_widths[i] for i, cent in enumerate(peak_centres)]
+        cent_bounds = list(zip(l_cent_bounds, u_cent_bounds))
+        bounds['centers'] = cent_bounds
+
+    if not bounds_dict['widths'] or len(bounds_dict['widths']) != no_peaks:
+        l_width_bounds = [width / tightness['width_bounds'][0] for width in peak_widths]
+        u_width_bounds = [width * tightness['width_bounds'][1] for width in peak_widths]
+        width_bounds = list(zip(l_width_bounds, u_width_bounds))
+        bounds['widths'] = width_bounds
+
+    if not bounds_dict['amps'] or len(bounds_dict['amps']) != no_peaks:
+        l_amp_bounds = [amp / tightness['amps_bounds'][0] for amp in peak_amps]
+        u_amp_bounds = [amp * tightness['amps_bounds'][1] for amp in peak_amps]
+        amp_bounds = list(zip(l_amp_bounds, u_amp_bounds))
+        bounds['amps'] = amp_bounds
+
+    return bounds

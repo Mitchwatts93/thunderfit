@@ -1,19 +1,18 @@
 import logging
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
-
-from scipy import sparse
+from scipy.sparse import diags, spdiags
 from scipy.sparse.linalg import spsolve
 from scipy.optimize import least_squares
-import numpy as np
+from numpy import array, ndarray, ones
 
 from . import scarf
 
 
 #### old method
 def find_background(data, residual_baseline_func, baseline_asl_func):
-    params = (np.array([0.01, 10 ** 5]))
-    bounds = [np.array([0.001, 10 ** 5]), np.array([0.1, 10 ** 9])]
+    params = (array([0.01, 10 ** 5]))
+    bounds = [array([0.001, 10 ** 5]), array([0.1, 10 ** 9])]
     baseline_values = least_squares(residual_baseline_func, params[:], args=(data.values,), bounds=bounds)
     p, lam = baseline_values['x']
     baseline_values = baseline_asl_func(data.values, lam, p, niter=10)
@@ -28,12 +27,12 @@ def residual_baseline(params, y):
 
 def baseline_als(y, lam, p, niter=10):
     L = len(y)
-    D = sparse.diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
-    w = np.ones(L)
+    D = diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
+    w = ones(L)
     if niter < 1:
         raise ValueError("n iter is too small!")
     for i in range(niter):
-        W = sparse.spdiags(w, 0, L, L)
+        W = spdiags(w, 0, L, L)
         Z = W + lam * D.dot(D.transpose())
         z = spsolve(Z, w * y)
         w = p * (y > z) + (1 - p) * (y < z)
@@ -54,14 +53,14 @@ def background_finder(x_data, y_data, bg, scarf_params):
         LOGGER.warning(
             "Warning: no background specified, so not using a background,"
             " this may prevent algorithm from converging")
-        bg = np.array([0 for _ in y_data])  # set the background as 0 everywhere
+        bg = array([0 for _ in y_data])  # set the background as 0 everywhere
         data_bg_rm_y = y_data # no background subtracted
         params = 'no'
 
     elif bg == 'SCARF':
         data_bg_rm_y, bg, params = scarf.perform_scarf(x_data, y_data, scarf_params)
 
-    elif isinstance(bg, np.ndarray):
+    elif isinstance(bg, ndarray):
         assert len(bg) == len(y_data), \
                 "the background generated or passed is of incorrect length"
         data_bg_rm_y = y_data - bg # subtract user supplied background from the data
