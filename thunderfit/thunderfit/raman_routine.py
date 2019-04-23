@@ -1,6 +1,4 @@
 import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 
 from . import thundobj
 from . import utilities as utili
@@ -11,6 +9,9 @@ from . import parsing
 
 
 def main():
+    LOGGER = logging.getLogger(__name__)
+    LOGGER.setLevel(logging.INFO)
+
     args = parsing.parse_user_args()
 
     arguments, LOGGER = parsing.using_user_args(args, LOGGER)

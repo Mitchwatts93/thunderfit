@@ -1,6 +1,4 @@
 import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 from difflib import get_close_matches
 from re import findall
 from numpy import ndarray
@@ -8,6 +6,7 @@ from typing import Dict, Union
 from copy import deepcopy
 
 from lmfit.model import ModelResult
+import matplotlib.pyplot as plt
 
 from . import utilities as utili
 from . import plotting
@@ -36,7 +35,7 @@ class Thunder():
         self.datapath: str = './data.txt'
 
         self.no_peaks: int = 0
-        self.background: str = "SCARF"
+        self.background: str = "SCARF" # fix this
         self.scarf_params: Union[None, Dict] = None
         self.peak_types: Union[None, list] = []
         self.peak_centres: Union[None, list] = []
@@ -45,10 +44,11 @@ class Thunder():
         self.tightness: str = "med"
         self.bounds: Union[None, Dict] = None
 
-        self.peaks: lmfit.model.ModelResult
+        self.peaks: ModelResult
         self.plot: plt = None
         self.fit_report: {} = {}
-        peak_params: {} = {}
+        self.peak_params: {} = {}
+        self.model = None # give type!
 
         self.free_params: int = 0
         self.p_value: int = 0
@@ -65,7 +65,6 @@ class Thunder():
             pass # they're already loaded as they've been passed
         else:
             self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind, self.y_ind) # load the data
-
 
         self.tightness = utili.tightness_setter(self.tightness)
 
@@ -96,7 +95,7 @@ class Thunder():
         self.tightness = thun.tightness
         self.bounds = thun.bounds
 
-    def create_thunder(self, inp: Dict):
+    def create_thunder(self, inp: Dict, LOGGER=logging.getLogger()):
         """
         Used to create a thunder object given different input types
         :param args: a,b,c depending on type of input and
@@ -126,7 +125,7 @@ class Thunder():
         self.bounds = inp.get('bounds', self.bounds)
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
-    def plot_all(self):
+    def plot_all(self, LOGGER=logging.getLogger()):
         ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components()) # plot each component of the model
         ax, plt = plotting.plot_background(self.x_data, self.background, ax) #plot the background supplied by user
         ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax) # plot the fitted data

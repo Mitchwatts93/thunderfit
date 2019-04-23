@@ -2,15 +2,22 @@ from typing import Union, Dict, List
 from argparse import ArgumentParser
 from os.path import basename
 from time import strftime
+from numpy import array
+import logging
 
 from . import utilities as utili
-
 
 def str_or_none(value):
     try:
         return str(value)
     except:
         return None
+
+def str_or_arr(value):
+    try:
+        return str(value)
+    except:
+        return array(value) # does this work?
 
 def parse_user_args():
 
@@ -30,7 +37,7 @@ def parse_user_args():
     parser.add_argument('--no_peaks', type=int, default=None,
                         help='the number of peaks you would like fitted. If you have specified bounds or peak infomation'
                              '\n e.g. centres then please make sure this is the same length as that list')
-    parser.add_argument('--background', type=str, default="SCARF",
+    parser.add_argument('--background', type=str_or_arr, default="SCARF",
                         help="The stype of background you'd like to fit. 'SCARF' is a rolling ball solgay_filter "
                              "background subtraction. \n 'OLD' uses a soon-to-be not implemented numerical method"
                              "which doesn't work too well. \n 'no' specifies that you would like no background fitted."
@@ -70,9 +77,9 @@ def parse_user_args():
 
     return args
 
-def using_user_args(args, LOGGER):
+def using_user_args(args, LOGGER=logging.getLogger()):
     if args.param_file_path:  # if there is a params file then use it
-        LOGGER.info('Using params file')
+        LOGGER.info('Using params file and ignoring all other user inputs from command line')
         arguments = utili.parse_param_file(args.param_file_path)  # parse it
         if args.datapath:
             arguments['datapath'] = args.datapath
@@ -80,7 +87,7 @@ def using_user_args(args, LOGGER):
         print('not using params file')
         arguments = utili.parse_args(args)  # else use argparse but put in dictionary form
 
-    return arguments, LOGGER
+    return arguments
 
 def make_user_files(arguments, file_name=None):
     curr_time = strftime('%d_%m_%Y_%l:%M%p')  # name directory with the current time

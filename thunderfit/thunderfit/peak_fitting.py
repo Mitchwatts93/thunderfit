@@ -5,41 +5,11 @@ def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, 
     model_specs = build_specs(peak_types, peak_centres, peak_amps, peak_widths, bounds)
     model, peak_params = generate_model(model_specs)
     peaks = model.fit(y_data, peak_params, x=x_data)
+    peak_params = peaks.best_values
     if not peaks.success:
         print('peaks failed to fit')
-        # here it may be a good idea to set the values for a failed fit to some default values, or none. Currently
-        # it is setting to the best values which could be very bad?
-        # add lines below and delete the line immediately following these comments
-        # peak_params = peaks.best_values
-        # peak_params = {key:nan for key in peak_params} # make sure this is properly handled later!
-    #else:
-    #   peak_params = peaks.best_values
-    peak_params = peaks.best_values
-
+        peak_params = {key: nan for key in peak_params}
     return model_specs, model, peak_params, peaks
-
-def make_bounds(tightness, no_peaks, bounds_dict, peak_widths, peak_centres, peak_amps):
-    bounds = {}
-
-    if not bounds_dict['centers'] or len(bounds_dict['centers']) != no_peaks:
-        l_cent_bounds = [cent - tightness['centre_bounds'] * peak_widths[i] for i, cent in enumerate(peak_centres)]
-        u_cent_bounds = [cent + tightness['centre_bounds'] * peak_widths[i] for i, cent in enumerate(peak_centres)]
-        cent_bounds = list(zip(l_cent_bounds, u_cent_bounds))
-        bounds['centers'] = cent_bounds
-
-    if not bounds_dict['widths'] or len(bounds_dict['widths']) != no_peaks:
-        l_width_bounds = [width / tightness['width_bounds'][0] for width in peak_widths]
-        u_width_bounds = [width * tightness['width_bounds'][1] for width in peak_widths]
-        width_bounds = list(zip(l_width_bounds, u_width_bounds))
-        bounds['widths'] = width_bounds
-
-    if not bounds_dict['amps'] or len(bounds_dict['amps']) != no_peaks:
-        l_amp_bounds = [amp / tightness['amps_bounds'][0] for amp in peak_amps]
-        u_amp_bounds = [amp * tightness['amps_bounds'][1] for amp in peak_amps]
-        amp_bounds = list(zip(l_amp_bounds, u_amp_bounds))
-        bounds['amps'] = amp_bounds
-
-    return bounds
 
 def build_specs(peak_types, peak_centres, peak_amps, peak_widths, bounds):
     specs = [

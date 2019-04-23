@@ -1,6 +1,3 @@
-import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 from scipy.signal import find_peaks as peak_find
 from scipy.signal import peak_widths as peak_width_func
 from numpy import argsort

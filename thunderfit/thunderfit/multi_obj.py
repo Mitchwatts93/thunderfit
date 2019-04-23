@@ -1,16 +1,18 @@
-import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
-
+from numpy import round
 from glob import glob
 from copy import deepcopy
 from pandas.errors import ParserError
 from tqdm import tqdm
 from ast import literal_eval
-
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use('TkAgg')
+from typing import Union
 
 from .thundobj import Thunder
 from . import utilities as utili
+from .background import background_removal as bg_remove
+from . import peak_finding
 
 ############## NOT IMPLEMENTED!
 # TODO
@@ -22,6 +24,17 @@ class ThunderBag():
         # initialise everything first
         self.thunder_bag: {} = {}
         self.coordinates: {} = {}
+        self.first: str = ''
+        self.stats: {} = {}
+        self.fit_params: {} = {}
+        self.x_ind: Union[None, int] = None
+        self.y_ind: Union[None, int] = None
+        self.e_ind: Union[None, int] = None
+        self.img_path: Union[None, str] = None
+        self.map: Union[None, str] = None
+        self.datapath: Union[None, str] = None
+        self.x_coord_ind: Union[None, int] = None
+        self.y_coord_ind: Union[None, int] = None
 
         if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
             self.thunder_bag[0] = Thunder(input)  # add all the details in depending on args
@@ -31,8 +44,8 @@ class ThunderBag():
             raise TypeError('Cannot convert input to ThunderBag object')
 
     def create_bag(self, inp):
-        self.x_ind =  inp.get('x_ind', None)
-        self. y_ind = inp.get('y_ind', None)
+        self.x_ind =  inp.get('x_ind', 2)
+        self.y_ind = inp.get('y_ind', 3)
         self.e_ind = inp.get('e_ind', None)
         self.img_path = inp.get('imgpath', None)
         self.coordinates = inp.get('coords', {})
@@ -98,7 +111,7 @@ class ThunderBag():
         bagkeys = tqdm(bag.keys())
         bagkeys.set_description(f"Operating with: {func.__name__}, to find: {sett_args}")
         for key in bagkeys:
-            thund = bag[key]
+            thund = bag.get(key) # bag[key]
             kwargs_ = [getattr(thund, arg) for arg in input_args]
             _, val = utili.apply_func((key, kwargs_), func)
             for i, arg in enumerate(sett_args):
@@ -110,6 +123,103 @@ class ThunderBag():
                     else:
                         print(f'Weird KeyError encountered: {e}')
 
+    def choose_spectrum(self):
+        # then we have to choose which spectrum we want
+        first = next(iter(self.thunder_bag.keys())) # changed from list to iter
+        while True:
+            try:
+                first_thunder = self.thunder_bag[first]
+                fig, ax = plt.subplots()
+                ax.plot(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'))
+                print(f"Need a decision on which plot is representitive of data, the following is for index {first}")
+                plt.show(block=True)
+                ans = input("If you are happy with using this data file, type y, otherwise enter a new index")
+                if ans == 'y':
+                    break
+                else:
+                    try:
+                        first = str(ans)
+                    except ValueError:
+                        print("You entered an incorrect answer! Trying again...")
+            except KeyError:
+                print('incorrect key, please enter a lower index value')
+        self.first = first
+
+    def clip_data(self):
+        first_thunder = self.thunder_bag[self.first]
+        clip_left, clip_right = utili.clip_data(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'))
+        for thund in self.thunder_bag.values():
+            setattr(thund, 'x_data', getattr(thund, 'x_data')[clip_left:clip_right])
+            setattr(thund, 'y_data', getattr(thund, 'y_data')[clip_left:clip_right])
+
+    def bg_param_setter(self):
+        # add step to find bg parameters for first one and use for the rest.
+        first_thunder = self.thunder_bag[self.first]
+        if isinstance(getattr(first_thunder, 'background'), str) and getattr(first_thunder, 'background')=="SCARF":
+            _, _, params = bg_remove.background_finder(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'),
+                                                       getattr(first_thunder, 'background'),
+                                                       getattr(first_thunder, 'scarf_params'))
+            [param.pop('b', None) for param in params]  # we want to find b each time so don't set it for all others
+            for thund in self.thunder_bag.values():
+                setattr(thund, 'scarf_params', params)  # set all the values to this
+
+    def peak_info_setter(self):
+        # add step to find bg parameters for first one and use for the rest.
+        first_thunder = self.thunder_bag[self.first]
+        no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
+            peak_finding.find_peak_details(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data_bg_rm'),
+                                           getattr(first_thunder, 'no_peaks'),
+                                           getattr(first_thunder, 'peak_centres'), getattr(first_thunder, 'peak_amps'),
+                                           getattr(first_thunder, 'peak_widths'),
+                                           getattr(first_thunder, 'peak_types'))
+        for thund in self.thunder_bag.values():  # set these first values for all of them
+            setattr(thund, 'no_peaks', no_peaks)  # set values
+            setattr(thund, 'peak_centres', peak_centres)  # set values
+            setattr(thund, 'peak_types', peak_types)  # set values
+
+    def bound_setter(self, bounds=None):
+        if not bounds:
+            first_thunder = self.thunder_bag[self.first]
+            bounds = peak_finding.make_bounds(getattr(first_thunder, 'tightness'), getattr(first_thunder, 'no_peaks'),
+                                              getattr(first_thunder, 'bounds'),
+                                              getattr(first_thunder, 'peak_widths'), getattr(first_thunder, 'peak_centres'),
+                                              getattr(first_thunder, 'peak_amps'))
+        for thund in self.thunder_bag.values():  # set these first values for all of them
+            setattr(thund, 'bounds', bounds)  # set values
+
+    def make_fit_params(self):
+        fit_params = {}
+        first_thunder = self.thunder_bag.get(self.first)
+        params = list(getattr(first_thunder, 'peak_params').keys())[
+                 : len(
+                     getattr(first_thunder, 'peak_params')) // getattr(first_thunder, 'no_peaks')]  # what are the peak params for the first peak
+        params = [param.split('_')[1] for param in params]  # keep only the type of param
+        for param in params:
+            fit_params[param] = {}  # e.g. 'center'
+            for key in self.thunder_bag.keys():
+                fit_details = getattr(self.thunder_bag.get(key), 'peak_params')
+                fit_details = [fit_details.get(key_) for key_ in fit_details.keys() if param in key_]
+                fit_params[param][key] = fit_details
+        self.fit_params = fit_params
+
+    def get_fit_stats(self):
+        stats = {'chisq': {}, 'reduced_chi_sq': {}, 'free_params': {}}
+        for key, thund in self.thunder_bag.items():
+            chisq = getattr(getattr(thund, 'peaks'), 'chisqr')
+            reduced_chi_sq = getattr(getattr(thund, 'peaks'), 'redchi')
+            free_params = round(chisq / reduced_chi_sq)
+            stats['chisq'][key] = chisq
+            stats['reduced_chi_sq'][key] = reduced_chi_sq
+            stats['free_params'][key] = free_params
+        self.stats = stats
+
+    def save_failed_plots(self, dirname):
+        for key, thund in self.thunder_bag.items():
+            if not getattr(getattr(thund, 'peaks'), 'success'):
+                thund.plot_all()
+                utili.save_plot(thund.plot, path=dirname,
+                                figname=f"failed_plot_{key}_at_position_{self.coordinates.get(key)}.svg")
+                thund.plot.close()  # close so memory is conserved.
 
 def main(arguments):
     bag = ThunderBag(deepcopy(arguments)) # load object

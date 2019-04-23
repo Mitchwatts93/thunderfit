@@ -1,6 +1,5 @@
 import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
+
 from os.path import join
 from os import mkdir
 from json import dump as j_dump
@@ -71,11 +70,12 @@ def tightness_setter(tightness):
 
     return tight_dict
 
-def load_data(datapath, x_ind, y_ind, e_ind=None):
+def load_data(datapath, x_ind, y_ind, e_ind=None, LOGGER=logging.getLogger()):
     """
     load in data as a pandas df - save by modifying self.data, use object params to load
     :return: None
     """
+
     if '.h5' in datapath: # if the data is already stored as a pandas df
         store = pd.HDFStore(datapath)
         keys = store.keys()
