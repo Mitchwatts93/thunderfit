@@ -1,6 +1,4 @@
 import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
 from numpy import ndarray, sqrt, array, min, float64
 from pandas.core.frame import DataFrame
 from pandas.core.series import Series
@@ -107,6 +105,7 @@ def smooth(L, window_length, polyorder):
     return savgol_filter(L, window_length, polyorder, mode='mirror')
 
 def perform_scarf(x_data, y_data, scarf_params=False):
+    logging.debug('performing scarf bg subtraction')
 
     bg = array([0 for _ in y_data], dtype=float64)
     rad = 70
@@ -116,6 +115,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
     params = []
 
     if isinstance(scarf_params, bool) and not scarf_params:
+        logging.debug('setting scarf parameters via user guided method')
         while True:
             #rcf step
             while True:
@@ -192,6 +192,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
                 params.append({'rad':rad, 'b':b, 'window_length':window_length, 'poly_order':poly_order})
             else:
                 print("You entered an incorrect answer! Trying whole fitting routine again...")
+
     elif isinstance(scarf_params, bool):
         # the user has passed True! recall this function and change it to false
         logging.warning('scarf has been passed the True bool value for scarf params. This is invalid, assuming you meant '
@@ -200,6 +201,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
         params += params_ # params_ is a list of one dictionary
         return data_bg_rm_y, bg
     elif isinstance(scarf_params, dict):
+        logging.debug('using scarf params: {scarf_params}')
         rad, window_length, poly_order = \
             scarf_params['rad'],  scarf_params['window_length'], scarf_params['poly_order']
         D = rcf(data_bg_rm_y, rad)
@@ -213,6 +215,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
         data_bg_rm_y -= L
         params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
     elif isinstance(scarf_params, list):
+        logging.debug(f'using scarf params: {scarf_params}')
         # the user wants multiple runs. call the function for each set of params, passing the new y data each time
         for param_dict in scarf_params:
             data_bg_rm_y, bg_, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=param_dict)
@@ -225,4 +228,5 @@ def perform_scarf(x_data, y_data, scarf_params=False):
         params += params_
         return data_bg_rm_y, bg, params
     plt.close()
+    logging.debug('scarf bg parameters are: {params}')
     return data_bg_rm_y, bg, params

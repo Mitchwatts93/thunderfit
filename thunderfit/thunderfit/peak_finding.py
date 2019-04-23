@@ -4,10 +4,12 @@ from numpy import argsort
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
+import logging
 
 from . import utilities as utili
 
 def peak_finder(data, prominence, height=0, width=0):
+    logging.debug(f'finding peaks based on prominence of {prominence}')
     # do a routine looping through until the right number of peaks is found
 
     peaks, properties = peak_find(data, prominence=prominence, height=height, width=width)  # find the peak positions in the data
@@ -24,6 +26,7 @@ def sort_lists(sorted_indices, list_to_sort):
     return [list_to_sort[i] for i in sorted_indices]
 
 def find_cents(prominence, y_data, find_all=False):
+    logging.debug(f'finding centre values based on prominence of {prominence}')
     peak_info = peak_finder(y_data, prominence, height=0, width=0)  # find the peak centers
     if find_all:
         return peak_info
@@ -31,6 +34,7 @@ def find_cents(prominence, y_data, find_all=False):
     return center_indices
 
 def interactive_peakfinder(prominence, x_data, y_data):
+    logging.debug('finding centres of peaks with user guided routine')
     while True:
         peak_info = find_cents(prominence, y_data, find_all=True)
         plt.plot(x_data, y_data)
@@ -51,6 +55,7 @@ def interactive_peakfinder(prominence, x_data, y_data):
     return peak_info, prominence
 
 def find_peak_properties(prominence, center_list, y_data, peak_info_key):
+    logging.debug(f'finding peak properties based on prominence of {prominence} and centers: {center_list} ')
     peak_info = peak_finder(y_data, prominence, height=0, width=0)
     center_indices = peak_info['center_indices']
     matching_indices = utili.find_closest_indices(center_indices, center_list)
@@ -63,7 +68,8 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
     return peak_properties
 
 def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence=1):
-
+    logging.debug(f'finding peak details based on prominence of {prominence}, and user provided details:'
+                  f'peak_no:{peak_no}, peak_centres:{peak_centres}, peak_amps:{peak_amps}, peak_widths:{peak_widths}, peak_types:{peak_types}')
     if len(peak_centres) == 0 or len(peak_centres) < peak_no:
         if peak_no and len(peak_centres) < peak_no and len(peak_centres):
             logging.warning("you specified less peak centers than peak_numbers."
@@ -125,6 +131,7 @@ def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
 
 
 def make_bounds(tightness, no_peaks, bounds_dict, peak_widths, peak_centres, peak_amps):
+    logging.debug(f'making bounds based on: tightness:{tightness}, no_peaks:{no_peaks}, bounds_dict:{bounds_dict}, peak_widths:{peak_widths}, peak_centres:{peak_centres}, peak_amps:{peak_amps}')
     bounds = {}
 
     if not bounds_dict['centers'] or len(bounds_dict['centers']) != no_peaks:

@@ -1,6 +1,8 @@
 from numpy import mean, std
+import logging
 
 def svn(y_data, mean_y_data=False, std_dev=False):
+    logging.debug('normalising using svn normalisation')
     """normalise using std variance normalisation"""
     if not mean_y_data and not std_dev:
         mean_y_data = mean(y_data)

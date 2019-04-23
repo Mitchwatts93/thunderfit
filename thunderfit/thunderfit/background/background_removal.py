@@ -1,14 +1,12 @@
 import logging
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
-from scipy.sparse import diags, spdiags
-from scipy.sparse.linalg import spsolve
-from scipy.optimize import least_squares
+#from scipy.sparse import diags, spdiags
+#from scipy.sparse.linalg import spsolve
+#from scipy.optimize import least_squares
 from numpy import array, ndarray, ones
 
 from . import scarf
 
-
+"""
 #### old method
 def find_background(data, residual_baseline_func, baseline_asl_func):
     params = (array([0.01, 10 ** 5]))
@@ -38,6 +36,7 @@ def baseline_als(y, lam, p, niter=10):
         w = p * (y > z) + (1 - p) * (y < z)
     return z
 ####
+"""
 
 def correct_negative_bg(y_bg_rm, bg):
     y_min = y_bg_rm.min()
@@ -48,9 +47,8 @@ def correct_negative_bg(y_bg_rm, bg):
 
 
 def background_finder(x_data, y_data, bg, scarf_params):
-    params = None
     if bg == 'no':  # then user doesn't want to make a background
-        LOGGER.warning(
+        logging.warning(
             "Warning: no background specified, so not using a background,"
             " this may prevent algorithm from converging")
         bg = array([0 for _ in y_data])  # set the background as 0 everywhere
@@ -58,20 +56,25 @@ def background_finder(x_data, y_data, bg, scarf_params):
         params = 'no'
 
     elif bg == 'SCARF':
+        logging.debug('using SCARF method for background subtraction')
         data_bg_rm_y, bg, params = scarf.perform_scarf(x_data, y_data, scarf_params)
 
     elif isinstance(bg, ndarray):
         assert len(bg) == len(y_data), \
                 "the background generated or passed is of incorrect length"
+        logging.debug('using numpy array as supplied by user')
         data_bg_rm_y = y_data - bg # subtract user supplied background from the data
         params = 'user_specified'
 
     elif bg == 'OLD':
-        bg = find_background(y_data, residual_baseline, baseline_als) # find a background the old way
-        data_bg_rm_y = y_data - bg  # subtract background from the data
-        params = 'old_method'
+        logging.warning('user specified old bg subtraction method which is no longer supported')
+        #bg = find_background(y_data, residual_baseline, baseline_als) # find a background the old way
+        #data_bg_rm_y = y_data - bg  # subtract background from the data
+        #params = 'old_method'
+        raise TypeError('old method is no longer supported')
 
     else:  # then it is the incorrect type
+        logging.warning('user specified unknown bg subtraction method')
         raise TypeError('the background passed is in the incorrect format, please pass as type np array')
 
     return bg, data_bg_rm_y, params

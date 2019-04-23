@@ -20,6 +20,7 @@ def str_or_arr(value):
         return array(value) # does this work?
 
 def parse_user_args():
+    logging.debug('parsing command line args')
 
     parser = ArgumentParser(
         description='fit peaks and background to the given data given a set of parameter'
@@ -77,9 +78,10 @@ def parse_user_args():
 
     return args
 
-def using_user_args(args, LOGGER=logging.getLogger()):
+def using_user_args(args):
+    logging.debug('parsing user args')
     if args.param_file_path:  # if there is a params file then use it
-        LOGGER.info('Using params file and ignoring all other user inputs from command line')
+        #logging.warning('Using params file and ignoring all other user inputs from command line')
         arguments = utili.parse_param_file(args.param_file_path)  # parse it
         if args.datapath:
             arguments['datapath'] = args.datapath
@@ -90,6 +92,7 @@ def using_user_args(args, LOGGER=logging.getLogger()):
     return arguments
 
 def make_user_files(arguments, file_name=None):
+    logging.debug('making file to store data inside')
     curr_time = strftime('%d_%m_%Y_%l:%M%p')  # name directory with the current time
     if not file_name:
         file_name = basename(arguments['datapath'])

@@ -17,16 +17,20 @@ from . import normalisation
 
 #### tools
 def save_thunder(obj, path, filename='thunder.d'):
+    logging.debug(f'saving using dill {filename}')
     d_dump(obj, open(join(path, filename), 'wb'))
 
 def load_thunder(path):
+    logging.debug('loading using dill')
     obj = d_load(open(path, 'rb'))
     return obj
 
 def save_plot(plot, path='.', figname='figure.png'):
+    logging.debug(f'saving figure {figname}')
     plot.savefig(join(path, figname), transparent=True, format='svg')
 
 def save_fit_report(obj, path, filename="report.json"):
+    logging.debug(f'saving report {filename}')
     j_dump(obj, open(join(path, filename), 'w'))
 
 def find_closest_indices(list1, list2):
@@ -39,6 +43,7 @@ def find_closest_indices(list1, list2):
     return list_of_matching_indices
 
 def normalise_all(y_bg_rem, bg, y_raw):
+    logging.debug('normalising many objects')
     y_data_bg_rm, (mean_y_data, std_dev) = normalisation.svn(y_bg_rem) # normalise the data
     background, _ = normalisation.svn(bg, mean_y_data, std_dev) #normalise with data from bg subtracted data
     y_data_norm, _ = normalisation.svn(y_raw, mean_y_data, std_dev) #normalise with data from bg subtracted data
@@ -48,6 +53,7 @@ def normalise_all(y_bg_rem, bg, y_raw):
 
 ### user inputs and loading etc
 def tightness_setter(tightness):
+    logging.debug('parsing tightness')
     tight_dict = {}
     tight_dict['centre_bounds'] = 1
     tight_dict['width_bounds'] = (5, 2)
@@ -70,18 +76,18 @@ def tightness_setter(tightness):
 
     return tight_dict
 
-def load_data(datapath, x_ind, y_ind, e_ind=None, LOGGER=logging.getLogger()):
+def load_data(datapath, x_ind, y_ind, e_ind=None):
     """
     load in data as a pandas df - save by modifying self.data, use object params to load
     :return: None
     """
-
+    logging.debug('loading data')
     if '.h5' in datapath: # if the data is already stored as a pandas df
         store = pd.HDFStore(datapath)
         keys = store.keys()
         if len(keys) > 1:
-            LOGGER.warning("Too many keys in the hdfstore, will assume all should be concated")
-            LOGGER.warning("not sure this concat works yet")
+            logging.warning("Too many keys in the hdfstore, will assume all should be concated")
+            logging.warning("not sure this concat works yet")
             data = store.concat([store[key] for key in keys]) # not sure this will work! concat all keys dfs together
         else:
             data = store[keys[0]] # if only one key then we use it as the datafile
@@ -103,6 +109,7 @@ def load_data(datapath, x_ind, y_ind, e_ind=None, LOGGER=logging.getLogger()):
     return x_data, y_data, e_data
 
 def map_unique_coords(x_data, y_data, x_coords, y_coords):
+    logging.debug('parsing coordinates')
     data = vstack((x_coords, y_coords, x_data, y_data)).transpose() # now have columns as the data
     df = pd.DataFrame(data=data, columns=['x_coords', 'y_coords', 'x_data', 'y_data'])
     unique_dict = dict(tuple(df.groupby(['x_coords', 'y_coords']))) # get a dictionary of the unique values for
@@ -126,7 +133,7 @@ def parse_param_file(filepath='./params.txt'):
     :return: dictionary of paramters
     """
     # maybe use json loads if you end up writing parameter files non-manually
-
+    logging.debug('parsing params file')
     with open(filepath, 'r') as f:
         arguments = j_load(f)
         f.close()
@@ -140,6 +147,7 @@ def parse_args(arg):
     :param arg: argparse parsed args
     :return: dictionary of parameters
     """
+    logging.debug('parsing args')
     arguments = {}
     arguments['x_ind'] = arg.x_ind
     arguments['y_ind'] = arg.y_ind
@@ -165,6 +173,7 @@ def make_dir(dirname, i=1):
     :param i: the run number we are on
     :return: str: the directory name which was available, and all subsequent data should be saved in
     """
+    logging.debug('making dir')
     try:
         mkdir(f'{dirname}')
     except FileExistsError as e:
@@ -175,7 +184,7 @@ def make_dir(dirname, i=1):
     return dirname
 
 def clip_data(x_data, y_data):
-
+    logging.debug('clipping data')
     clip_left, clip_right = 0, len(x_data) - 1
     while True:
         fig, ax = plt.subplots()

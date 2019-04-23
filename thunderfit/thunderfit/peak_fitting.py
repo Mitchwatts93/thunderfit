@@ -1,7 +1,10 @@
 from lmfit import models
 from numpy import nan
+import logging
 
 def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, bounds):
+    logging.debug(f'fitting peaks:  peak_centres:{peak_centres}, peak_amps:{peak_amps}, peak_widths:{peak_widths}, '
+                  f'peak_types:{peak_types}, bounds:{bounds}')
     model_specs = build_specs(peak_types, peak_centres, peak_amps, peak_widths, bounds)
     model, peak_params = generate_model(model_specs)
     peaks = model.fit(y_data, peak_params, x=x_data)
@@ -12,6 +15,7 @@ def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, 
     return model_specs, model, peak_params, peaks
 
 def build_specs(peak_types, peak_centres, peak_amps, peak_widths, bounds):
+    logging.debug('building specs')
     specs = [
         {
             'type': peak_types[i],
@@ -33,6 +37,7 @@ def generate_model(model_specs):
     :param model_specs:
     :return:
     """
+    logging.debug('generating model specs')
     composite_model = None
     params = None
     for i, basis_func in enumerate(model_specs):

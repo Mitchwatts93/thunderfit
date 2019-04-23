@@ -4,17 +4,20 @@ import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import logging
 
 from . import utilities as utili
 
 
 ##### funcs for plotting
 def shift_map_matr(coordinates_array):
+    logging.debug('shifting coordinates array')
     coordinates_array[:, 0] = coordinates_array[:, 0] - min(coordinates_array[:, 0])
     coordinates_array[:, 1] = coordinates_array[:, 1] - min(coordinates_array[:, 1])
     return coordinates_array
 
 def map_scan_plot(coordinates, values):
+    logging.debug('plotting mapscans')
     no_fits = len(list(values.values())[0])
     figs = []
     axs = []
@@ -49,6 +52,7 @@ def map_scan_plot(coordinates, values):
     return figs, axs
 
 def plot_map_scan(bag, fit_params, dirname):
+    logging.debug('runnning user input routine to generate/save user chosen variables in maps')
     coordinates_array = array(list(getattr(bag, 'coordinates').values()))  # convert coordinates for each point into an array
     coordinates_array = shift_map_matr(
         coordinates_array)  # shift so that each coordinate starts at 0, not normalised
@@ -56,6 +60,7 @@ def plot_map_scan(bag, fit_params, dirname):
         getattr(bag, 'coordinates')[key] = coordinates_array.tolist()[i]  # reassign in the correct format
     while True:
         plt.close()
+        plt.clf()
         ans = input("making map scans, please input which property you would like to scan. options are:"
                     f"\n {[p_ for p_ in fit_params.keys()]}. or type e to exit")
         if ans == 'e':

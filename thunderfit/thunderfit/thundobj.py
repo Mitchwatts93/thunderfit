@@ -69,6 +69,7 @@ class Thunder():
         self.tightness = utili.tightness_setter(self.tightness)
 
     def overwrite_thunder(self, inp):
+        logging.debug('overwriting thund obj')
         thun = inp
 
         if thun.x_data and thun.y_data:
@@ -95,16 +96,17 @@ class Thunder():
         self.tightness = thun.tightness
         self.bounds = thun.bounds
 
-    def create_thunder(self, inp: Dict, LOGGER=logging.getLogger()):
+    def create_thunder(self, inp: Dict):
         """
         Used to create a thunder object given different input types
         :param args: a,b,c depending on type of input and
         :return: None, we modify the object unless a spec1d object is passed, in which case we return that
         """
+        logging.debug('creating thund obj')
         try: # only continue if its e_ind missing
             self.e_ind = inp['e_ind']
         except KeyError as e:
-            LOGGER.info(f"KeyError: Missing field in the data dictionary: {e}")
+            logging.info(f"KeyError: Missing field in the data dictionary: {e}")
 
         try: # If its the others you need to fail here
             self.datapath = inp['datapath']
@@ -125,7 +127,8 @@ class Thunder():
         self.bounds = inp.get('bounds', self.bounds)
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
-    def plot_all(self, LOGGER=logging.getLogger()):
+    def plot_all(self):
+        logging.debug('plotting all for thund obj')
         ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components()) # plot each component of the model
         ax, plt = plotting.plot_background(self.x_data, self.background, ax) #plot the background supplied by user
         ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax) # plot the fitted data
@@ -144,6 +147,7 @@ class Thunder():
         self.plot = plt
 
     def gen_fit_report(self):
+        logging.debug('genertaing fit report for thund obj')
         self.fit_report = {mod_no:{} for mod_no in range(len(self.peak_types))}
 
         ## total fit data

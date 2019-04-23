@@ -8,6 +8,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 from typing import Union
+import logging
 
 from .thundobj import Thunder
 from . import utilities as utili
@@ -44,6 +45,7 @@ class ThunderBag():
             raise TypeError('Cannot convert input to ThunderBag object')
 
     def create_bag(self, inp):
+        logging.debug('creating bag object')
         self.x_ind =  inp.get('x_ind', 2)
         self.y_ind = inp.get('y_ind', 3)
         self.e_ind = inp.get('e_ind', None)
@@ -92,6 +94,7 @@ class ThunderBag():
 
     @staticmethod
     def create_thunder(file, inp):
+        logging.debug('creating thunder object')
         arguments = deepcopy(inp)
         arguments['datapath'] = file
         thund_obj = Thunder(arguments)
@@ -99,6 +102,7 @@ class ThunderBag():
 
     @staticmethod
     def read_map(file_address, x_ind, y_ind, x_coord_ind, y_coord_ind):
+        logging.debug('reading in mapscan file')
         x_data, y_data, _ = utili.load_data(file_address, x_ind, y_ind)  # load the data. note these drop nan rows but
                                     # does that for the whole filepath so will be consistent for data and coordinates
         x_coords, y_coords, _ = utili.load_data(file_address, x_coord_ind, y_coord_ind)  # load the coordinates
@@ -124,6 +128,7 @@ class ThunderBag():
                         print(f'Weird KeyError encountered: {e}')
 
     def choose_spectrum(self):
+        logging.debug('choosing which thunder object will be the user specified data for bg etc')
         # then we have to choose which spectrum we want
         first = next(iter(self.thunder_bag.keys())) # changed from list to iter
         while True:
@@ -146,6 +151,7 @@ class ThunderBag():
         self.first = first
 
     def clip_data(self):
+        logging.debug('clipping data based on user specified plot')
         first_thunder = self.thunder_bag[self.first]
         clip_left, clip_right = utili.clip_data(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'))
         for thund in self.thunder_bag.values():
@@ -153,6 +159,7 @@ class ThunderBag():
             setattr(thund, 'y_data', getattr(thund, 'y_data')[clip_left:clip_right])
 
     def bg_param_setter(self):
+        logging.debug('setting backgrounds for all based on background of user specified plot')
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = self.thunder_bag[self.first]
         if isinstance(getattr(first_thunder, 'background'), str) and getattr(first_thunder, 'background')=="SCARF":
@@ -164,6 +171,7 @@ class ThunderBag():
                 setattr(thund, 'scarf_params', params)  # set all the values to this
 
     def peak_info_setter(self):
+        logging.debug('setting peak no, centres and types based on user specified plot details')
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = self.thunder_bag[self.first]
         no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
@@ -178,6 +186,7 @@ class ThunderBag():
             setattr(thund, 'peak_types', peak_types)  # set values
 
     def bound_setter(self, bounds=None):
+        logging.debug('setting bounds based on user provided bounds or found for user specified plot')
         if not bounds:
             first_thunder = self.thunder_bag[self.first]
             bounds = peak_finding.make_bounds(getattr(first_thunder, 'tightness'), getattr(first_thunder, 'no_peaks'),
@@ -188,6 +197,7 @@ class ThunderBag():
             setattr(thund, 'bounds', bounds)  # set values
 
     def make_fit_params(self):
+        logging.debug('generating fit params')
         fit_params = {}
         first_thunder = self.thunder_bag.get(self.first)
         params = list(getattr(first_thunder, 'peak_params').keys())[
@@ -203,6 +213,7 @@ class ThunderBag():
         self.fit_params = fit_params
 
     def get_fit_stats(self):
+        logging.debug('generating fit stats')
         stats = {'chisq': {}, 'reduced_chi_sq': {}, 'free_params': {}}
         for key, thund in self.thunder_bag.items():
             chisq = getattr(getattr(thund, 'peaks'), 'chisqr')
@@ -214,6 +225,7 @@ class ThunderBag():
         self.stats = stats
 
     def save_failed_plots(self, dirname):
+        logging.debug('saving failed plots')
         for key, thund in self.thunder_bag.items():
             if not getattr(getattr(thund, 'peaks'), 'success'):
                 thund.plot_all()
