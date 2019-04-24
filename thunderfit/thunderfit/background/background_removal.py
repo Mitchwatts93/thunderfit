@@ -1,8 +1,9 @@
 import logging
-#from scipy.sparse import diags, spdiags
-#from scipy.sparse.linalg import spsolve
-#from scipy.optimize import least_squares
-from numpy import array, ndarray, ones
+
+# from scipy.sparse import diags, spdiags
+# from scipy.sparse.linalg import spsolve
+# from scipy.optimize import least_squares
+from numpy import array, ndarray
 
 from . import scarf
 
@@ -38,6 +39,7 @@ def baseline_als(y, lam, p, niter=10):
 ####
 """
 
+
 def correct_negative_bg(y_bg_rm, bg):
     y_min = y_bg_rm.min()
     if y_min < 0:
@@ -52,7 +54,7 @@ def background_finder(x_data, y_data, bg, scarf_params):
             "Warning: no background specified, so not using a background,"
             " this may prevent algorithm from converging")
         bg = array([0 for _ in y_data])  # set the background as 0 everywhere
-        data_bg_rm_y = y_data # no background subtracted
+        data_bg_rm_y = y_data  # no background subtracted
         params = 'no'
 
     elif bg == 'SCARF':
@@ -61,16 +63,16 @@ def background_finder(x_data, y_data, bg, scarf_params):
 
     elif isinstance(bg, ndarray):
         assert len(bg) == len(y_data), \
-                "the background generated or passed is of incorrect length"
+            "the background generated or passed is of incorrect length"
         logging.debug('using numpy array as supplied by user')
-        data_bg_rm_y = y_data - bg # subtract user supplied background from the data
+        data_bg_rm_y = y_data - bg  # subtract user supplied background from the data
         params = 'user_specified'
 
     elif bg == 'OLD':
         logging.warning('user specified old bg subtraction method which is no longer supported')
-        #bg = find_background(y_data, residual_baseline, baseline_als) # find a background the old way
-        #data_bg_rm_y = y_data - bg  # subtract background from the data
-        #params = 'old_method'
+        # bg = find_background(y_data, residual_baseline, baseline_als) # find a background the old way
+        # data_bg_rm_y = y_data - bg  # subtract background from the data
+        # params = 'old_method'
         raise TypeError('old method is no longer supported')
 
     else:  # then it is the incorrect type

@@ -1,6 +1,8 @@
+import logging
+
 from lmfit import models
 from numpy import nan
-import logging
+
 
 def fit_peaks(x_data, y_data, peak_types, peak_centres, peak_amps, peak_widths, bounds):
     logging.debug(f'fitting peaks:  peak_centres:{peak_centres}, peak_amps:{peak_amps}, peak_widths:{peak_widths}, '

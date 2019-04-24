@@ -1,5 +1,7 @@
-from numpy import mean, std
 import logging
+
+from numpy import mean, std
+
 
 def svn(y_data, mean_y_data=False, std_dev=False):
     logging.debug('normalising using svn normalisation')

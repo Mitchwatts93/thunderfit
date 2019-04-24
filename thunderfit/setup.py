@@ -4,11 +4,10 @@ def readme():
     with open("README.rst") as f:
         return f.read()
 
-
 setup(
     name='thunderfit',
     python_requires='>3.6',
-    version='1.3.32',
+    version='1.3.48',
     description='Thunderfit fitting code',
     long_description=readme(),
     classifiers=[
@@ -24,19 +23,19 @@ setup(
     packages=find_packages(),
     install_requires = ['jsonschema==2.6.0',
         'dill==0.2.9',
-        'scipy==1.2.1',
-        'numpy==1.16.2',
+        'scipy==1.1.0',
+        'numpy==1.15.1',
         'matplotlib==2.2.3',
         'pandas==0.23.4',
-        'lmfit==0.9.11',
-        'tqdm==4.31.1',
+        'lmfit==0.9.13',
+        'tqdm==4.26.0',
         'asteval==0.9.13',
-
+        'typing==3.6.6',
         ],
     include_package_data=True,
     test_suite='nose.collector',
     tests_require=['nose'],
     entry_points={
-        "console_scripts": ['ramananalyse = thunderfit.raman_routine:main', 'mapscan = thunderfit.map_scan:main']},
+        "console_scripts": ['ramananalyse = thunderfit.raman_routine:main', 'mapscan = thunderfit.map_scan:main',
+                            'genparams = thunderfit.create_params:main']},
     )
-

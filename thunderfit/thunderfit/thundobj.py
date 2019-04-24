@@ -1,15 +1,15 @@
 import logging
+from copy import deepcopy
 from difflib import get_close_matches
 from re import findall
-from numpy import ndarray
 from typing import Dict, Union
-from copy import deepcopy
 
-from lmfit.model import ModelResult
 import matplotlib.pyplot as plt
+from lmfit.model import ModelResult
+from numpy import ndarray
 
-from . import utilities as utili
 from . import plotting
+from . import utilities as utili
 
 
 # TODO: need to fail if peak fitting doesn't work!
@@ -18,6 +18,7 @@ class Thunder():
     """
     thunder object with all the methods we love inside it. Name generated using WuTang Clan name generator.
     """
+
     def __init__(self, input, x_data=None, y_data=None, e_data=None):
         self.input: Union[Thunder, Dict] = input
 
@@ -35,7 +36,7 @@ class Thunder():
         self.datapath: str = './data.txt'
 
         self.no_peaks: int = 0
-        self.background: str = "SCARF" # fix this
+        self.background: str = "SCARF"  # fix this
         self.scarf_params: Union[None, Dict] = None
         self.peak_types: Union[None, list] = []
         self.peak_centres: Union[None, list] = []
@@ -48,7 +49,7 @@ class Thunder():
         self.plot: plt = None
         self.fit_report: {} = {}
         self.peak_params: {} = {}
-        self.model = None # give type!
+        self.model = None  # give type!
 
         self.free_params: int = 0
         self.p_value: int = 0
@@ -62,9 +63,10 @@ class Thunder():
             raise TypeError('Cannot convert input to Thunder object')
 
         if isinstance(self.x_data, ndarray) and isinstance(self.y_data, ndarray):
-            pass # they're already loaded as they've been passed
+            pass  # they're already loaded as they've been passed
         else:
-            self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind, self.y_ind) # load the data
+            self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind,
+                                                                    self.y_ind)  # load the data
 
         self.tightness = utili.tightness_setter(self.tightness)
 
@@ -84,7 +86,7 @@ class Thunder():
         if thun.y_data_bg_rm:
             self.y_data_bg_rm = thun.y_data_bg_rm
         if thun.y_data_norm:
-            self.y_data_norm =thun.y_data_norm
+            self.y_data_norm = thun.y_data_norm
 
         self.no_peaks = thun.no_peaks
         self.background = thun.background
@@ -103,12 +105,12 @@ class Thunder():
         :return: None, we modify the object unless a spec1d object is passed, in which case we return that
         """
         logging.debug('creating thund obj')
-        try: # only continue if its e_ind missing
+        try:  # only continue if its e_ind missing
             self.e_ind = inp['e_ind']
         except KeyError as e:
             logging.info(f"KeyError: Missing field in the data dictionary: {e}")
 
-        try: # If its the others you need to fail here
+        try:  # If its the others you need to fail here
             self.datapath = inp['datapath']
             self.x_ind = inp['x_ind']
             self.y_ind = inp['y_ind']
@@ -129,15 +131,15 @@ class Thunder():
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
     def plot_all(self):
         logging.debug('plotting all for thund obj')
-        ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components()) # plot each component of the model
-        ax, plt = plotting.plot_background(self.x_data, self.background, ax) #plot the background supplied by user
-        ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax) # plot the fitted data
+        ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components())  # plot each component of the model
+        ax, plt = plotting.plot_background(self.x_data, self.background, ax)  # plot the background supplied by user
+        ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax)  # plot the fitted data
         try:
             ax, plt = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
-                                         self.peaks.best_fit, ax) #plot a band of uncertainty
+                                                      self.peaks.best_fit, ax)  # plot a band of uncertainty
         except TypeError:
             logging.warning('There are not uncertainties available for some reason - '
-                         'try lowering the tightness of automatic bounds')
+                            'try lowering the tightness of automatic bounds')
         ax, plt = plotting.plot_data(self.x_data, self.y_data, ax)  # plot the raw data
 
         ax.minorticks_on()
@@ -148,7 +150,7 @@ class Thunder():
 
     def gen_fit_report(self):
         logging.debug('genertaing fit report for thund obj')
-        self.fit_report = {mod_no:{} for mod_no in range(len(self.peak_types))}
+        self.fit_report = {mod_no: {} for mod_no in range(len(self.peak_types))}
 
         ## total fit data
         self.fit_report['chi_sq'] = self.chi_sq
@@ -156,7 +158,7 @@ class Thunder():
         self.fit_report['p_value'] = 'not implemented'
 
         ## individual parameter data
-        param_info = {"center":"centers", "amplitude":"amps", "sigma":"widths", "fwhm":False, "height":False}
+        param_info = {"center": "centers", "amplitude": "amps", "sigma": "widths", "fwhm": False, "height": False}
         for parameter, param_obj in self.peaks.params.items():
             model_no = int(findall(r'\d+', parameter)[0])
             param_type = param_info[get_close_matches(parameter, param_info.keys())[0]]
@@ -167,14 +169,14 @@ class Thunder():
                 type = self.peak_types[model_no]
                 bounds = self.bounds[param_type][model_no]
 
-                fit_info = {"value":value,
-                            "stderr":err,
-                            "peak_type":type,
-                            "bounds":bounds}
+                fit_info = {"value": value,
+                            "stderr": err,
+                            "peak_type": type,
+                            "bounds": bounds}
 
                 self.fit_report[model_no][param_type] = fit_info
 
 
 def main(arguments):
-    thunder = Thunder(deepcopy(arguments)) # load object
+    thunder = Thunder(deepcopy(arguments))  # load object
     return thunder

@@ -1,8 +1,9 @@
-from scipy.signal import find_peaks as peak_find
-from scipy.signal import peak_widths as peak_width_func
-from numpy import argsort
 import matplotlib
 import matplotlib.pyplot as plt
+from numpy import argsort
+from scipy.signal import find_peaks as peak_find
+from scipy.signal import peak_widths as peak_width_func
+
 matplotlib.use('TkAgg')
 import logging
 
@@ -67,6 +68,22 @@ def find_peak_properties(prominence, center_list, y_data, peak_info_key):
         peak_properties = [peak_info[peak_info_key][i] for i in matching_indices]
     return peak_properties
 
+def match_peak_centres(center_indices, y_data, prominence=1):
+    while True:
+        peak_info_ = find_cents(prominence, y_data, find_all=True)
+        center_indices_ = utili.find_closest_indices(peak_info_['center_indices'],
+                                                     center_indices)  # the indices might be slightly off so fix that
+        if len(center_indices_) == len(center_indices):
+            break
+        elif len(center_indices_) > len(center_indices):
+            center_indices_ = center_indices_[:len(center_indices)]  # as they're in order of prominence
+            break
+        else:
+            prominence *= 10  # increase prominence until we get more than or equal to number.
+        # do something smarter!
+    center_indices = [peak_info_['center_indices'][i] for i in center_indices_]
+    return center_indices
+
 def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence=1):
     logging.debug(f'finding peak details based on prominence of {prominence}, and user provided details:'
                   f'peak_no:{peak_no}, peak_centres:{peak_centres}, peak_amps:{peak_amps}, peak_widths:{peak_widths}, peak_types:{peak_types}')
@@ -106,7 +123,8 @@ def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_wid
         if peak_no and len(peak_widths) < peak_no and len(peak_widths):
             logging.warning("you specified less peak widths than peak_numbers."
                 " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        center_indices = utili.find_closest_indices(x_data, peak_centres)
+        center_indices = utili.find_closest_indices(x_data, peak_centres) # get the indices from the x cent values
+        center_indices = match_peak_centres(center_indices, y_data)  # match to the peakfinding cents
         peak_properties = peak_width_func(y_data, center_indices, rel_height=0.6)
         peak_left_edges, peak_right_edges = [int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]]
         peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges])

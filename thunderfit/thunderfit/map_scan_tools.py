@@ -1,7 +1,8 @@
-from numpy import unique, round, array, nanmin, nanmax
-from scipy.sparse import coo_matrix
 import matplotlib
 import matplotlib.pyplot as plt
+from numpy import unique, round, array, nanmin, nanmax, nan
+from scipy.sparse import coo_matrix
+
 matplotlib.use('TkAgg')
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import logging
@@ -9,12 +10,13 @@ import logging
 from . import utilities as utili
 
 
-##### funcs for plotting
+# funcs for plotting
 def shift_map_matr(coordinates_array):
     logging.debug('shifting coordinates array')
     coordinates_array[:, 0] = coordinates_array[:, 0] - min(coordinates_array[:, 0])
     coordinates_array[:, 1] = coordinates_array[:, 1] - min(coordinates_array[:, 1])
     return coordinates_array
+
 
 def map_scan_plot(coordinates, values):
     logging.debug('plotting mapscans')
@@ -35,7 +37,8 @@ def map_scan_plot(coordinates, values):
         xx = (round(X / x_step)).astype(int)
         y_step = unique(Y)[1] - unique(Y)[0]
         yy = round((Y / y_step)).astype(int)
-        data_ = coo_matrix((Z, (xx, yy))).toarray()
+        data_ = coo_matrix((Z, (xx, yy))).toarray() # out=nanmat should mean that any missing values are nan
+        data_[data_ == 0] = nan
         f = plt.figure()
         ax = plt.gca()
         magma_cmap = matplotlib.cm.get_cmap('magma')
@@ -51,9 +54,11 @@ def map_scan_plot(coordinates, values):
         axs.append(ax)
     return figs, axs
 
+
 def plot_map_scan(bag, fit_params, dirname):
     logging.debug('runnning user input routine to generate/save user chosen variables in maps')
-    coordinates_array = array(list(getattr(bag, 'coordinates').values()))  # convert coordinates for each point into an array
+    coordinates_array = array(list(getattr(bag, 'coordinates').values()))  # convert coordinates for each point into an
+    # array
     coordinates_array = shift_map_matr(
         coordinates_array)  # shift so that each coordinate starts at 0, not normalised
     for i, key in enumerate(getattr(bag, 'coordinates')):
@@ -86,4 +91,4 @@ def plot_map_scan(bag, fit_params, dirname):
                     utili.save_plot(pt, path=dirname, figname=f"{p}_{i}.svg")
             except AttributeError:
                 print("Tried to save plot but there is no plot yet! Something wen't wrong in making the plot")
-#####
+#

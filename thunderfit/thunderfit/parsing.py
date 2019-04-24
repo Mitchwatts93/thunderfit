@@ -1,11 +1,13 @@
-from typing import Union, Dict, List
+import logging
 from argparse import ArgumentParser
 from os.path import basename
 from time import strftime
+from typing import Union, Dict, List
+
 from numpy import array
-import logging
 
 from . import utilities as utili
+
 
 def str_or_none(value):
     try:
@@ -13,11 +15,13 @@ def str_or_none(value):
     except:
         return None
 
+
 def str_or_arr(value):
     try:
         return str(value)
     except:
-        return array(value) # does this work?
+        return array(value)  # does this work?
+
 
 def parse_user_args():
     logging.debug('parsing command line args')
@@ -42,8 +46,9 @@ def parse_user_args():
                         help="The stype of background you'd like to fit. 'SCARF' is a rolling ball solgay_filter "
                              "background subtraction. \n 'OLD' uses a soon-to-be not implemented numerical method"
                              "which doesn't work too well. \n 'no' specifies that you would like no background fitted."
-                             "NOT IMPLEMENTED YET: An np array of background can also be passed by passing the path to the file, but please note that it must be the same"
-                             "length as the datafile (once rows containing nan values have been removed).")
+                             "NOT IMPLEMENTED YET: An np array of background can also be passed by passing the path to "
+                             "the file, but please note that it must be the same length as the datafile (once rows "
+                             "containing nan values have been removed).")
     parser.add_argument('--scarf_params', type=Union[None, Dict], default=None,
                         help='a dictionary (or None) of parameters for scarf algorithm. If none an interactive routine'
                              'will be used. if the dictionary is specified it should be of the form: \n'
@@ -51,7 +56,8 @@ def parse_user_args():
                              '\n where window length must be odd and greater than poly_order, and all must be integers')
     parser.add_argument('--peak_types', type=Union[None, List], default=None,
                         help='a list (or none) or the types of peak to be fitted. '
-                             '\n e.g. ["LorentzianModel", "GaussianModel"] as strings! they must be implemented in lmfit')
+                             '\n e.g. ["LorentzianModel", "GaussianModel"] as strings! they must be implemented in lmfi'
+                             't')
     parser.add_argument('--peak_centres', type=Union[None, List], default=None,
                         help='a list (or none) or the centres values (x values) of the peaks to be fitted. '
                              '\n e.g. [488, 365] as integers!')
@@ -78,10 +84,11 @@ def parse_user_args():
 
     return args
 
+
 def using_user_args(args):
     logging.debug('parsing user args')
     if args.param_file_path:  # if there is a params file then use it
-        #logging.warning('Using params file and ignoring all other user inputs from command line')
+        # logging.warning('Using params file and ignoring all other user inputs from command line')
         arguments = utili.parse_param_file(args.param_file_path)  # parse it
         if args.datapath:
             arguments['datapath'] = args.datapath
@@ -91,12 +98,13 @@ def using_user_args(args):
 
     return arguments
 
+
 def make_user_files(arguments, file_name=None):
     logging.debug('making file to store data inside')
     curr_time = strftime('%d_%m_%Y_%l:%M%p')  # name directory with the current time
     if not file_name:
         file_name = basename(arguments['datapath'])
-    file_name = file_name.split('.')[0] # the name of the file
+    file_name = file_name.split('.')[0]  # the name of the file
     dirname = utili.make_dir(f'{file_name}_analysed_{curr_time}')  # make a dict for the processed data to be saved in)
 
     return file_name, dirname

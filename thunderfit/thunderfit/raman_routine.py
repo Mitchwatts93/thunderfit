@@ -1,13 +1,14 @@
 import logging
+from os import rename
 from os.path import join
-import os.path
+from time import strftime
 
+from . import parsing
+from . import peak_finding
+from . import peak_fitting
 from . import thundobj
 from . import utilities as utili
 from .background import background_removal as bg_remove
-from . import peak_finding
-from . import peak_fitting
-from . import parsing
 
 
 def main():
@@ -17,8 +18,13 @@ def main():
     arguments = parsing.using_user_args(args)
 
     # save a plot of the figure and the thunder object
-    file_name, dirname = parsing.make_user_files(arguments, file_name=None)
-    log_filename = join(os.path.dirname(os.path.realpath(__file__)),dirname,f'{file_name}.log')
+
+    curr_time = strftime('%d_%m_%Y_%l:%M%p')
+    file_name = arguments['datapath']
+    log_filename = f'{file_name}_{curr_time}.log'
+    logging.getLogger().setLevel(logging.DEBUG)
+    logger = logging.getLogger('')
+    logger.handlers = []
     logging.FileHandler(log_filename, mode="w", encoding=None, delay=False)
     logging.basicConfig(filename=log_filename, level=logging.DEBUG)
 
@@ -58,7 +64,14 @@ def main():
     thunder.plot_all() # plot the data in full and save as an object
     thunder.gen_fit_report() # generate a fit report
 
+    # create a directory to save everything in
+    file_name, dirname = parsing.make_user_files(arguments, file_name=None)
+
     logging.info('saving plots, reports and thund obj')
     utili.save_plot(thunder.plot, path=dirname, figname=f"{file_name}.svg")
     utili.save_thunder(thunder, path=dirname, filename=f"{file_name}.d")
     utili.save_fit_report(thunder.fit_report, path=dirname, filename=f"{file_name}_report.json")
+
+    # move the log file in with all the rest of it
+    log_filename_ = str(join(dirname, f'{file_name}.log'))
+    rename(log_filename, log_filename_)  # use os.rename to move the log file to the final destination
