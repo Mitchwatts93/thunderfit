@@ -79,6 +79,14 @@ def parse_user_args():
                              'correspond to the low and high bounds on that specific value')
     parser.add_argument('--normalise', type=bool, default=False,
                         help='bool, True or False for should I normalise data or not')
+    parser.add_argument('--mapscan', type=bool, default=False,
+                        help='bool, True or False is this a mapscan?')
+    parser.add_argument('--method', type=str, default='leastsq',
+                        help='which minimisation algorithm to use')
+    parser.add_argument('--tol', type=float, default=0.0000001,
+                        help='tolerance when fitting')
+    parser.add_argument('--amp_bounds', type=bool, default=False,
+                        help='whether to create bounds for the amplitude or not')
 
     args = parser.parse_args()  # this allows us to now use them all
 

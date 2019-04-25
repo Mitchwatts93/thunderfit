@@ -13,10 +13,8 @@ Misc:
 - figure out what to do with uncertainty on y values?
 - comment everything
 - check background as failed plots bg plot looks unsmoothed
-- make peak finding scipt to help user find info
-
+- when fails lower the tolerance
 
 TESTING needed
 ==============
 - close plots on mapscan when done??? HOW? plt.close() messes everything up or does nothing
-- If using user-supplied params, give the option to tweak them so that bounds can still be automatically found. i.e. for peaks do peakfinder and choose the closest to those numbers? already done for widths, can just add a few lines and use the function in peakfinder for finding the closest center from a list to those found using peakfinder tool

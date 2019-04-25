@@ -55,6 +55,10 @@ class Thunder():
         self.p_value: int = 0
         self.chisq: int = 0
 
+        self.method: str = 'leastsq'
+        self.tol: float = 0.0000001
+        self.amp_bounds: bool = False
+
         if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
             self.overwrite_thunder(input)  # add all the details in depending on args
         elif isinstance(input, dict):
@@ -98,6 +102,10 @@ class Thunder():
         self.tightness = thun.tightness
         self.bounds = thun.bounds
 
+        self.method = thun.method
+        self.tol = thun.tol
+        self.amp_bounds = thun.amp_bounds
+
     def create_thunder(self, inp: Dict):
         """
         Used to create a thunder object given different input types
@@ -127,6 +135,9 @@ class Thunder():
         self.peak_amps = inp.get('peak_amps', self.peak_amps)
         self.tightness = inp.get('tightness', self.tightness)
         self.bounds = inp.get('bounds', self.bounds)
+        self.method = inp.get('method', self.method)
+        self.tol = inp.get('tol', self.tol)
+        self.amp_bounds = inp.get('amp_bound', self.amp_bounds)
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
     def plot_all(self):

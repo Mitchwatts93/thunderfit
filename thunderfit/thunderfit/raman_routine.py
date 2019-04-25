@@ -31,6 +31,11 @@ def main():
     logging.info('creating thunder obj')
     thunder = thundobj.main(arguments) # create a Thunder object
 
+    if arguments.get('clip_data', False):
+        logging.info('clipping data')
+        clip_left, clip_right = utili.clip_data(getattr(thunder, 'x_data'), getattr(thunder, 'y_data'))
+        thunder.x_data, thunder.y_data = thunder.x_data[clip_left:clip_right], thunder.y_data[clip_left:clip_right]
+
     logging.info('setting and subtracting bg')
     thunder.background, thunder.y_data_bg_rm, _ = bg_remove.background_finder(thunder.x_data, thunder.y_data,
                                                                            thunder.background, thunder.scarf_params)
@@ -53,7 +58,8 @@ def main():
     logging.info('fitting peaks')
     thunder.specs, thunder.model, thunder.peak_params, thunder.peaks = \
         peak_fitting.fit_peaks(thunder.x_data, thunder.y_data_bg_rm, thunder.peak_types, thunder.peak_centres,
-                               thunder.peak_amps, thunder.peak_widths, thunder.bounds) # fit peaks
+                               thunder.peak_amps, thunder.peak_widths, thunder.bounds, thunder.method, thunder.tol,
+                               thunder.amp_bounds) # fit peaks
 
     logging.info('setting stats etc')
     thunder.chi_sq = thunder.peaks.chisqr # set the stats from the fits

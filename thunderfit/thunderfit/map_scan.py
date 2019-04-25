@@ -101,7 +101,8 @@ def main():
     logging.info('fitting peaks for all')
     bag.bag_iterator(getattr(bag, 'thunder_bag'), peak_fitting.fit_peaks,
                      ('x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
-                      'peak_amps', 'peak_widths', 'bounds'), ('specs', 'model', 'peak_params', 'peaks'))  # fit peaks
+                      'peak_amps', 'peak_widths', 'bounds', 'method', 'tol',
+              'amp_bounds'), ('specs', 'model', 'peak_params', 'peaks'))  # fit peaks
 
     ##### fit params dictionary
     # store all the peak parameters in a dictionary, so the keys are e.g. sigma, center, amplitude, and the values are
@@ -139,5 +140,6 @@ def main():
     # move the log file in with all the rest of it
     log_filename_ = str(join(dirname, f'{file_name}.log'))
     rename(log_filename, log_filename_) # use os.rename to move the log file to the final destination
+    utili.save_fit_report(arguments, path=dirname, filename=f"{file_name}_inpargs.json")
 
 
