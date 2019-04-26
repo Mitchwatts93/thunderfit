@@ -18,15 +18,8 @@ def main():
     arguments = parsing.using_user_args(args)
 
     # save a plot of the figure and the thunder object
-
-    curr_time = strftime('%d_%m_%Y_%l:%M%p')
     file_name = arguments['datapath']
-    log_filename = f'{file_name}_{curr_time}.log'
-    logging.getLogger().setLevel(logging.DEBUG)
-    logger = logging.getLogger('')
-    logger.handlers = []
-    logging.FileHandler(log_filename, mode="w", encoding=None, delay=False)
-    logging.basicConfig(filename=log_filename, level=logging.DEBUG)
+    log_filename = utili.setup_logger(file_name)
 
     logging.info('creating thunder obj')
     thunder = thundobj.main(arguments) # create a Thunder object
@@ -46,20 +39,18 @@ def main():
                                                  utili.normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
 
     logging.info('setting peak info')
-    thunder.no_peaks, thunder.peak_centres, thunder.peak_amps, thunder.peak_widths, thunder.peak_types, _ = \
-                   peak_finding.find_peak_details(thunder.x_data, thunder.y_data_bg_rm, thunder.no_peaks,
-                                                  thunder.peak_centres, thunder.peak_amps, thunder.peak_widths,
-                                                  thunder.peak_types) # find peaks/use them if supplied
+    thunder.no_peaks, thunder.peak_info_dict, _ = peak_finding.find_peak_details(thunder.x_data,
+                                                                                 thunder.y_data_bg_rm,
+                                                                                 thunder.peak_info_dict,
+                                                                                 thunder.no_peaks) # find peaks/use them if supplied
 
     logging.info('setting bounds')
-    thunder.bounds = peak_finding.make_bounds(thunder.tightness, thunder.no_peaks, thunder.bounds, thunder.peak_widths,
-                                              thunder.peak_centres, thunder.peak_amps) # make bounds
+    thunder.bounds = peak_finding.make_bounds(thunder.tightness, thunder.no_peaks, thunder.bounds,
+                                              thunder.peak_info_dict) # make bounds
 
     logging.info('fitting peaks')
-    thunder.specs, thunder.model, thunder.peak_params, thunder.peaks = \
-        peak_fitting.fit_peaks(thunder.x_data, thunder.y_data_bg_rm, thunder.peak_types, thunder.peak_centres,
-                               thunder.peak_amps, thunder.peak_widths, thunder.bounds, thunder.method, thunder.tol,
-                               thunder.amp_bounds) # fit peaks
+    thunder.specs, thunder.model, thunder.peak_params, thunder.peaks = peak_fitting.fit_peaks(
+        thunder.x_data, thunder.y_data_bg_rm, thunder.peak_info_dict, thunder.bounds, thunder.method, thunder.tol) # fit peaks
 
     logging.info('setting stats etc')
     thunder.chi_sq = thunder.peaks.chisqr # set the stats from the fits

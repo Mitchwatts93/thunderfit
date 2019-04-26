@@ -16,6 +16,7 @@ from .thundobj import Thunder
 from . import utilities as utili
 from .background import background_removal as bg_remove
 from . import peak_finding
+from . import peak_fitting
 
 
 ############## NOT IMPLEMENTED!
@@ -180,42 +181,51 @@ class ThunderBag():
             for thund in self.thunder_bag.values():
                 setattr(thund, 'scarf_params', params)  # set all the values to this
 
-    def peak_info_setter(self):
+    def remove_backgrounds(self):
+        # do some checks
+        self.bag_iterator(getattr(self, 'thunder_bag'), bg_remove.background_finder,
+                         ('x_data', 'y_data', 'background', 'scarf_params'),
+                         ('background', 'y_data_bg_rm', 'params'))
+
+    def normalise_data(self):
+        self.bag_iterator(getattr(self, 'thunder_bag'), utili.normalise_all, ('y_data_bg_rm', 'background', 'y_data'),
+                         ('y_data_bg_rm', 'background', 'y_data_norm'))
+
+    def find_peaks(self):
         logging.debug('setting peak no, centres and types based on user specified plot details')
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = self.thunder_bag[self.first]
-        no_peaks, peak_centres, peak_amps, peak_widths, peak_types, prominence = \
+        no_peaks, peak_info_dict, prominence = \
             peak_finding.find_peak_details(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data_bg_rm'),
-                                           getattr(first_thunder, 'no_peaks'),
-                                           getattr(first_thunder, 'peak_centres'), getattr(first_thunder, 'peak_amps'),
-                                           getattr(first_thunder, 'peak_widths'),
-                                           getattr(first_thunder, 'peak_types'))
+                                           getattr(first_thunder, 'no_peaks'), getattr(first_thunder, 'peak_finder_type', 'auto'))
         for thund in self.thunder_bag.values():  # set these first values for all of them
             setattr(thund, 'no_peaks', no_peaks)  # set values
-            center_indices = utili.find_closest_indices(thund.x_data, peak_centres) # get the indices from the x centres
+            center_indices = utili.find_closest_indices(thund.x_data, peak_info_dict['center']) # get the indices from the x centres
             center_indices = peak_finding.match_peak_centres(center_indices, thund.y_data) # match to the peakfinding cents
             peak_centres = thund.x_data[center_indices] # convert back to x values
-            setattr(thund, 'peak_centres', peak_centres)  # set values
-            setattr(thund, 'peak_types', peak_types)  # set values
+            peak_info_dict['center'] = peak_centres # set values
+            thund.peak_info_dict = peak_info_dict
 
     def peaks_adj_params(self):
         for thund in self.thunder_bag.values():  # set these first values for all of them
-            center_indices = utili.find_closest_indices(thund.x_data, thund.peak_centres) # get the indices from the x centres
+            center_indices = utili.find_closest_indices(thund.x_data, thund.peak_info_dict['center']) # get the indices from the x centres
             center_indices = peak_finding.match_peak_centres(center_indices, thund.y_data) # match to the peakfinding cents
             peak_centres = thund.x_data[center_indices] # convert back to x values
-            setattr(thund, 'peak_centres', peak_centres)  # set values
+            thund.peak_info_dict['center'] = peak_centres # set values
 
     def bound_setter(self, bounds=None):
         logging.debug('setting bounds based on user provided bounds or found for user specified plot')
         if not bounds:
             first_thunder = self.thunder_bag[self.first]
-            bounds = peak_finding.make_bounds(getattr(first_thunder, 'tightness'), getattr(first_thunder, 'no_peaks'),
-                                              getattr(first_thunder, 'bounds'),
-                                              getattr(first_thunder, 'peak_widths'),
-                                              getattr(first_thunder, 'peak_centres'),
-                                              getattr(first_thunder, 'peak_amps'))
+            bounds = peak_finding.make_bounds(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'), getattr(first_thunder, 'no_peaks'),
+                                              first_thunder.peak_info_dict)
         for thund in self.thunder_bag.values():  # set these first values for all of them
             setattr(thund, 'bounds', bounds)  # set values
+
+    def fit_peaks(self):
+        self.bag_iterator(getattr(self, 'thunder_bag'), peak_fitting.fit_peaks,
+                         ('x_data', 'y_data_bg_rm', 'peak_info_dict', 'bounds', 'method', 'tol'),
+                         ('specs', 'model', 'peak_params', 'peaks'))  # fit peaks
 
     def make_fit_params(self):
         logging.debug('generating fit params')
@@ -223,8 +233,7 @@ class ThunderBag():
         first_thunder = self.thunder_bag.get(self.first)
         params = list(getattr(first_thunder, 'peak_params').keys())[
                  : len(
-                     getattr(first_thunder, 'peak_params')) // getattr(first_thunder,
-                                                                       'no_peaks')]  # what are the peak params for the first peak
+                     getattr(first_thunder, 'peak_params')) // getattr(first_thunder, 'no_peaks')]  # what are the peak params for the first peak
         params = [param.split('_')[1] for param in params]  # keep only the type of param
         for param in params:
             fit_params[param] = {}  # e.g. 'center'

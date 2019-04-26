@@ -67,8 +67,21 @@ def plot_map_scan(bag, fit_params, dirname):
         plt.close()
         plt.clf()
         ans = input("making map scans, please input which property you would like to scan. options are:"
-                    f"\n {[p_ for p_ in fit_params.keys()]}. or type e to exit")
+                    f"\n {[p_ for p_ in fit_params.keys()]}, or type 'all' to plot all, or type e to exit")
         if ans == 'e':
+            break
+        elif ans == 'all':
+            for p in fit_params.keys():
+                plot, ax = map_scan_plot(getattr(bag, 'coordinates'), fit_params.get(p))
+                for i, pt in enumerate(plot):
+                    try:
+                        cents = next(iter(fit_params.get('center').values()))
+                        pt.suptitle(f'{p}_{i}_heatmap. peak {i} is centered at: {cents[i]}')
+                    except KeyError:
+                        print("tried to add label for peak centers onto graph, but couldn't fetch the right variable")
+                        pt.suptitle(f'{p}_{i}_heatmap')
+                for i, pt in enumerate(plot):
+                    utili.save_plot(pt, path=dirname, figname=f"{p}_{i}.svg")
             break
         else:
             try:

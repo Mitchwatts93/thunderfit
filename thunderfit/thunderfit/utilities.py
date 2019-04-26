@@ -8,7 +8,7 @@ import matplotlib
 import pandas as pd
 from dill import dump as d_dump
 from dill import load as d_load
-from numpy import vstack
+from numpy import vstack, pad, diff
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -55,34 +55,55 @@ def normalise_all(y_bg_rem, bg, y_raw):
     y_data_norm, _ = normalisation.svn(y_raw, mean_y_data, std_dev)  # normalise with data from bg subtracted data
 
     return y_data_bg_rm, background, y_data_norm
+
+def safe_list_get(l, idx, default):
+    """fetch items safely from a list, if it isn't long enough return a default value"""
+    try:
+        return l[idx]
+    except IndexError:
+        return default
+
+def sharpening_routine(x_data, y_data):
+    sharpening_factor = (0, 0)
+    res_enhanced = y_data
+    while True:
+        plt.plot(x_data, res_enhanced)
+        print(f"Do you want to sharpen the peaks to help find components? Note this will not edit the actual data. "
+              f"Current sharpening factor is: {sharpening_factor}")
+        plt.show()
+        ans = input("Please enter the method (either 'power' or 'deriv'), then a comma, then a new sharpening factors "
+                    "(comma seperated if mutliple i.e. for derivative), "
+                    "or type y to continue with the current factor")
+        if ans == 'y':
+            plt.close()
+            return y_data
+        else:
+            try:
+                ans = ans.split(',')
+                _type = ans[0]
+                ans = ans[1:]
+                sharpening_factor = [float(fac) for fac in ans]
+                res_enhanced = peak_sharpening(y_data, _type, sharpening_factor)
+            except:
+                print("You entered an incorrect answer! Trying again...")
+
+
+def peak_sharpening(y_data, _type, sharpening_factor):
+    if _type == 'power':
+        res_enhanced = y_data ** sharpening_factor[0]  # raise to the power
+    elif _type == 'deriv':
+        y_double_prime = pad(diff(y_data, n=2), (0, 2), 'constant')
+        y_4_prime = pad(diff(y_data, n=4), (0, 4), 'constant')
+        res_enhanced = y_data - sharpening_factor[0] * y_double_prime + sharpening_factor[
+            1] * y_4_prime  # this is the original data minus its
+        # derivative multiplied by some factor
+    else:
+        raise ValueError("enter a correct type")
+    return res_enhanced
+
 # tools
 
 # user inputs and loading etc
-def tightness_setter(tightness):
-    logging.debug('parsing tightness')
-    tight_dict = {}
-    tight_dict['centre_bounds'] = 1
-    tight_dict['width_bounds'] = (5, 2)
-    tight_dict['amps_bounds'] = (2, 2)
-
-    if tightness == 'low':
-        tight_dict['centre_bounds'] = 10
-        tight_dict['width_bounds'] = (20, 3)
-        tight_dict['amps_bounds'] = (5, 3)
-    elif tightness == "med":
-        pass
-    elif tightness == 'high':
-        tight_dict['centre_bounds'] = 0.5
-        tight_dict['width_bounds'] = (2, 1)
-        tight_dict['amps_bounds'] = (1.2, 1.2)
-
-    else:
-        logging.warning(
-            'The tightness defined was incorrect format, use low, med or high. Using default med settings')
-
-    return tight_dict
-
-
 def load_data(datapath, x_ind, y_ind, e_ind=None):
     """
     load in data as a pandas df - save by modifying self.data, use object params to load
@@ -230,4 +251,15 @@ def apply_func(key_kwargs_, func):
     kwargs_ = key_kwargs_[1]
     val = func(*kwargs_)
     return key, val
+
+
+def setup_logger(log_name):
+    curr_time = strftime('%d_%m_%Y_%l:%M%p')
+    log_filename = f"{log_name}_{curr_time}.log"
+    logging.getLogger().setLevel(logging.DEBUG)
+    logger = logging.getLogger('')
+    logger.handlers = []
+    logging.basicConfig(filename=log_filename, level=logging.DEBUG)
+    logging.info('have read in user arguments')
+    return log_filename
 #

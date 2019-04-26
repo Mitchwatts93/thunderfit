@@ -10,7 +10,9 @@ from numpy import ndarray
 
 from . import plotting
 from . import utilities as utili
-
+from .background import background_removal as bg_remove
+from . import peak_finding
+from . import peak_fitting
 
 # TODO: need to fail if peak fitting doesn't work!
 
@@ -38,11 +40,10 @@ class Thunder():
         self.no_peaks: int = 0
         self.background: str = "SCARF"  # fix this
         self.scarf_params: Union[None, Dict] = None
-        self.peak_types: Union[None, list] = []
-        self.peak_centres: Union[None, list] = []
-        self.peak_widths: Union[None, list] = []
-        self.peak_amps: Union[None, list] = []
-        self.tightness: str = "med"
+
+        self.peak_info_dict: Dict = {}
+        self.peak_finder_type: str = 'auto'
+
         self.bounds: Union[None, Dict] = None
 
         self.peaks: ModelResult
@@ -57,7 +58,6 @@ class Thunder():
 
         self.method: str = 'leastsq'
         self.tol: float = 0.0000001
-        self.amp_bounds: bool = False
 
         if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
             self.overwrite_thunder(input)  # add all the details in depending on args
@@ -71,8 +71,6 @@ class Thunder():
         else:
             self.x_data, self.y_data, self.e_data = utili.load_data(self.datapath, self.x_ind,
                                                                     self.y_ind)  # load the data
-
-        self.tightness = utili.tightness_setter(self.tightness)
 
     def overwrite_thunder(self, inp):
         logging.debug('overwriting thund obj')
@@ -95,16 +93,14 @@ class Thunder():
         self.no_peaks = thun.no_peaks
         self.background = thun.background
         self.scarf_params = thun.scarf_params
-        self.peak_types = thun.peak_types
-        self.peak_centres = thun.peak_centres
-        self.peak_widths = thun.peak_widths
-        self.peak_amps = thun.peak_amps
-        self.tightness = thun.tightness
+
+        self.peak_info_dict = thun.peak_info_dict
+        self.peak_finder_type = thun.peak_finder_type
+
         self.bounds = thun.bounds
 
         self.method = thun.method
         self.tol = thun.tol
-        self.amp_bounds = thun.amp_bounds
 
     def create_thunder(self, inp: Dict):
         """
@@ -129,15 +125,63 @@ class Thunder():
         self.background = inp.get('background', self.background)
         # do some check on background here to set it to an np array
         self.scarf_params = inp.get('scarf_params', self.scarf_params)
-        self.peak_types = inp.get('peak_types', self.peak_types)
-        self.peak_centres = inp.get('peak_centres', self.peak_centres)
-        self.peak_widths = inp.get('peak_widths', self.peak_widths)
-        self.peak_amps = inp.get('peak_amps', self.peak_amps)
-        self.tightness = inp.get('tightness', self.tightness)
+
+        self.peak_info_dict = inp.get('peak_info_dict', self.peak_info_dict)
+        self.peak_finder_type = inp.get('peak_finder_type', self.peak_finder_type)
+
         self.bounds = inp.get('bounds', self.bounds)
         self.method = inp.get('method', self.method)
         self.tol = inp.get('tol', self.tol)
-        self.amp_bounds = inp.get('amp_bound', self.amp_bounds)
+
+    def clip_data(self):
+        clip_left, clip_right = utili.clip_data(getattr(self, 'x_data'), getattr(self, 'y_data'))
+        setattr(self, 'x_data', getattr(self, 'x_data')[clip_left:clip_right])
+        setattr(self, 'y_data', getattr(self, 'y_data')[clip_left:clip_right])
+
+    def remove_bg(self):
+        background, y_data_bg_rm, params = bg_remove.background_finder(getattr(self, 'x_data'),
+                                                                       getattr(self, 'y_data'),
+                                                                       getattr(self, 'background'),
+                                                                       getattr(self, 'scarf_params'))
+        setattr(self, 'background', background)
+        setattr(self, 'y_data_bg_rm', y_data_bg_rm)
+        setattr(self, 'params', params)
+
+    def normalise(self):
+        y_data_bg_rm, background, y_data_norm = utili.normalise_all('y_data_bg_rm', 'background', 'y_data')
+        setattr(self, 'background', background)
+        setattr(self, 'y_data_bg_rm', y_data_bg_rm)
+        setattr(self, 'y_data_norm', y_data_norm)
+
+    def find_peaks(self):
+        no_peaks, peak_info_dict, prominence = \
+            peak_finding.find_peak_details(getattr(self, 'x_data'), getattr(self, 'y_data_bg_rm'),
+                                           getattr(self, 'no_peaks'),
+                                           getattr(self, 'peak_finder_type', 'auto'))
+        setattr(self, 'no_peaks', no_peaks)  # set values
+        center_indices = utili.find_closest_indices(self.x_data, peak_info_dict['center'])  # get the indices from the x centres
+        center_indices = peak_finding.match_peak_centres(center_indices, self.y_data)  # match to the peakfinding cents
+        peak_centres = self.x_data[center_indices]  # convert back to x values
+        peak_info_dict['center'] = peak_centres  # set values
+        setattr(self, peak_info_dict, peak_info_dict)
+
+    def bound_setter(self, bounds=None):
+        if not bounds:
+            bounds = peak_finding.make_bounds(getattr(self, 'x_data'), getattr(self, 'y_data'), getattr(self, 'no_peaks'),
+                                              self.peak_info_dict)
+        setattr(self, 'bounds', bounds)  # set values
+
+    def fit_peaks(self):
+        specs, model, peak_params, peaks = peak_fitting.fit_peaks(getattr(self, 'x_data'),
+                                                                          getattr(self, 'y_data_bg_rm'),
+                                                                          getattr(self, 'peak_info_dict'),
+                                                                          getattr(self, 'bounds'),
+                                                                          getattr(self, 'method'),
+                                                                          getattr(self, 'tol'))
+        setattr(self, 'specs', specs)
+        setattr(self, 'model', model)
+        setattr(self, 'peak_params', peak_params)
+        setattr(self, 'peaks', peaks)
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
     def plot_all(self):
@@ -161,7 +205,7 @@ class Thunder():
 
     def gen_fit_report(self):
         logging.debug('genertaing fit report for thund obj')
-        self.fit_report = {mod_no: {} for mod_no in range(len(self.peak_types))}
+        self.fit_report = {mod_no: {} for mod_no in range(len(self.peak_info_dict['peak_types']))}
 
         ## total fit data
         self.fit_report['chi_sq'] = self.chi_sq
@@ -169,7 +213,7 @@ class Thunder():
         self.fit_report['p_value'] = 'not implemented'
 
         ## individual parameter data
-        param_info = {"center": "centers", "amplitude": "amps", "sigma": "widths", "fwhm": False, "height": False}
+        param_info = {"center": "center", "amplitude": "amplitude", "sigma": "sigma", "fwhm": False, "height": False}
         for parameter, param_obj in self.peaks.params.items():
             model_no = int(findall(r'\d+', parameter)[0])
             param_type = param_info[get_close_matches(parameter, param_info.keys())[0]]
@@ -177,7 +221,7 @@ class Thunder():
             if param_type:
                 value = param_obj.value
                 err = param_obj.stderr
-                type = self.peak_types[model_no]
+                type = self.peak_info_dict['peak_types'][model_no]
                 bounds = self.bounds[param_type][model_no]
 
                 fit_info = {"value": value,

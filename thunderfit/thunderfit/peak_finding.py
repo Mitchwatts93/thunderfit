@@ -2,7 +2,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 from numpy import argsort
 from scipy.signal import find_peaks as peak_find
-from scipy.signal import peak_widths as peak_width_func
 
 matplotlib.use('TkAgg')
 import logging
@@ -20,7 +19,7 @@ def peak_finder(data, prominence, height=0, width=0):
     sorted_indices = argsort(amps)[::-1] # we will sort below in order of amplitudes
 
     peak_info = {'center_indices': sort_lists(sorted_indices, peaks), 'right_edges': sort_lists(sorted_indices, list(properties['right_bases'])),
-                 'left_edges': sort_lists(sorted_indices, list(properties['left_bases'])), 'amps': sort_lists(sorted_indices, amps)}
+                 'left_edges': sort_lists(sorted_indices, list(properties['left_bases'])), 'amplitude': sort_lists(sorted_indices, amps)}
     return peak_info
 
 def sort_lists(sorted_indices, list_to_sort):
@@ -31,11 +30,10 @@ def find_cents(prominence, y_data, find_all=False):
     peak_info = peak_finder(y_data, prominence, height=0, width=0)  # find the peak centers
     if find_all:
         return peak_info
-    center_indices = peak_info['center_indices']
-    return center_indices
+    #center_indices = peak_info['center_indices']
+    return peak_info
 
-def interactive_peakfinder(prominence, x_data, y_data):
-    logging.debug('finding centres of peaks with user guided routine')
+def auto_peak_finder(prominence, x_data, y_data):
     while True:
         peak_info = find_cents(prominence, y_data, find_all=True)
         plt.plot(x_data, y_data)
@@ -55,18 +53,52 @@ def interactive_peakfinder(prominence, x_data, y_data):
     plt.close()
     return peak_info, prominence
 
-def find_peak_properties(prominence, center_list, y_data, peak_info_key):
-    logging.debug(f'finding peak properties based on prominence of {prominence} and centers: {center_list} ')
-    peak_info = peak_finder(y_data, prominence, height=0, width=0)
-    center_indices = peak_info['center_indices']
-    matching_indices = utili.find_closest_indices(center_indices, center_list)
-    if peak_info_key=='widths':
-        center_list = [center_indices[i] for i in matching_indices]
-        peak_properties = peak_width_func(y_data, center_list, rel_height=0.6)
-        peak_properties = ([int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]])
+def user_peak_finder(x_data, y_data):
+    peak_info = {'center_values':(), 'amplitude':(), 'sigma':()}
+    for key, peak_value in peak_info.items():
+        while True:
+            to_plot = peak_value
+            if key == 'sigma':
+                cents = peak_info['center_values']
+                to_plot = [(cents[i] - width/2, cents[i] + width/2) for i, width in enumerate(to_plot)]
+            print(f"Peak finder requires user input, please look at the following plot of values for {key}: {peak_value}")
+            plot_values(key, to_plot, x_data, y_data)
+            ans = input("If you are happy with the plot, type y. If not then please type a list of values seperated by commas ")
+            if ans == 'y':
+                break
+            else:
+                try:
+                    peak_value_ = ans.split(',')
+                    peak_value = [float(i) for i in peak_value_]
+                except ValueError:
+                    print("You entered an incorrect answer! Trying again...")
+        plt.close()
+        peak_info[key] = peak_value
+    return peak_info
+
+def plot_values(key, list_of_values, x_data, y_data):
+    plt.plot(x_data, y_data)
+    if key == 'center_values':
+        for xc in list_of_values:
+            plt.axvline(x=xc)
+    elif key == 'amplitude':
+        for yc in list_of_values:
+            plt.axhline(y=yc)
+    elif key =='sigma': # these have to be passed in as band edges
+        for band in list_of_values:
+            plt.axvspan(band[0], band[1], alpha=0.1, color='red')
+    plt.show()
+
+def interactive_peakfinder(x_data, y_data, type='auto', prominence=1):
+    logging.debug('finding centres of peaks with user guided routine')
+    if type == 'user':
+        peak_info = user_peak_finder(x_data, y_data)
+        prominence = None
     else:
-        peak_properties = [peak_info[peak_info_key][i] for i in matching_indices]
-    return peak_properties
+        peak_info, prominence = auto_peak_finder(prominence, x_data, y_data)
+        center_indices = peak_info['center_indices']
+        peak_info['center_values'] = x_data[center_indices]
+    return peak_info, prominence
 
 def match_peak_centres(center_indices, y_data, prominence=1):
     while True:
@@ -84,90 +116,67 @@ def match_peak_centres(center_indices, y_data, prominence=1):
     center_indices = [peak_info_['center_indices'][i] for i in center_indices_]
     return center_indices
 
-def find_peak_details(x_data, y_data, peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence=1):
+def find_peak_details(x_data, y_data, no_peaks, type='auto', prominence=1):
     logging.debug(f'finding peak details based on prominence of {prominence}, and user provided details:'
-                  f'peak_no:{peak_no}, peak_centres:{peak_centres}, peak_amps:{peak_amps}, peak_widths:{peak_widths}, peak_types:{peak_types}')
-    if len(peak_centres) == 0 or len(peak_centres) < peak_no:
-        if peak_no and len(peak_centres) < peak_no and len(peak_centres):
-            logging.warning("you specified less peak centers than peak_numbers."
-                 " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        if not peak_no: # then they don't know so we can find everything in one go and save some time
-            peak_info, prominence = interactive_peakfinder(prominence, x_data, y_data)
-            center_indices = peak_info['center_indices']
-            peak_amps = peak_info['amps']
-            peak_properties = peak_width_func(y_data, center_indices, rel_height=0.6)
-            peak_left_edges, peak_right_edges = [int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]]
-            peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges]) # the xvalues can be
-                                                                                            # indexed from the data
-            peak_centres = x_data[center_indices]
-            peak_no = len(center_indices)
-        else: # just find the centers
-            center_indices = find_cents(prominence, y_data)
-            center_indices = center_indices[:peak_no] # take the first n as user has specified how many peaks
-            peak_centres = x_data[center_indices]
-    elif len(peak_centres) > peak_no:
-        logging.warning("specified more peak centers than no_peaks. cutting the peaks supplied as [:no_peaks]")
-        peak_centres = peak_centres[:peak_no]
+                  f'no_peaks:{no_peaks}')
 
-    if len(peak_amps) == 0 or len(peak_amps) < peak_no:
-        if peak_no and len(peak_amps) and len(peak_amps) < peak_no:
-            logging.warning("you specified less peak amps than peak_numbers."
-                " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        center_indices = utili.find_closest_indices(x_data, peak_centres)
-        peak_amps = find_peak_properties(prominence, center_indices, y_data, 'amps')
-    elif len(peak_amps) > peak_no:
-        logging.warning("specified more peak amps than no_peaks. cutting the peaks supplied as [:no_peaks]")
-        peak_amps = peak_amps[:peak_no]
+    peak_info, prominence = interactive_peakfinder(x_data, y_data, type, prominence)
+    no_peaks = max(len(value) for value in peak_info.values())
+    center = peak_info['center_values']
+    amplitude = peak_info['amplitude']
+    sigma = peak_info.get('sigma', ())
+    for i, sig in enumerate(sigma):
+        x1 = x_data[0] + sig
+        sigma[i] = utili.find_closest_indices(x_data, x1)
+        import ipdb
+        ipdb.set_trace()
+    type = ["LorentzianModel" for i in range(no_peaks)]
+    peak_info_dict = {}
 
-    if len(peak_widths) == 0 or len(peak_widths) < peak_no:
-        if peak_no and len(peak_widths) < peak_no and len(peak_widths):
-            logging.warning("you specified less peak widths than peak_numbers."
-                " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        center_indices = utili.find_closest_indices(x_data, peak_centres) # get the indices from the x cent values
-        center_indices = match_peak_centres(center_indices, y_data)  # match to the peakfinding cents
-        peak_properties = peak_width_func(y_data, center_indices, rel_height=0.6)
-        peak_left_edges, peak_right_edges = [int(i) for i in peak_properties[2]], [int(i) for i in peak_properties[3]]
-        peak_widths = abs(x_data[peak_right_edges] - x_data[peak_left_edges])
-        for i in range(len(peak_widths)):
-            if peak_widths[i] == 0:
-                peak_widths[i] = 1
+    peak_info_dict['center'], peak_info_dict['amplitude'], peak_info_dict['sigma'], \
+    peak_info_dict['type'] = center, amplitude, sigma, type
 
-    elif len(peak_widths) > peak_no:
-        logging.warning("specified more peak widths than no_peaks. cutting the peaks supplied as [:no_peaks]")
-        peak_widths = peak_widths[:peak_no]
+    return no_peaks, peak_info_dict, prominence
 
-    if len(peak_types) == 0 or len(peak_types) < peak_no:
-        if peak_no and len(peak_types) < peak_no and len(peak_types):
-            logging.warning("you specified less peak types than peak_numbers."
-                " Currently only finding all peaks based on tightness criteria or using all supplied is possible")
-        peak_types = ['LorentzianModel' for _ in peak_centres]  # we assume all the types are Lorentzian for now
-    elif len(peak_types) > peak_no:
-        logging.warning("specified more peak types than no_peaks. cutting the peaks supplied as [:no_peaks]")
-        peak_types = peak_widths[:peak_no]
-
-    return peak_no, peak_centres, peak_amps, peak_widths, peak_types, prominence
-
-
-def make_bounds(tightness, no_peaks, bounds_dict, peak_widths, peak_centres, peak_amps):
-    logging.debug(f'making bounds based on: tightness:{tightness}, no_peaks:{no_peaks}, bounds_dict:{bounds_dict}, peak_widths:{peak_widths}, peak_centres:{peak_centres}, peak_amps:{peak_amps}')
+def make_bounds(x_data, y_data, no_peaks, peak_info_dict):
+    logging.debug(f'making bounds based on: no_peaks:{no_peaks}, '
+                  f'peak_info_dict: {peak_info_dict}')
     bounds = {}
+    for key in peak_info_dict:
+        while True:
+            ans = input(f"Do you want to create bounds for {key}? \n"
+                        f"Current values are: {peak_info_dict[key]} \n"
+                        f"type y or n")
+            if ans == 'y':
+                bounds[key] = interactive_bounds(x_data, y_data, len(peak_info_dict[key]))
+                break
+            elif ans == 'n':
+                break
+            else:
+                print("incorrect answer, please type y or n")
+    return bounds
 
-    if not bounds_dict['centers'] or len(bounds_dict['centers']) != no_peaks:
-        l_cent_bounds = [cent - tightness['centre_bounds'] * peak_widths[i] for i, cent in enumerate(peak_centres)]
-        u_cent_bounds = [cent + tightness['centre_bounds'] * peak_widths[i] for i, cent in enumerate(peak_centres)]
-        cent_bounds = list(zip(l_cent_bounds, u_cent_bounds))
-        bounds['centers'] = cent_bounds
-
-    if not bounds_dict['widths'] or len(bounds_dict['widths']) != no_peaks:
-        l_width_bounds = [width / tightness['width_bounds'][0] for width in peak_widths]
-        u_width_bounds = [width * tightness['width_bounds'][1] for width in peak_widths]
-        width_bounds = list(zip(l_width_bounds, u_width_bounds))
-        bounds['widths'] = width_bounds
-
-    if not bounds_dict['amps'] or len(bounds_dict['amps']) != no_peaks:
-        l_amp_bounds = [amp / tightness['amps_bounds'][0] for amp in peak_amps]
-        u_amp_bounds = [amp * tightness['amps_bounds'][1] for amp in peak_amps]
-        amp_bounds = list(zip(l_amp_bounds, u_amp_bounds))
-        bounds['amps'] = amp_bounds
-
+def interactive_bounds(x_data, y_data, no_bounds:int):
+    bounds = [(0, 0) for i in range(no_bounds)]
+    while True:
+        plt.plot(x_data, y_data)
+        for bound in bounds:
+            plt.axvspan(bound[0], bound[1], alpha=0.1, color='red')
+        print(f"current bounds are: {bounds}")
+        plt.show()
+        ans = input(f"Please enter a list of values for the bounds, comma delimited. You must enter {2*no_bounds}"
+                    f" numbers. type y if you are happy with these bounds")
+        if ans == 'y':
+            break
+        else:
+            try:
+                bounds = ans.split(',')
+                bounds = [float(i) for i in bounds]
+                if len(bounds) != 2 * no_bounds:
+                    raise ValueError("incorrect no of bounds passed")
+                else:
+                    bounds = [(bounds[2*i], bounds[2*i+1]) for i in range(no_bounds)]
+            except Exception as e:
+                print("You entered an incorrect answer! Trying again...")
+    plt.close()
     return bounds

@@ -8,11 +8,17 @@ from time import strftime
 from . import map_scan_tools
 from . import multi_obj
 from . import parsing
-from . import peak_finding
-from . import peak_fitting
 from . import utilities as utili
-from .background import background_removal as bg_remove
 
+def setup_logger(log_name):
+    curr_time = strftime('%d_%m_%Y_%l:%M%p')
+    log_filename = f"{log_name}_{curr_time}.log"
+    logging.getLogger().setLevel(logging.DEBUG)
+    logger = logging.getLogger('')
+    logger.handlers = []
+    logging.basicConfig(filename=log_filename, level=logging.DEBUG)
+    logging.info('have read in user arguments')
+    return log_filename
 
 def main():
     args = parsing.parse_user_args()
@@ -21,19 +27,14 @@ def main():
 
     try:  # a user can pass in a list of filenames or just one
         file_name = basename(literal_eval(arguments['datapath'])[0])
+        log_name = file_name
     except SyntaxError:  # assume its just a string and not a list passed
         file_name = None
         log_name = arguments['datapath']
         arguments['datapath'] = f"['{arguments['datapath']}',]"  # as this is what multiobj needs
 
     # setup logger
-    curr_time = strftime('%d_%m_%Y_%l:%M%p')
-    log_filename = f"{log_name}_{curr_time}.log"
-    logging.getLogger().setLevel(logging.DEBUG)
-    logger = logging.getLogger('')
-    logger.handlers = []
-    logging.basicConfig(filename=log_filename, level=logging.DEBUG)
-    logging.info('have read in user arguments')
+    log_filename = utili.setup_logger(log_name)
 
     logging.info('creating multi_obj object')
     bag = multi_obj.main(arguments)  # create a Thunder object
@@ -60,49 +61,34 @@ def main():
         logging.info('determining background conditions for all based on user guided for first')
         bag.bg_param_setter()
     logging.info('removing background from data for all thunder objects')
-    bag.bag_iterator(getattr(bag, 'thunder_bag'), bg_remove.background_finder, ('x_data', 'y_data',
-                                                                                'background', 'scarf_params'),
-                     ('background', 'y_data_bg_rm', 'params'))  # determine the background
+    bag.remove_backgrounds()
 
     ###### normalisation
-    if args.normalise:
+    if arguments.get('normalise', False):
         logging.info('normalising data using svn normalisation')
-        bag.bag_iterator(getattr(bag, 'thunder_bag'), utili.normalise_all, ('y_data_bg_rm', 'background', 'y_data'),
-                         ('y_data_bg_rm', 'background', 'y_data_norm'))
+        bag.normalise_data()
 
     ###### find peaks
-    if arguments.get('peakf_first_only', False):
+    if arguments.get('find_peaks', False):
+        print("Warning: Finding peaks automatically will overwirte and peak_info_dict supplied")
         logging.info('running user guided routine to determine peak information')
-        bag.peak_info_setter()
+        bag.find_peaks()
     elif arguments.get('adj_params', False):
         bag.peaks_adj_params()
     logging.info('setting peak information for all thunder objects')
-    bag.bag_iterator(getattr(bag, 'thunder_bag'), peak_finding.find_peak_details, ('x_data', 'y_data_bg_rm', 'no_peaks',
-                                                                                   'peak_centres', 'peak_amps',
-                                                                                   'peak_widths',
-                                                                                   'peak_types'), (
-                         'no_peaks', 'peak_centres', 'peak_amps', 'peak_widths', 'peak_types',
-                         'prominence'))  # find peaks/use them if supplied
 
     ###### find bounds
-    if arguments.get('bounds_first_only', False):
-        logging.info('setting bounds based on first')
+    if arguments.get('find_bounds', False):
+        logging.info('finding bounds via user guided routine')
         bag.bound_setter()
     else:
-        logging.info('setting all bounds to preset')
-        bounds = {'amps': False, 'centers': False, 'widths': False}  # should really do this in the thunderobj
+        logging.info("setting all bounds to either user supplied or preset: {'amplitude': False, 'center': False, 'sigma': False}")
+        bounds = arguments.get('bounds', {'amplitude': False, 'center': False, 'sigma': False})  # should really do this in the thunderobj
         bag.bound_setter(bounds)
-    logging.info('finding bounds for all data sets')
-    bag.bag_iterator(getattr(bag, 'thunder_bag'), peak_finding.make_bounds,
-                     ('tightness', 'no_peaks', 'bounds', 'peak_widths',
-                      'peak_centres', 'peak_amps'), ('bounds',))  # make bounds
 
     ###### fit peaks
     logging.info('fitting peaks for all')
-    bag.bag_iterator(getattr(bag, 'thunder_bag'), peak_fitting.fit_peaks,
-                     ('x_data', 'y_data_bg_rm', 'peak_types', 'peak_centres',
-                      'peak_amps', 'peak_widths', 'bounds', 'method', 'tol',
-              'amp_bounds'), ('specs', 'model', 'peak_params', 'peaks'))  # fit peaks
+    bag.fit_peaks()
 
     ##### fit params dictionary
     # store all the peak parameters in a dictionary, so the keys are e.g. sigma, center, amplitude, and the values are

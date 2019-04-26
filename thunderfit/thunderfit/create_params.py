@@ -1,11 +1,13 @@
 import matplotlib.pyplot as plt
 from os.path import basename
 from ast import literal_eval
+import numpy as np
 
 from . import utilities
 from . import parsing
 from . import multi_obj
 from . import thundobj
+from . import peak_finding
 
 def main():
     args = parsing.parse_user_args()
@@ -26,71 +28,9 @@ def main():
     else:
         thund = thundobj.main(arguments)  # create a Thunder object
 
-    cents = []
-    while True:
-        plt.plot(thund.x_data, thund.y_data)
-        for xc in cents:
-            plt.axvline(x=xc)
-        print(f"First looking at peak center values, look at the following plot with centers at values:"
-              f"{cents}")
-        plt.show()
-        ans = input("Please enter a list of values e.g. 1,2,3 etc. or type y if happy with these values")
-        if ans == 'y':
-            break
-        else:
-            try:
-                cents = ans.split(',')
-                cents = [float(i) for i in cents]
-            except:
-                print("You entered an incorrect answer! Trying again...")
-    plt.close()
 
-    amps = []
-    while True:
-        plt.plot(thund.x_data, thund.y_data)
-        if len(amps) == len(cents):
-            plt.plot(cents, amps, 'r*')
-        else:
-            for yc in amps:
-                plt.axhline(y=yc)
-        print(f"First looking at peak center values, look at the following plot with amps at values:"
-              f"{amps}")
-        plt.show()
-        ans = input("Please enter a list of values e.g. [1,2,3] etc. or type y if happy with these values")
-        if ans == 'y':
-            break
-        else:
-            try:
-                amps = ans.split(',')
-                amps = [float(i) for i in amps]
-            except:
-                print("You entered an incorrect answer! Trying again...")
-    plt.close()
+    thund.y_data = utilities.sharpening_routine(thund.x_data, thund.y_data)
 
-    widths = []
-    while True:
-        plt.plot(thund.x_data, thund.y_data)
-        if len(widths)%2:
-            for width in widths:
-                plt.axvline(x=width)
-        else:
-            for band in range(len(widths)//2):
-                plt.axvspan(widths[2*band], widths[2*band + 1], alpha=0.1, color='red')
-        print(f"First looking at peak center values, look at the following plot with widths at values:"
-              f"{widths}")
-        plt.show()
-        ans = input("Please enter a list of values e.g. [1,2,3] etc. or type y if happy with these values")
-        if ans == 'y':
-            break
-        else:
-            try:
-                widths = ans.split(',')
-                widths = [float(i) for i in widths]
-            except:
-                print("You entered an incorrect answer! Trying again...")
-    plt.close()
-    widths = [abs(widths[2*i+1]-widths[2*i]) for i in range(len(widths)//2)]
-
-    params = {"peak_centres":cents, "peak_amps":amps, "peak_widths":widths}
-    utilities.save_fit_report(params, './', 'generated_params.txt')
+    peak_info, _ = peak_finding.interactive_peakfinder(thund.x_data, thund.y_data, type='user')
+    utilities.save_fit_report(peak_info, './', 'generated_params.txt')
 
