@@ -30,6 +30,8 @@ def map_scan_plot(coordinates, values):
         for key in values.keys():
             x, y = coordinates[key]
             z = utili.safe_list_get(values[key], i, nan)
+            if type(z) == str:
+                return [], []
             X.append(x)
             Y.append(y)
             Z.append(z)

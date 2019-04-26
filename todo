@@ -22,18 +22,17 @@ not urgent:
 - bootstrapping for errors
 - comment everything
 - change peak_info_dict to a peak params object everywhere
-- support form argument for models
+
 
 Unsupported models:
 - custom
-- step models of any kind
 - split lorentzian
 - maybe exponentialgaussian?
+- expression models
 
 TESTING needed
 ==============
-- test other peak types
-- implement methods of fit etc for thunder objects
+
 
 
 Finished
@@ -54,3 +53,6 @@ Finished
 - fix the gen params script so it only calls the peak_finder functions 
 - cleanup object methods in thunder obj to have e.g. clip, remove bg, find peak, fit etc
 - make peak finder user guided properly display widths and amplitude as atm is only for centers
+- test other peak types
+- implement methods of fit etc for thunder objects
+- step models of any kind

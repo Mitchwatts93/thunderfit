@@ -64,8 +64,6 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     type_ = peak_info_dict.get('type', ())
     if 'PolynomialModel' in type_ or 'SplitLorentzianModel' in type_ or 'ExponentialGaussianModel' in type_:
         raise NotImplementedError("No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel")
-    if 'StepModel' in type_ or 'RectangleModel' in type_:
-        raise NotImplementedError('warning: no support for step models yet')
     if 'ExpressionModel' in type_:
         raise NotImplementedError("no support for expression models yet!")
     center = peak_info_dict.get('center', ())
@@ -85,13 +83,13 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     b = peak_info_dict.get('b', ())
     degree = peak_info_dict.get('degree', ())
     #poly_consts = peak_info_dict.get('poly_consts', ())
-    form = peak_info_dict.get('form', ())
     center1 = peak_info_dict.get('center1', ())
     center2 = peak_info_dict.get('center2', ())
     sigma1 = peak_info_dict.get('sigma1', ())
     sigma2 = peak_info_dict.get('sigma2', ())
     decay = peak_info_dict.get('decay', ())
     expr = peak_info_dict.get('expr', ())
+    form = peak_info_dict.get('form', ())
 
     specs = [
         {
@@ -112,8 +110,6 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'a': utils.safe_list_get(a, i, None),
                        'b': utils.safe_list_get(b, i, None),
                        'degree': utils.safe_list_get(degree, i, None),
-
-                       'form': utils.safe_list_get(form, i, None),
                        'center1': utils.safe_list_get(center1, i, None),
                        'center2': utils.safe_list_get(center2, i, None),
                        'sigma1': utils.safe_list_get(sigma1, i, None),
@@ -143,7 +139,8 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'sigma2': utils.safe_list_get(bounds.get('sigma2', []), i, (None, None)),
                        'decay': utils.safe_list_get(bounds.get('decay', []), i, (None, None))
                        },
-            'expr': utils.safe_list_get(expr, i, None)
+            'expr': utils.safe_list_get(expr, i, None),
+            'form': utils.safe_list_get(form, i, None)
         }
         for i in range(len(type_))
     ]
@@ -171,9 +168,12 @@ def generate_model(model_specs):
         if spec['type'] == 'ExpressionModel':
             expr = spec['expr']
             model = models.ExpressionModel(expr)
+        elif spec['type'] in ['StepModel','RectangleModel']:
+            form = spec['form']
+            model = getattr(models, spec['type'])(prefix=prefix, form=form)
         else:
             model = getattr(models, spec['type'])(prefix=prefix)  # generate the lmfit model based on the type specified
-        model = decide_model_actions(spec, model, prefix) # call another function to decide what to do
+        model = decide_model_actions(spec, model) # call another function to decide what to do
         model_params = model.make_params() # make the params object
         if params is None: # first loop
             params = model_params
@@ -183,17 +183,16 @@ def generate_model(model_specs):
             composite_model = composite_model + model
     return composite_model, params
 
-def decide_model_actions(spec, model, prefix):
+def decide_model_actions(spec, model):
     for param_key, param_value in spec['params'].items():
         if param_value: # then set this value
-            p_name = prefix + param_key
             model.set_param_hint(param_key, value=param_value)
     for bound_key, bound_value in spec['bounds'].items():
         if bound_value[0]: # then set lower bound
-            b_name = prefix + bound_key
             model.set_param_hint(bound_key, min=bound_value[0])
         if bound_value[1]: # then set upper bound
-            b_name = prefix + bound_key
             model.set_param_hint(bound_key, max=bound_value[1])
     return model
 
+# "sigma":[null, 3, 3, 10, 15, 15, 8, 20],
+#  "sigma":[[1,20], [1,20], [1,20], [5, 40], [5, 40], [5, 40], [5, 35], [5, 35]],
