@@ -29,7 +29,7 @@ def map_scan_plot(coordinates, values):
         Z = []
         for key in values.keys():
             x, y = coordinates[key]
-            z = values[key][i]
+            z = utili.safe_list_get(values[key], i, nan)
             X.append(x)
             Y.append(y)
             Z.append(z)
@@ -76,7 +76,7 @@ def plot_map_scan(bag, fit_params, dirname):
                 for i, pt in enumerate(plot):
                     try:
                         cents = next(iter(fit_params.get('center').values()))
-                        pt.suptitle(f'{p}_{i}_heatmap. peak {i} is centered at: {cents[i]}')
+                        pt.suptitle(f"{p}_{i}_heatmap. peak {i} is centered at: {utili.safe_list_get(cents, i, 'na')}")
                     except KeyError:
                         print("tried to add label for peak centers onto graph, but couldn't fetch the right variable")
                         pt.suptitle(f'{p}_{i}_heatmap')

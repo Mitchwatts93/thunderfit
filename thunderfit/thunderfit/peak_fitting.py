@@ -61,12 +61,17 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     Note that each element is a dictionary containing either None, or a value for that peak i.e. the parameter guess,
     or the bounds for that value. Only some will be valid for each peak type, which will be handled elsewhere"""
     logging.debug('building specs')
-    type = peak_info_dict.get('type', ())
-    if 'PolynomialModel' in type:
-        raise NotImplementedError("No support for polynomial models yet")
+    type_ = peak_info_dict.get('type', ())
+    if 'PolynomialModel' in type_ or 'SplitLorentzianModel' in type_ or 'ExponentialGaussianModel' in type_:
+        raise NotImplementedError("No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel")
+    if 'StepModel' in type_ or 'RectangleModel' in type_:
+        raise NotImplementedError('warning: no support for step models yet')
+    if 'ExpressionModel' in type_:
+        raise NotImplementedError("no support for expression models yet!")
     center = peak_info_dict.get('center', ())
     amplitude = peak_info_dict.get('amplitude', ())
     sigma = peak_info_dict.get('sigma', ())
+    sigma_l = peak_info_dict.get('sigma_l', ())
     sigma_r = peak_info_dict.get('sigma_r', ())
     gamma = peak_info_dict.get('gamma', ())
     fraction = peak_info_dict.get('fraction', ())
@@ -86,14 +91,16 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     sigma1 = peak_info_dict.get('sigma1', ())
     sigma2 = peak_info_dict.get('sigma2', ())
     decay = peak_info_dict.get('decay', ())
+    expr = peak_info_dict.get('expr', ())
 
     specs = [
         {
-            'type': type[i],
+            'type': type_[i],
             'params': {'center': utils.safe_list_get(center, i, None),
                        'amplitude': utils.safe_list_get(amplitude, i, None),
                        'sigma': utils.safe_list_get(sigma, i, None),
                        'sigma_r': utils.safe_list_get(sigma_r, i, None),
+                       'sigma_l': utils.safe_list_get(sigma_l, i, None),
                        'gamma': utils.safe_list_get(gamma, i, None),
                        'fraction': utils.safe_list_get(fraction, i, None),
                        'beta': utils.safe_list_get(beta, i, None),
@@ -111,7 +118,7 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'center2': utils.safe_list_get(center2, i, None),
                        'sigma1': utils.safe_list_get(sigma1, i, None),
                        'sigma2': utils.safe_list_get(sigma2, i, None),
-                       'decay': utils.safe_list_get(decay, i, None)
+                       'decay': utils.safe_list_get(decay, i, None),
                        },
             'bounds': {'center': utils.safe_list_get(bounds.get('center', []), i,(None, None)),
                        'amplitude': utils.safe_list_get(bounds.get('amplitude', []), i, (None, None)),
@@ -135,10 +142,13 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'sigma1': utils.safe_list_get(bounds.get('sigma1', []), i, (None, None)),
                        'sigma2': utils.safe_list_get(bounds.get('sigma2', []), i, (None, None)),
                        'decay': utils.safe_list_get(bounds.get('decay', []), i, (None, None))
-                       }
+                       },
+            'expr': utils.safe_list_get(expr, i, None)
         }
-        for i in range(len(type))
+        for i in range(len(type_))
     ]
+
+
 
     #'poly_consts': utils.safe_list_get(poly_consts, i, None), and
     # 'poly_consts': utils.safe_list_get(bounds.get('poly_consts', []), i, [None, None]),
@@ -156,9 +166,14 @@ def generate_model(model_specs):
     composite_model = None
     params = None
     for i, spec in enumerate(model_specs):
-        prefix = f'm{i}_'
-        model = getattr(models, spec['type'])(prefix=prefix) # generate the lmfit model based on the type specified
-        model = decide_model_actions(spec, model) # call another function to decide what to do
+        prefix = f'm{i}__'
+
+        if spec['type'] == 'ExpressionModel':
+            expr = spec['expr']
+            model = models.ExpressionModel(expr)
+        else:
+            model = getattr(models, spec['type'])(prefix=prefix)  # generate the lmfit model based on the type specified
+        model = decide_model_actions(spec, model, prefix) # call another function to decide what to do
         model_params = model.make_params() # make the params object
         if params is None: # first loop
             params = model_params
@@ -168,14 +183,17 @@ def generate_model(model_specs):
             composite_model = composite_model + model
     return composite_model, params
 
-def decide_model_actions(spec, model):
+def decide_model_actions(spec, model, prefix):
     for param_key, param_value in spec['params'].items():
         if param_value: # then set this value
+            p_name = prefix + param_key
             model.set_param_hint(param_key, value=param_value)
     for bound_key, bound_value in spec['bounds'].items():
         if bound_value[0]: # then set lower bound
+            b_name = prefix + bound_key
             model.set_param_hint(bound_key, min=bound_value[0])
         if bound_value[1]: # then set upper bound
+            b_name = prefix + bound_key
             model.set_param_hint(bound_key, max=bound_value[1])
     return model
 

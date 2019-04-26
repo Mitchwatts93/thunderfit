@@ -231,10 +231,7 @@ class ThunderBag():
         logging.debug('generating fit params')
         fit_params = {}
         first_thunder = self.thunder_bag.get(self.first)
-        params = list(getattr(first_thunder, 'peak_params').keys())[
-                 : len(
-                     getattr(first_thunder, 'peak_params')) // getattr(first_thunder, 'no_peaks')]  # what are the peak params for the first peak
-        params = [param.split('_')[1] for param in params]  # keep only the type of param
+        params = set([key.split('__')[1] for key in getattr(first_thunder, 'peak_params').keys()])
         for param in params:
             fit_params[param] = {}  # e.g. 'center'
             for key in self.thunder_bag.keys():
