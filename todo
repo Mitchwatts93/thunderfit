@@ -12,8 +12,7 @@ next up:
 - properly parse user args to make sure they are consistent with each other, e.g. if no_peaks isn't passed but peak details are then just work it out etc.
 - what happens if you give parameters that don't exist for that model?
 - whats going on with splitlorentzianmodel?
-- figure out how to do an arbitrary user supplied model
-- why don't step models work in mapscan plot?
+
 
 not urgent:
 - method for plotting grid over an image of the mapscan
@@ -30,9 +29,10 @@ Unsupported models:
 - maybe exponentialgaussian?
 - expression models
 
+
 TESTING needed
 ==============
-
+- polynomial
 
 
 Finished

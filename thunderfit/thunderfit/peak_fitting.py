@@ -62,7 +62,7 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     or the bounds for that value. Only some will be valid for each peak type, which will be handled elsewhere"""
     logging.debug('building specs')
     type_ = peak_info_dict.get('type', ())
-    if 'PolynomialModel' in type_ or 'SplitLorentzianModel' in type_ or 'ExponentialGaussianModel' in type_:
+    if 'SplitLorentzianModel' in type_ or 'ExponentialGaussianModel' in type_:
         raise NotImplementedError("No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel")
     if 'ExpressionModel' in type_:
         raise NotImplementedError("no support for expression models yet!")
@@ -82,7 +82,6 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     a = peak_info_dict.get('a', ())
     b = peak_info_dict.get('b', ())
     degree = peak_info_dict.get('degree', ())
-    #poly_consts = peak_info_dict.get('poly_consts', ())
     center1 = peak_info_dict.get('center1', ())
     center2 = peak_info_dict.get('center2', ())
     sigma1 = peak_info_dict.get('sigma1', ())
@@ -90,6 +89,15 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     decay = peak_info_dict.get('decay', ())
     expr = peak_info_dict.get('expr', ())
     form = peak_info_dict.get('form', ())
+    c0 = peak_info_dict.get('c0', ())
+    c1 = peak_info_dict.get('c1', ())
+    c2 = peak_info_dict.get('c2', ())
+    c3 = peak_info_dict.get('c3', ())
+    c4 = peak_info_dict.get('c4', ())
+    c5 = peak_info_dict.get('c5', ())
+    c6 = peak_info_dict.get('c6', ())
+    c7 = peak_info_dict.get('c7', ())
+
 
     specs = [
         {
@@ -115,6 +123,14 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'sigma1': utils.safe_list_get(sigma1, i, None),
                        'sigma2': utils.safe_list_get(sigma2, i, None),
                        'decay': utils.safe_list_get(decay, i, None),
+                       'c0': utils.safe_list_get(c0, i, None),
+                       'c1': utils.safe_list_get(c1, i, None),
+                       'c2': utils.safe_list_get(c2, i, None),
+                       'c3': utils.safe_list_get(c3, i, None),
+                       'c4': utils.safe_list_get(c4, i, None),
+                       'c5': utils.safe_list_get(c5, i, None),
+                       'c6': utils.safe_list_get(c6, i, None),
+                       'c7': utils.safe_list_get(c7, i, None)
                        },
             'bounds': {'center': utils.safe_list_get(bounds.get('center', []), i,(None, None)),
                        'amplitude': utils.safe_list_get(bounds.get('amplitude', []), i, (None, None)),
@@ -131,13 +147,19 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'a': utils.safe_list_get(bounds.get('a', []), i, (None, None)),
                        'b': utils.safe_list_get(bounds.get('b', []), i, (None, None)),
                        'degree': utils.safe_list_get(bounds.get('degree', []), i, (None, None)),
-
-                       'form': utils.safe_list_get(bounds.get('form', []), i, (None, None)),
                        'center1': utils.safe_list_get(bounds.get('center1', []), i, (None, None)),
                        'center2': utils.safe_list_get(bounds.get('center2', []), i, (None, None)),
                        'sigma1': utils.safe_list_get(bounds.get('sigma1', []), i, (None, None)),
                        'sigma2': utils.safe_list_get(bounds.get('sigma2', []), i, (None, None)),
-                       'decay': utils.safe_list_get(bounds.get('decay', []), i, (None, None))
+                       'decay': utils.safe_list_get(bounds.get('decay', []), i, (None, None)),
+                       'c0': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c1': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c2': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c3': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c4': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c5': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c6': utils.safe_list_get(bounds.get('c0', []), i, (None, None)),
+                       'c7': utils.safe_list_get(bounds.get('c0', []), i, (None, None))
                        },
             'expr': utils.safe_list_get(expr, i, None),
             'form': utils.safe_list_get(form, i, None)
@@ -145,26 +167,14 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
         for i in range(len(type_))
     ]
 
-
-
-    #'poly_consts': utils.safe_list_get(poly_consts, i, None), and
-    # 'poly_consts': utils.safe_list_get(bounds.get('poly_consts', []), i, [None, None]),
-    # not yet implemented!
-
     return specs
 
 def generate_model(model_specs):
-    """
-    https://chrisostrouchov.com/post/peak_fit_xrd_python/
-    :param model_specs:
-    :return:
-    """
     logging.debug('generating model specs')
     composite_model = None
     params = None
     for i, spec in enumerate(model_specs):
         prefix = f'm{i}__'
-
         if spec['type'] == 'ExpressionModel':
             expr = spec['expr']
             model = models.ExpressionModel(expr)
@@ -193,6 +203,3 @@ def decide_model_actions(spec, model):
         if bound_value[1]: # then set upper bound
             model.set_param_hint(bound_key, max=bound_value[1])
     return model
-
-# "sigma":[null, 3, 3, 10, 15, 15, 8, 20],
-#  "sigma":[[1,20], [1,20], [1,20], [5, 40], [5, 40], [5, 40], [5, 35], [5, 35]],
