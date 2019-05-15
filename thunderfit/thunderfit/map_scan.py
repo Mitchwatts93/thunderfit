@@ -29,9 +29,9 @@ def main():
         file_name = basename(literal_eval(arguments['datapath'])[0])
         log_name = file_name
     except SyntaxError:  # assume its just a string and not a list passed
-        file_name = None
+        file_name = arguments['datapath']
         log_name = arguments['datapath']
-        arguments['datapath'] = f"['{arguments['datapath']}',]"  # as this is what multiobj needs
+        arguments['datapath'] = [f"{arguments['datapath']}",]  # as this is what multiobj needs
 
     # setup logger
     log_filename = utili.setup_logger(log_name)
@@ -67,15 +67,21 @@ def main():
     if arguments.get('normalise', False):
         logging.info('normalising data using svn normalisation')
         bag.normalise_data()
+        # then shift the values up since normalisation may create negative values
+        for thund in bag.thunder_bag.values():
+            thund.y_data_bg_rm = thund.y_data_bg_rm - min(thund.y_data_bg_rm)
+
 
     ###### find peaks
     if arguments.get('find_peaks', False):
+        logging.info('setting peak information for all thunder objects')
         print("Warning: Finding peaks automatically will overwirte and peak_info_dict supplied")
         logging.info('running user guided routine to determine peak information')
         bag.find_peaks()
     elif arguments.get('adj_params', False):
+        logging.info('setting peak information for all thunder objects')
         bag.peaks_adj_params()
-    logging.info('setting peak information for all thunder objects')
+
 
     ###### find bounds
     if arguments.get('find_bounds', False):
@@ -106,7 +112,8 @@ def main():
 
     ###### plot map scan
     logging.info('plotting map scans')
-    map_scan_tools.plot_map_scan(bag, getattr(bag, 'fit_params'), dirname)
+    bag.make_map_matrices() # make the mapscan arrays
+    map_scan_tools.plot_map_scan(bag, getattr(bag, 'fit_params'), bag.map_matrices, bag.X_coords, bag.Y_coords, dirname)
 
     # save individual plots for each of the failed fits
     logging.info('saving failed fit plots')

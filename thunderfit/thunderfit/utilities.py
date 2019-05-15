@@ -1,5 +1,5 @@
 import logging
-from json import dump as j_dump
+from json import dump as j_dumps
 from json import load as j_load
 from os import mkdir
 from os.path import join
@@ -36,7 +36,7 @@ def save_plot(plot, path='.', figname='figure.png'):
 
 def save_fit_report(obj, path, filename="report.json"):
     logging.debug(f'saving report {filename}')
-    j_dump(obj, open(join(path, filename), 'w'))
+    j_dumps(obj, open(join(path, filename), 'w'), indent=4)
 
 
 def find_closest_indices(list1, list2):
@@ -121,9 +121,10 @@ def load_data(datapath, x_ind, y_ind, e_ind=None):
         else:
             data = store[keys[0]]  # if only one key then we use it as the datafile
     else:  # its a txt or csv file
-        data = pd.read_csv(datapath, header=None, sep='\t')  # load in, works for .txt and .csv
+        data = pd.read_csv(datapath, header=None, sep='\t', dtype='float')  # load in, works for .txt and .csv
+        if len(data.columns) < 2:
+            data = pd.read_csv(datapath, header=None, sep='\s+', dtype='float')  # load in, works for .txt and .csv
         # this needs to be made more flexible/user defined
-
     if e_ind:  # if we have specified this column then we use it, otherwise just x and y
         assert (len(data.columns) >= 2), "You have specified an e_ind but there are less than 3 columns in the data"
         e_data = data[e_ind].values

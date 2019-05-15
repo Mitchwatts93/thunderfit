@@ -116,9 +116,9 @@ def match_peak_centres(center_indices, y_data, prominence=1):
     center_indices = [peak_info_['center_indices'][i] for i in center_indices_]
     return center_indices
 
-def find_peak_details(x_data, y_data, no_peaks, type='auto', prominence=1):
+def find_peak_details(x_data, y_data, type='auto', prominence=1):
     logging.debug(f'finding peak details based on prominence of {prominence}, and user provided details:'
-                  f'no_peaks:{no_peaks}')
+                  f'no_peak')
 
     peak_info, prominence = interactive_peakfinder(x_data, y_data, type, prominence)
     no_peaks = max(len(value) for value in peak_info.values())
@@ -128,8 +128,6 @@ def find_peak_details(x_data, y_data, no_peaks, type='auto', prominence=1):
     for i, sig in enumerate(sigma):
         x1 = x_data[0] + sig
         sigma[i] = utili.find_closest_indices(x_data, x1)
-        import ipdb
-        ipdb.set_trace()
     type = ["LorentzianModel" for i in range(no_peaks)]
     peak_info_dict = {}
 

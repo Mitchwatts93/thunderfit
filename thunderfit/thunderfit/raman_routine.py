@@ -38,14 +38,13 @@ def main():
         thunder.y_data_bg_rm, thunder.background, thunder.y_data_norm = \
                                                  utili.normalise_all(thunder.y_data_bg_rm, thunder.background, thunder.y_data)
 
-    logging.info('setting peak info')
-    thunder.no_peaks, thunder.peak_info_dict, _ = peak_finding.find_peak_details(thunder.x_data,
-                                                                                 thunder.y_data_bg_rm,
-                                                                                 thunder.peak_info_dict,
-                                                                                 thunder.no_peaks) # find peaks/use them if supplied
-
-    logging.info('setting bounds')
-    thunder.bounds = peak_finding.make_bounds(thunder.tightness, thunder.no_peaks, thunder.bounds,
+    if arguments.get('find_peaks', False):
+        logging.info('setting peak info')
+        thunder.no_peaks, thunder.peak_info_dict, _ = peak_finding.find_peak_details(thunder.x_data,
+                                                                                     thunder.y_data_bg_rm) # find peaks/use them if supplied
+    if arguments.get('find_bounds', False):
+        logging.info('finding bounds via user guided routine')
+        thunder.bounds = peak_finding.make_bounds(thunder.x_data, thunder.y_data, thunder.no_peaks,
                                               thunder.peak_info_dict) # make bounds
 
     logging.info('fitting peaks')

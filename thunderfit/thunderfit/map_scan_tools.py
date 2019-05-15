@@ -1,6 +1,6 @@
 import matplotlib
 import matplotlib.pyplot as plt
-from numpy import unique, round, array, nanmin, nanmax, nan
+from numpy import unique, round, array, nanmin, nanmax, nan, nanpercentile
 from scipy.sparse import coo_matrix
 
 matplotlib.use('TkAgg')
@@ -17,13 +17,13 @@ def shift_map_matr(coordinates_array):
     coordinates_array[:, 1] = coordinates_array[:, 1] - min(coordinates_array[:, 1])
     return coordinates_array
 
-
-def map_scan_plot(coordinates, values):
-    logging.debug('plotting mapscans')
-    no_fits = len(list(values.values())[0])
-    figs = []
-    axs = []
-    for i in range(no_fits):
+def map_scan_matrices(coordinates, values):
+    logging.debug('generating map matrices')
+    no_maps = len(list(values.values())[0])
+    data = {}
+    X_ = {}
+    Y_ = {}
+    for i in range(no_maps):
         X = []
         Y = []
         Z = []
@@ -39,14 +39,29 @@ def map_scan_plot(coordinates, values):
         xx = (round(X / x_step)).astype(int)
         y_step = unique(Y)[1] - unique(Y)[0]
         yy = round((Y / y_step)).astype(int)
-        data_ = coo_matrix((Z, (xx, yy))).toarray() # out=nanmat should mean that any missing values are nan
+        data_ = coo_matrix((Z, (yy, xx))).toarray()  # out=nanmat should mean that any missing values are nan
         data_[data_ == 0] = nan
+        data[i] = data_
+        X_[i] = X
+        Y_[i] = Y
+    return data, X_, Y_
+
+def map_scan_plot(data_mat, X_coords, Y_coords):
+    logging.debug('plotting mapscans')
+    no_fits = len(data_mat.keys())
+    figs = []
+    axs = []
+    for i in range(no_fits):
+        data = data_mat[i]
+        X = X_coords[i]
+        Y = Y_coords[i]
         f = plt.figure()
         ax = plt.gca()
         magma_cmap = matplotlib.cm.get_cmap('magma')
         magma_cmap.set_bad(color='green')
-        im = plt.imshow(data_, cmap=magma_cmap, extent=[min(X), max(X), max(Y), min(Y)], vmin=nanmin(data_),
-                        vmax=nanmax(data_))
+        im = plt.imshow(data, cmap=magma_cmap, vmin=nanpercentile(data,1), extent=[min(X), max(X), max(Y), min(Y)],
+                        vmax=nanpercentile(data,99)) # we plot the 99th percentile and 1st percentil as the max and min
+        # colours
         plt.xlabel('x coordinates')
         plt.ylabel('y coordinates')
         divider = make_axes_locatable(ax)
@@ -56,15 +71,8 @@ def map_scan_plot(coordinates, values):
         axs.append(ax)
     return figs, axs
 
-
-def plot_map_scan(bag, fit_params, dirname):
+def plot_map_scan(bag, fit_params, map_matrices, X_coords, Y_coords, dirname):
     logging.debug('runnning user input routine to generate/save user chosen variables in maps')
-    coordinates_array = array(list(getattr(bag, 'coordinates').values()))  # convert coordinates for each point into an
-    # array
-    coordinates_array = shift_map_matr(
-        coordinates_array)  # shift so that each coordinate starts at 0, not normalised
-    for i, key in enumerate(getattr(bag, 'coordinates')):
-        getattr(bag, 'coordinates')[key] = coordinates_array.tolist()[i]  # reassign in the correct format
     while True:
         plt.close()
         plt.clf()
@@ -74,12 +82,13 @@ def plot_map_scan(bag, fit_params, dirname):
             break
         elif ans == 'all':
             for p in fit_params.keys():
-                plot, ax = map_scan_plot(getattr(bag, 'coordinates'), fit_params.get(p))
+                data_mat = map_matrices[p]
+                plot, ax = map_scan_plot(data_mat, X_coords[p], Y_coords[p])
                 for i, pt in enumerate(plot):
                     try:
                         cents = next(iter(fit_params.get('center').values()))
                         pt.suptitle(f"{p}_{i}_heatmap. peak {i} is centered at: {utili.safe_list_get(cents, i, 'na')}")
-                    except KeyError:
+                    except (KeyError, AttributeError):
                         print("tried to add label for peak centers onto graph, but couldn't fetch the right variable")
                         pt.suptitle(f'{p}_{i}_heatmap')
                 for i, pt in enumerate(plot):
@@ -88,12 +97,13 @@ def plot_map_scan(bag, fit_params, dirname):
         else:
             try:
                 p = ans
-                plot, ax = map_scan_plot(getattr(bag, 'coordinates'), fit_params.get(p))
+                data_mat = map_matrices[p]
+                plot, ax = map_scan_plot(data_mat, X_coords[p], Y_coords[p])
                 for i, pt in enumerate(plot):
                     try:
                         cents = next(iter(fit_params.get('center').values()))
                         pt.suptitle(f'{p}_{i}_heatmap. peak {i} is centered at: {cents[i]}')
-                    except KeyError:
+                    except (KeyError, AttributeError):
                         print("tried to add label for peak centers onto graph, but couldn't fetch the right variable")
                         pt.suptitle(f'{p}_{i}_heatmap')
             except KeyError:
@@ -107,3 +117,4 @@ def plot_map_scan(bag, fit_params, dirname):
             except AttributeError:
                 print("Tried to save plot but there is no plot yet! Something wen't wrong in making the plot")
 #
+    return map_matrices

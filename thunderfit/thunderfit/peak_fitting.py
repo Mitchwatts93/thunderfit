@@ -117,7 +117,6 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'slope': utils.safe_list_get(slope, i, None),
                        'a': utils.safe_list_get(a, i, None),
                        'b': utils.safe_list_get(b, i, None),
-                       'degree': utils.safe_list_get(degree, i, None),
                        'center1': utils.safe_list_get(center1, i, None),
                        'center2': utils.safe_list_get(center2, i, None),
                        'sigma1': utils.safe_list_get(sigma1, i, None),
@@ -146,7 +145,6 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'slope': utils.safe_list_get(bounds.get('slope', []), i, (None, None)),
                        'a': utils.safe_list_get(bounds.get('a', []), i, (None, None)),
                        'b': utils.safe_list_get(bounds.get('b', []), i, (None, None)),
-                       'degree': utils.safe_list_get(bounds.get('degree', []), i, (None, None)),
                        'center1': utils.safe_list_get(bounds.get('center1', []), i, (None, None)),
                        'center2': utils.safe_list_get(bounds.get('center2', []), i, (None, None)),
                        'sigma1': utils.safe_list_get(bounds.get('sigma1', []), i, (None, None)),
@@ -162,7 +160,8 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'c7': utils.safe_list_get(bounds.get('c0', []), i, (None, None))
                        },
             'expr': utils.safe_list_get(expr, i, None),
-            'form': utils.safe_list_get(form, i, None)
+            'form': utils.safe_list_get(form, i, None),
+            'degree': utils.safe_list_get(degree, i, None)
         }
         for i in range(len(type_))
     ]
@@ -181,6 +180,8 @@ def generate_model(model_specs):
         elif spec['type'] in ['StepModel','RectangleModel']:
             form = spec['form']
             model = getattr(models, spec['type'])(prefix=prefix, form=form)
+        elif spec['type'] == 'PolynomialModel':
+            model = getattr(models, spec['type'])(prefix=prefix, degree = spec['degree'])
         else:
             model = getattr(models, spec['type'])(prefix=prefix)  # generate the lmfit model based on the type specified
         model = decide_model_actions(spec, model) # call another function to decide what to do

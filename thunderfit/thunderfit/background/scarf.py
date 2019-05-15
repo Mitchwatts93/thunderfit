@@ -109,6 +109,7 @@ def smooth(L, window_length, polyorder):
     :param polyorder: must be less than window length
     :return:
     """
+
     return savgol_filter(L, window_length, polyorder, mode='mirror')
 
 
@@ -224,7 +225,7 @@ def perform_scarf(x_data, y_data, scarf_params=False):
             b = scarf_params['b']  # if passed then use it
         except KeyError:  # otherwise find it
             b = min(y_data - L)  # whats the smallest difference between D and b? shift it up by that
-        L = D + b
+        L = L + b
         bg += L
         data_bg_rm_y -= L
         params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})

@@ -44,7 +44,7 @@ class Thunder():
         self.peak_info_dict: Dict = {}
         self.peak_finder_type: str = 'auto'
 
-        self.bounds: Union[None, Dict] = None
+        self.bounds: Dict = {}
 
         self.peaks: ModelResult
         self.plot: plt = None
@@ -188,14 +188,16 @@ class Thunder():
         logging.debug('plotting all for thund obj')
         ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components())  # plot each component of the model
         ax, plt = plotting.plot_background(self.x_data, self.background, ax)  # plot the background supplied by user
-        ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, self.background, ax)  # plot the fitted data
         try:
             ax, plt = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
                                                       self.peaks.best_fit, ax)  # plot a band of uncertainty
         except TypeError:
-            logging.warning('There are not uncertainties available for some reason - '
-                            'try lowering the tightness of automatic bounds')
+            logging.warning('There are not uncertainties available because the bounds are too restrictive.'
+                            'The covariance matrix is not valid near the bounds so widen the bounds for whatever is '
+                            'causing the issue')
         ax, plt = plotting.plot_data(self.x_data, self.y_data, ax)  # plot the raw data
+        ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, 0, ax, line='k--')  # plot the fitted data
+        ax, plt = plotting.plot_data(self.x_data, self.y_data_bg_rm, ax, line='g--')  # plot the raw data bg rm
 
         ax.minorticks_on()
         ax.grid(which='minor', alpha=0.2)
@@ -205,7 +207,7 @@ class Thunder():
 
     def gen_fit_report(self):
         logging.debug('genertaing fit report for thund obj')
-        self.fit_report = {mod_no: {} for mod_no in range(len(self.peak_info_dict['peak_types']))}
+        self.fit_report = {mod_no: {} for mod_no in range(len(self.peak_info_dict['type']))}
 
         ## total fit data
         self.fit_report['chi_sq'] = self.chi_sq
@@ -216,13 +218,13 @@ class Thunder():
         param_info = {"center": "center", "amplitude": "amplitude", "sigma": "sigma", "fwhm": False, "height": False}
         for parameter, param_obj in self.peaks.params.items():
             model_no = int(findall(r'\d+', parameter)[0])
-            param_type = param_info[get_close_matches(parameter, param_info.keys())[0]]
+            param_type = parameter.split('__')[1]
 
             if param_type:
                 value = param_obj.value
                 err = param_obj.stderr
-                type = self.peak_info_dict['peak_types'][model_no]
-                bounds = self.bounds[param_type][model_no]
+                type = utili.safe_list_get(self.peak_info_dict.get('type', [False,]), model_no, False)
+                bounds = utili.safe_list_get(self.bounds.get(f'{param_type}', [False,]), model_no, False)
 
                 fit_info = {"value": value,
                             "stderr": err,

@@ -1,6 +1,7 @@
 from ast import literal_eval
 from copy import deepcopy
 from glob import glob
+from numpy import array, ndarray
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -17,6 +18,7 @@ from . import utilities as utili
 from .background import background_removal as bg_remove
 from . import peak_finding
 from . import peak_fitting
+from . import map_scan_tools
 
 
 ############## NOT IMPLEMENTED!
@@ -59,7 +61,7 @@ class ThunderBag():
         self.map = inp.get('map', None)  # if user passes map as True then the file will be treated as a map file
 
         data_paths = inp.get('datapath', None)
-        self.datapath = literal_eval(data_paths)  # this is a bit dangerous!!!!!
+        self.datapath = data_paths  # this is a bit dangerous!!!!!
 
         for i, data in tqdm(enumerate(self.datapath)):
             if len(self.datapath):
@@ -121,6 +123,7 @@ class ThunderBag():
 
     @staticmethod
     def bag_iterator(bag, func, input_args, sett_args):
+
         bagkeys = tqdm(bag.keys())
         bagkeys.set_description(f"Operating with: {func.__name__}, to find: {sett_args}")
         for key in bagkeys:
@@ -189,7 +192,7 @@ class ThunderBag():
 
     def normalise_data(self):
         self.bag_iterator(getattr(self, 'thunder_bag'), utili.normalise_all, ('y_data_bg_rm', 'background', 'y_data'),
-                         ('y_data_bg_rm', 'background', 'y_data_norm'))
+                         ('y_data_bg_rm', 'background', 'y_data'))
 
     def find_peaks(self):
         logging.debug('setting peak no, centres and types based on user specified plot details')
@@ -227,6 +230,27 @@ class ThunderBag():
                          ('x_data', 'y_data_bg_rm', 'peak_info_dict', 'bounds', 'method', 'tol'),
                          ('specs', 'model', 'peak_params', 'peaks'))  # fit peaks
 
+    def make_map_matrices(self):
+        if not isinstance(self.coordinates, ndarray):
+            coordinates_array = array(list(getattr(self, 'coordinates').values()))
+        else:
+            coordinates_array = self.coordinates
+        coordinates_array = map_scan_tools.shift_map_matr(coordinates_array)
+        for i, key in enumerate(getattr(self, 'coordinates')):
+            getattr(self, 'coordinates')[key] = coordinates_array.tolist()[i]  # reassign in the correct format
+        map_matrices = {}
+        X_dict = {}
+        Y_dict = {}
+        for p in self.fit_params.keys():
+            data_mat, X_, Y_ = map_scan_tools.map_scan_matrices(getattr(self, 'coordinates'), self.fit_params.get(p))
+            map_matrices[p] = data_mat
+            X_dict[p] = X_
+            Y_dict[p] = Y_
+
+        self.map_matrices = map_matrices
+        self.X_coords = X_dict
+        self.Y_coords = Y_dict
+
     def make_fit_params(self):
         logging.debug('generating fit params')
         fit_params = {}
@@ -236,7 +260,7 @@ class ThunderBag():
             fit_params[param] = {}  # e.g. 'center'
             for key in self.thunder_bag.keys():
                 fit_details = getattr(self.thunder_bag.get(key), 'peak_params')
-                fit_details = [fit_details.get(key_) for key_ in fit_details.keys() if param in key_]
+                fit_details = [fit_details.get(key_) for key_ in fit_details.keys() if key_.split('__')[1] == param]
                 fit_params[param][key] = fit_details
         self.fit_params = fit_params
 
@@ -260,6 +284,16 @@ class ThunderBag():
                 utili.save_plot(thund.plot, path=dirname,
                                 figname=f"failed_plot_{key}_at_position_{self.coordinates.get(key)}.svg")
                 thund.plot.close()  # close so memory is conserved.
+
+    def save_all_plots(self, dirname):
+        for key, thund in self.thunder_bag.items():
+            thund.plot_all()
+            utili.save_plot(thund.plot, path=dirname,
+                            figname=f"plot_no_{key}_at_position_{self.coordinates.get(key)}.svg")
+            thund.plot.close()  # close so memory is conserved.
+
+
+
 
 
 def main(arguments):

@@ -13,4 +13,3 @@ def svn(y_data, mean_y_data=False, std_dev=False):
     shifted_y_data = y_data - mean_y_data
     normalised_y = shifted_y_data / std_dev
     return normalised_y, (mean_y_data, std_dev)
-

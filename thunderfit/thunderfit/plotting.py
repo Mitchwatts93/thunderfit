@@ -1,5 +1,5 @@
 import matplotlib
-
+from numpy import ndarray, full
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import logging
@@ -26,8 +26,12 @@ def plot_fits(x, peaks, ax=False, linethickness=0.5):
     else:
         fig, ax = plt.subplots()
 
-    for i, peak in enumerate(peaks):
-        ax.plot(x, peaks[peak], linewidth=linethickness)
+    for peak in peaks.values():
+        if isinstance(peak, ndarray):
+            ax.plot(x, peak, linewidth=linethickness)
+        elif isinstance(peak, float) or isinstance(peak, int):
+            ax.plot(x, full(x.shape , peak), linewidth=linethickness)
+
     return ax, plt
 
 
