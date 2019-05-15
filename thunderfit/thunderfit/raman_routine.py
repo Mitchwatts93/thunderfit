@@ -26,7 +26,7 @@ def main():
 
     if arguments.get('clip_data', False):
         logging.info('clipping data')
-        clip_left, clip_right = utili.clip_data(getattr(thunder, 'x_data'), getattr(thunder, 'y_data'))
+        clip_left, clip_right = utili.clip_data(getattr(thunder, 'x_data'), getattr(thunder, 'y_data'), arguments.get('clips', None))
         thunder.x_data, thunder.y_data = thunder.x_data[clip_left:clip_right], thunder.y_data[clip_left:clip_right]
 
     logging.info('setting and subtracting bg')

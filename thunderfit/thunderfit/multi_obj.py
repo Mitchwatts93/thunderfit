@@ -163,10 +163,10 @@ class ThunderBag():
                 first = next(iter(self.thunder_bag.keys()))
         self.first = first
 
-    def clip_data(self):
+    def clip_data(self, clips=None):
         logging.debug('clipping data based on user specified plot')
         first_thunder = self.thunder_bag[self.first]
-        clip_left, clip_right = utili.clip_data(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'))
+        clip_left, clip_right = utili.clip_data(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'), clips)
         for thund in self.thunder_bag.values():
             setattr(thund, 'x_data', getattr(thund, 'x_data')[clip_left:clip_right])
             setattr(thund, 'y_data', getattr(thund, 'y_data')[clip_left:clip_right])
@@ -242,7 +242,7 @@ class ThunderBag():
         X_dict = {}
         Y_dict = {}
         for p in self.fit_params.keys():
-            data_mat, X_, Y_ = map_scan_tools.map_scan_matrices(getattr(self, 'coordinates'), self.fit_params.get(p))
+            data_mat, X_, Y_ = map_scan_tools.map_scan_matrices_from_dicts(getattr(self, 'coordinates'), self.fit_params.get(p))
             map_matrices[p] = data_mat
             X_dict[p] = X_
             Y_dict[p] = Y_
@@ -260,7 +260,7 @@ class ThunderBag():
             fit_params[param] = {}  # e.g. 'center'
             for key in self.thunder_bag.keys():
                 fit_details = getattr(self.thunder_bag.get(key), 'peak_params')
-                fit_details = [fit_details.get(key_) for key_ in fit_details.keys() if key_.split('__')[1] == param]
+                fit_details = {key_.split('__')[0]:fit_details.get(key_) for key_ in fit_details.keys() if key_.split('__')[1] == param}
                 fit_params[param][key] = fit_details
         self.fit_params = fit_params
 
@@ -285,9 +285,9 @@ class ThunderBag():
                                 figname=f"failed_plot_{key}_at_position_{self.coordinates.get(key)}.svg")
                 thund.plot.close()  # close so memory is conserved.
 
-    def save_all_plots(self, dirname):
+    def save_all_plots(self, dirname, plot_unc=True):
         for key, thund in self.thunder_bag.items():
-            thund.plot_all()
+            thund.plot_all(plot_unc=plot_unc)
             utili.save_plot(thund.plot, path=dirname,
                             figname=f"plot_no_{key}_at_position_{self.coordinates.get(key)}.svg")
             thund.plot.close()  # close so memory is conserved.

@@ -28,7 +28,7 @@ def main():
     try:  # a user can pass in a list of filenames or just one
         file_name = basename(literal_eval(arguments['datapath'])[0])
         log_name = file_name
-    except SyntaxError:  # assume its just a string and not a list passed
+    except (SyntaxError, ValueError):  # assume its just a string and not a list passed
         file_name = arguments['datapath']
         log_name = arguments['datapath']
         arguments['datapath'] = [f"{arguments['datapath']}",]  # as this is what multiobj needs
@@ -41,7 +41,7 @@ def main():
 
     bag.first = next(iter((bag.thunder_bag.keys())))
 
-    if arguments.get('clip_data', False) or arguments.get('bg_first_only', False) or arguments.get(
+    if (arguments.get('clip_data', False) and not arguments.get('clips', False)) or arguments.get('bg_first_only', False) or arguments.get(
             'peakf_first_only', False) or arguments.get('bounds_first_only', False):
         logging.info('choosing spectrum for data')
         bag.choose_spectrum()  # choose which spectrum to base everything off of if user wants to use one spectra to
@@ -51,7 +51,7 @@ def main():
     ###### clip the data if weird edges
     if arguments.get('clip_data', False):
         logging.info('clipping data')
-        bag.clip_data()
+        bag.clip_data(arguments.get('clips', False))
 
     ###### cosmic ray removal goes here
     ####################################################################################################################
@@ -113,11 +113,16 @@ def main():
     ###### plot map scan
     logging.info('plotting map scans')
     bag.make_map_matrices() # make the mapscan arrays
-    map_scan_tools.plot_map_scan(bag, getattr(bag, 'fit_params'), bag.map_matrices, bag.X_coords, bag.Y_coords, dirname)
+    map_scan_tools.plot_map_scan(getattr(bag, 'fit_params'), bag.map_matrices, bag.X_coords, bag.Y_coords, dirname)
 
     # save individual plots for each of the failed fits
     logging.info('saving failed fit plots')
     bag.save_failed_plots(dirname)
+
+    # save a gif of every single plot
+    if arguments.get('make_gif', False):
+        logging.info('saving all plots as gif')
+        utili.gif_maker(bag.thunder_bag, f'{dirname}/all_data.gif')
 
     ###### put here some code for cluster analysis and pca
     logging.info('not currently doing cluster analysis or pca')

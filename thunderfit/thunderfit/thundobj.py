@@ -133,8 +133,8 @@ class Thunder():
         self.method = inp.get('method', self.method)
         self.tol = inp.get('tol', self.tol)
 
-    def clip_data(self):
-        clip_left, clip_right = utili.clip_data(getattr(self, 'x_data'), getattr(self, 'y_data'))
+    def clip_data(self, clips=None):
+        clip_left, clip_right = utili.clip_data(getattr(self, 'x_data'), getattr(self, 'y_data'), clips)
         setattr(self, 'x_data', getattr(self, 'x_data')[clip_left:clip_right])
         setattr(self, 'y_data', getattr(self, 'y_data')[clip_left:clip_right])
 
@@ -184,26 +184,29 @@ class Thunder():
         setattr(self, 'peaks', peaks)
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
-    def plot_all(self):
+    def plot_all(self, ax=None, plot_unc=True):
         logging.debug('plotting all for thund obj')
-        ax, plt = plotting.plot_fits(self.x_data, self.peaks.eval_components())  # plot each component of the model
-        ax, plt = plotting.plot_background(self.x_data, self.background, ax)  # plot the background supplied by user
+        ax, plt, fig = plotting.plot_fits(self.x_data, self.peaks.eval_components(), ax=ax)  # plot each component of the model
+        ax, plt, fig = plotting.plot_background(self.x_data, self.background, ax=ax, fig=fig)  # plot the background supplied by user
         try:
-            ax, plt = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
-                                                      self.peaks.best_fit, ax)  # plot a band of uncertainty
+            if plot_unc:
+                ax, plt, fig = plotting.plot_uncertainty_curve(self.x_data, self.peaks.eval_uncertainty(sigma=3),
+                                                      self.peaks.best_fit, ax=ax, fig=fig)  # plot a band of uncertainty
         except TypeError:
             logging.warning('There are not uncertainties available because the bounds are too restrictive.'
                             'The covariance matrix is not valid near the bounds so widen the bounds for whatever is '
                             'causing the issue')
-        ax, plt = plotting.plot_data(self.x_data, self.y_data, ax)  # plot the raw data
-        ax, plt = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, 0, ax, line='k--')  # plot the fitted data
-        ax, plt = plotting.plot_data(self.x_data, self.y_data_bg_rm, ax, line='g--')  # plot the raw data bg rm
+        ax, plt, fig = plotting.plot_data(self.x_data, self.y_data, ax=ax, fig=fig)  # plot the raw data
+        ax, plt, fig = plotting.plot_fit_sum(self.x_data, self.peaks.best_fit, 0, ax=ax, line='k--', fig=fig)  # plot the fitted data
+        ax, plt, fig = plotting.plot_data(self.x_data, self.y_data_bg_rm, ax=ax, line='g--', fig=fig)  # plot the raw data bg rm
 
         ax.minorticks_on()
         ax.grid(which='minor', alpha=0.2)
         ax.grid(which='major', alpha=0.5)
 
         self.plot = plt
+
+        return ax, fig
 
     def gen_fit_report(self):
         logging.debug('genertaing fit report for thund obj')

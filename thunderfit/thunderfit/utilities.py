@@ -9,10 +9,11 @@ import matplotlib
 import pandas as pd
 from dill import dump as d_dump
 from dill import load as d_load
-from numpy import vstack, pad, diff
+from numpy import vstack, pad, diff, frombuffer
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 from . import normalisation
 
@@ -218,33 +219,38 @@ def make_dir(dirname, i=1):
     return dirname
 
 
-def clip_data(x_data, y_data):
+def clip_data(x_data, y_data, clips=None):
     logging.debug('clipping data')
-    clip_left, clip_right = 0, len(x_data) - 1
-    while True:
-        fig, ax = plt.subplots()
-        ax.plot(x_data[clip_left:clip_right], y_data[clip_left:clip_right])
-        print(f"Removing background, please type two x values seperated by a space for the clips. \n"
-              f"Current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
-              f"PLEASE MAKE SURE YOU ENTER IN THE SAME ORDER AS HERE. i.e. if first value is larger than right then the "
-              f"first value will be the large x_clip second small")
-        plt.show(block=True)
-        ans = input("If you are happy with the clips type y. If not then please type a new pair of values ")
-        if ans == 'y':
-            break
-        else:
-            try:
-                ans = ans.split(' ')
-                if len(ans) != 2:
-                    raise ValueError("The tuple was more than two elements long")
-                clip_left = float(ans[0])
-                clip_left = find_closest_indices(list(x_data), [clip_left])[0]
-                clip_right = float(ans[1])
-                clip_right = find_closest_indices(list(x_data), [clip_right])[0]
-            except ValueError:
-                print("You entered an incorrect answer! Trying again...")
+    if clips:
+        clip_left, clip_right = clips
+        clip_left = find_closest_indices(list(x_data), [clip_left])[0]
+        clip_right = find_closest_indices(list(x_data), [clip_right])[0]
+    else:
+        clip_left, clip_right = 0, len(x_data) - 1
+        while True:
+            fig, ax = plt.subplots()
+            ax.plot(x_data[clip_left:clip_right], y_data[clip_left:clip_right])
+            print(f"Removing background, please type two x values seperated by a space for the clips. \n"
+                  f"Current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
+                  f"PLEASE MAKE SURE YOU ENTER IN THE SAME ORDER AS HERE. i.e. if first value is larger than right then the "
+                  f"first value will be the large x_clip second small")
+            plt.show(block=True)
+            ans = input("If you are happy with the clips type y. If not then please type a new pair of values ")
+            if ans == 'y':
+                break
+            else:
+                try:
+                    ans = ans.split(' ')
+                    if len(ans) != 2:
+                        raise ValueError("The tuple was more than two elements long")
+                    clip_left = float(ans[0])
+                    clip_left = find_closest_indices(list(x_data), [clip_left])[0]
+                    clip_right = float(ans[1])
+                    clip_right = find_closest_indices(list(x_data), [clip_right])[0]
+                except ValueError:
+                    print("You entered an incorrect answer! Trying again...")
 
-    plt.close()
+        plt.close()
     return clip_left, clip_right
 
 
@@ -264,4 +270,21 @@ def setup_logger(log_name):
     logging.basicConfig(filename=log_filename, level=logging.DEBUG)
     logging.info('have read in user arguments')
     return log_filename
+
+
+def gif_maker(bag, filename):
+    bags = iter(bag.values())
+
+    def update(i):
+        thund = next(bags)
+        ax, fig = thund.plot_all(plot_unc=False)
+        plt.text(0.1, 0.9, f'PLOT_{i}', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        fig.canvas.draw()
+        img = frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+        img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        plt.close()
+        return img
+
+    import imageio
+    imageio.mimsave(filename, [update(i) for i in range(len(bag))], fps=2)
 #
