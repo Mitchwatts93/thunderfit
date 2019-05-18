@@ -10,6 +10,10 @@ from . import thundobj
 from . import peak_finding
 
 def main():
+    """
+    simple function to guide the user to making a parameters file and saving it for them.
+    :return:
+    """
     args = parsing.parse_user_args()
 
     arguments = parsing.using_user_args(args)

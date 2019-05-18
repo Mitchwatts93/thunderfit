@@ -7,6 +7,16 @@ import logging
 
 # todo fix the assertions in these
 def plot_data(x, y, fig=False, ax=False, line='r-', linethickness=0.5):
+    """
+    quick funtion to plot the data
+    :param x:
+    :param y:
+    :param fig:
+    :param ax:
+    :param line:
+    :param linethickness:
+    :return:
+    """
     logging.debug('plotting data')
     if ax:
         # assert isinstance(ax, axes._subplots.AxesSubplot), "the figure passed isn't the correct format, please pass" \

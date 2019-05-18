@@ -20,7 +20,6 @@ from . import peak_fitting
 from . import map_scan_tools
 
 
-############## NOT IMPLEMENTED!
 # TODO
 # make option of passing in many params files - one for each data file
 

@@ -12,33 +12,57 @@ from . import utilities as utili
 
 # funcs for plotting
 def shift_map_matr(coordinates_array):
+    """
+    function to shift all the coordinates in a coordinates array so that it start from zero.
+    :param coordinates_array: an np array of mxn with the coordinates of each scan at each position
+    :return: the shifted coordinates array
+    """
     logging.debug('shifting coordinates array')
     coordinates_array[:, 0] = coordinates_array[:, 0] - min(coordinates_array[:, 0])
     coordinates_array[:, 1] = coordinates_array[:, 1] - min(coordinates_array[:, 1])
     return coordinates_array
 
+
 def generate_map_matrix(coordinates, peak_label_vals):
-    X = []
+    """
+    function to generate a map matrix based on a dictionary of coordinates and peak_label_vals. both have matching keys
+    and the coordinates values are (x,y) tuples, peak_label_vals is a dictionary of values of what is being mapped.
+    :param coordinates: dictionary of keys corresponding to thunder objects, values are (x,y)
+    :param peak_label_vals: same keys as coordinates but with values which will be mapped to a matrix
+    :return: a matrix of dimensions from coordinates. each
+    element corresponds to a new scan, so assumes a uniform grid. the spacing of scans isn't coded in here, but can be
+    accessed from the X and Y which are returned (lists of the coodinates)
+    """
+    X = [] #initialise these
     Y = []
     Z = []
 
-    for key in peak_label_vals.keys():
-        x, y = coordinates[key]
-        z = peak_label_vals[key]
-        if type(z) == str:
-            return [], []
-        X.append(x)
+    for key in peak_label_vals.keys(): # corresponding to a pixel
+        x, y = coordinates[key] #coordinates
+        z = peak_label_vals[key] #value at those coordinates
+        if type(z) == str: # not sure why this is here.
+            return [], [] #probably will break if this happens. better to raise an error
+        X.append(x) # append to coordinates and values to the lists
         Y.append(y)
         Z.append(z)
-    x_step = unique(X)[1] - unique(X)[0]
-    xx = (round(X / x_step)).astype(int)
+    x_step = unique(X)[1] - unique(X)[0] #what are the step sizes in x
+    xx = (round(X / x_step)).astype(int) # turn the x coordinates into an array of integer steps
     y_step = unique(Y)[1] - unique(Y)[0]
     yy = round((Y / y_step)).astype(int)
-    data_ = coo_matrix((Z, (yy, xx))).toarray()  # out=nanmat should mean that any missing values are nan
+    data_ = coo_matrix((Z, (yy, xx))).toarray() #build a dense array by using sparse array notation and converting
+    data_[data_ == 0] = nan #if its zero we assume thats because there was no data taken there.
 
     return X, Y, data_
 
+
 def map_scan_matrices_from_dicts(coordinates, values):
+    """
+    function to generate dictionaries of X and Y coordiantes, as well as dict of data matrices. does this for all
+    the peak types in the passed in dictionaries. keys are the properties e.g. 'center' etc
+    :param coordinates: dictionary of coordinates for each property (usually doesn't differ though so is a repeat of the same ones)
+    :param values: dict of values for each property (key). e.g. 'center' has value which is a dict of run keys and values at that key
+    :return: data dict, and X_, Y_ coordinate dicts. same keys as input
+    """
     logging.debug('generating map matrices')
     peak_labels = list(values.values())[0].keys()
     data = {}
@@ -47,13 +71,20 @@ def map_scan_matrices_from_dicts(coordinates, values):
     for peak_label in peak_labels:
         peak_label_vals = {key: values[key].get(peak_label, nan) for key in values.keys()}
         X, Y, data_ = generate_map_matrix(coordinates, peak_label_vals)
-        data_[data_ == 0] = nan
         data[peak_label] = data_
         X_[peak_label] = X
         Y_[peak_label] = Y
     return data, X_, Y_
 
+
 def map_plotter(data, X, Y):
+    """
+    function to plot a mapscan given a data matrix and the actual coordinates to plot on the map
+    :param data: np array of values
+    :param X: x coordinates corresponding to each element in data in x direction
+    :param Y: same as for x
+    :return: figure and axis to be reused/saved etc later
+    """
     f = plt.figure()
     ax = plt.gca()
     magma_cmap = matplotlib.cm.get_cmap('magma')
@@ -69,7 +100,15 @@ def map_plotter(data, X, Y):
 
     return f, ax
 
+
 def map_scan_plot_dicts(data_mat, X_coords, Y_coords):
+    """
+    plot all the data and save all the plots into dicts which are returned
+    :param data_mat: data matrices as dicts. keys are for the properties for which each map matrix is the value
+    :param X_coords: x coordinates as dicts. keys same as data_mat
+    :param Y_coords: same as for x
+    :return:
+    """
     logging.debug('plotting mapscans')
     peak_labels = data_mat.keys()
     figs = {}
@@ -83,17 +122,48 @@ def map_scan_plot_dicts(data_mat, X_coords, Y_coords):
         axs[peak_label] = ax
     return figs, axs
 
+
 def get_cent_mean(peak_label, fit_params):
+    """
+    function to return the mean center values from fit_params dict. isn't a great abstraction barrier though!
+    :param peak_label: the label of the peak you want the mean center value for e.g. 'm0' for mdoel 0
+    :param fit_params: fit params dict with keys of properties for peaks e.g. 'center' and 'amplitude'
+     these have values which are dicts which include peak_label as a key. those values are the values for that property
+     for each peak
+    :return: the mean center value
+    """
     cents = [cent.get(peak_label, 0) for cent in fit_params.get('center', nan).values()]
     cent_mean = nanmean(cents)
     return cent_mean
 
+
 def save_mapscan(peak_label, fit_params, plot, dirname, p):
+    """
+    given a mapscan plot save it and add a title
+    :param peak_label: the label of the peak the mapscan is for
+    :param fit_params: the dicitonary of all peak properties and peaks values
+    :param plot: the plot to save
+    :param dirname: str: where to save it
+    :param p: str: what is the peak being saved
+    :return:
+    """
     cent_mean = get_cent_mean(peak_label, fit_params)
     plot[peak_label].suptitle(f"{p}_{peak_label}_heatmap. peak {peak_label} is centered at:  {cent_mean}")
     utili.save_plot(plot[peak_label], path=dirname, figname=f"{p}_{peak_label}.svg")
 
+
 def mapscans_for_parameter(map_matrices, X_coords, Y_coords, p, fit_params, dirname):
+    """
+    given the map matrices coordinates dictionaries and fit parameters, plot all the mapscans and then call them all to be saved
+    :param map_matrices: a dict of map matrices, keys are the type of map to save e.g. 'center'. the values are dicts of
+    actual data matrices as values and keys correspond to the model keys e.g. 'm0'
+    :param X_coords: coordinates dict with keys same as map_matrices
+    :param Y_coords: same as for x
+    :param p: key for what mapscan to access
+    :param fit_params: fit parameters dictionary as made by multi_obj method
+    :param dirname: where to save the mapscans
+    :return:
+    """
     data_mat = map_matrices[p]
     plot, ax = map_scan_plot_dicts(data_mat, X_coords[p], Y_coords[p])
     for peak_label in plot.keys():
@@ -102,6 +172,16 @@ def mapscans_for_parameter(map_matrices, X_coords, Y_coords, p, fit_params, dirn
 
 
 def plot_map_scan(fit_params, map_matrices, X_coords, Y_coords, dirname):
+    """
+    function to plot the mapscans given user input on what to plot for.
+    :param fit_params: a dictionary of dicts. 1st keys are properties e.g. 'center' and second keys are for each model
+    e.g. 'm0'. values are a dict of the actual values for each pixel in the map
+    :param map_matrices: same as fit_params but the values are map matrices instead of dicts
+    :param X_coords: same as map_matrices except the values are lists of X_coords
+    :param Y_coords: same as x
+    :param dirname: str: where to save the plots
+    :return:
+    """
     logging.debug('runnning user input routine to generate/save user chosen variables in maps')
     while True:
         ans = input("making map scans, please input which property you would like to scan. options are:"

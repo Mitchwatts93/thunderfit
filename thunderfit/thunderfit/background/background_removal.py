@@ -1,8 +1,4 @@
 import logging
-
-# from scipy.sparse import diags, spdiags
-# from scipy.sparse.linalg import spsolve
-# from scipy.optimize import least_squares
 from numpy import array, ndarray
 
 from . import scarf
@@ -41,6 +37,12 @@ def baseline_als(y, lam, p, niter=10):
 
 
 def correct_negative_bg(y_bg_rm, bg):
+    """
+    function to shift the bg and the y data with the bg removed up if there are negative values.
+    :param y_bg_rm: the y data with bg removed
+    :param bg: the bg as an np array
+    :return:
+    """
     y_min = y_bg_rm.min()
     if y_min < 0:
         y_bg_rm += abs(y_min)  # then shift all the data up so no points are below zero
@@ -48,7 +50,15 @@ def correct_negative_bg(y_bg_rm, bg):
     return y_bg_rm, bg
 
 
-def background_finder(x_data, y_data, bg, scarf_params):
+def background_finder(x_data, y_data, bg, scarf_params=False):
+    """
+    function to find the background given bg which is either a string or an np array specifying the type of background to remove.
+    :param x_data: x data as np array
+    :param y_data: y data as np array. npte x and y must be same length
+    :param bg: an np array of size y_data or a string specifying the type of bg to remove
+    :param scarf_params: the parameters for scarf background removal. if nothing is passed it defaults to none
+    :return: bg as np array, y data with the bg removed, the parameters relating to the background
+    """
     if bg == 'no':  # then user doesn't want to make a background
         logging.warning(
             "Warning: no background specified, so not using a background,"

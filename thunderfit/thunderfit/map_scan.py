@@ -3,24 +3,19 @@ from ast import literal_eval
 from os.path import basename
 from os.path import join
 from os import rename
-from time import strftime
 
 from . import map_scan_tools
 from . import multi_obj
 from . import parsing
 from . import utilities as utili
 
-def setup_logger(log_name):
-    curr_time = strftime('%d_%m_%Y_%l:%M%p')
-    log_filename = f"{log_name}_{curr_time}.log"
-    logging.getLogger().setLevel(logging.DEBUG)
-    logger = logging.getLogger('')
-    logger.handlers = []
-    logging.basicConfig(filename=log_filename, level=logging.DEBUG)
-    logging.info('have read in user arguments')
-    return log_filename
 
 def main():
+    """
+    the script to run a mapscan analysis for a user based on a parameters file or manually passed args
+    :return:
+    """
+
     args = parsing.parse_user_args()
 
     arguments = parsing.using_user_args(args)
@@ -33,16 +28,17 @@ def main():
         log_name = arguments['datapath']
         arguments['datapath'] = [f"{arguments['datapath']}",]  # as this is what multiobj needs
 
+
     # setup logger
     log_filename = utili.setup_logger(log_name)
 
     logging.info('creating multi_obj object')
     bag = multi_obj.main(arguments)  # create a Thunder object
 
-    bag.first = next(iter((bag.thunder_bag.keys())))
+    bag.first = next(iter((bag.thunder_bag.keys()))) # get the first thunder object
 
     if (arguments.get('clip_data', False) and not arguments.get('clips', False)) or arguments.get('bg_first_only', False) or arguments.get(
-            'peakf_first_only', False) or arguments.get('bounds_first_only', False):
+            'peakf_first_only', False) or arguments.get('bounds_first_only', False): #then we want the user to decide which thunder object to use
         logging.info('choosing spectrum for data')
         bag.choose_spectrum()  # choose which spectrum to base everything off of if user wants to use one spectra to
         # choose parameters
@@ -115,11 +111,11 @@ def main():
     bag.make_map_matrices() # make the mapscan arrays
     map_scan_tools.plot_map_scan(getattr(bag, 'fit_params'), bag.map_matrices, bag.X_coords, bag.Y_coords, dirname)
 
-    # save individual plots for each of the failed fits
+    ###### save individual plots for each of the failed fits
     logging.info('saving failed fit plots')
     bag.save_failed_plots(dirname)
 
-    # save a gif of every single plot
+    ###### save a gif of every single plot
     if arguments.get('make_gif', False):
         logging.info('saving all plots as gif')
         utili.gif_maker(bag.thunder_bag, f'{dirname}/all_data.gif')
@@ -128,14 +124,14 @@ def main():
     logging.info('not currently doing cluster analysis or pca')
     ####################################################################################################################
 
-    # save the bag object and it reports
+    ###### save the bag object and it reports
     logging.info('saving fit reports on stats and fitting parameters')
     utili.save_fit_report(getattr(bag, 'stats'), path=dirname, filename=f"{file_name}_report.json")
     utili.save_fit_report(getattr(bag, 'fit_params'), path=dirname, filename=f"{file_name}_peak_info.json")
     logging.info('saving thunderbag object')
     utili.save_thunder(bag, path=dirname, filename=f"{file_name}.d")
 
-    # move the log file in with all the rest of it
+    ###### move the log file in with all the rest of it
     log_filename_ = str(join(dirname, f'{file_name}.log'))
     rename(log_filename, log_filename_) # use os.rename to move the log file to the final destination
     utili.save_fit_report(arguments, path=dirname, filename=f"{file_name}_inpargs.json")

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 def rcf(A, rad):
     """
-    Popular rolling circle filter (RCF) routine as described by James et al.: https://doi.org/10.1366%2F12-06766
+    Rolling circle filter (RCF) routine as described by James et al.: https://doi.org/10.1366%2F12-06766
     :param A: np matrix of data
     :param r: radius of circle to filter with
     :return: L, a numpy array of length len(A) which is the locus of the RCF
@@ -51,7 +51,7 @@ def generate_sub_matrices(A, rad, RC, n):
     :param A: Data matrix, length n
     :param rad: radius of RCF filter
     :param RC: np array of length 2r+1 with
-    :param n:
+    :param n: integer describing length of A
     :return: A_sub, RC_sub, lists of same dimensions, sampled according to paper: https://doi.org/10.1366%2F12-06766
     """
     ni = n
@@ -113,99 +113,126 @@ def smooth(L, window_length, polyorder):
     return savgol_filter(L, window_length, polyorder, mode='mirror')
 
 
+def user_guided_scarf(x_data, bg, data_bg_rm_y, params=[], rad=70, window_length=51, poly_order=3, L_sg=0):
+    while True:
+        # rcf step
+        while True:
+            try:
+                D = rcf(data_bg_rm_y, rad)
+                fig, ax = plt.subplots()
+                ax.plot(x_data, D)
+                ax.plot(x_data, data_bg_rm_y)
+                print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
+                plt.show(block=True)
+                ans = input("If you are happy with the plot, type y. if not then please type a new rad")
+                if ans == 'y':
+                    break
+                else:
+                    try:
+                        rad = int(ans)
+                    except ValueError:
+                        print("You entered an incorrect answer! Trying again...")
+            except RuntimeError:
+                print(f"Please enter a smaller radius, the radius must be less than half the number of data points:"
+                      f" {len(data_bg_rm_y)//2}")
+                rad = 70
+
+        # then apply SG filter to D
+        while True:
+            try:
+                L_sg = smooth(D, window_length, poly_order)
+                fig, ax = plt.subplots()
+                ax.plot(x_data, L_sg)
+                ax.plot(x_data, data_bg_rm_y)
+                print(
+                    f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
+                    f"{window_length}, {poly_order}")
+                plt.show(block=True)
+            except ValueError as e:
+                print(
+                    "Incorrect values for window_length and poly_order have been entered. Poly order must be less "
+                    "than window length and window length must be odd")
+            ans = input("please enter y if you are happy with these values, or enter two integers with a space "
+                        "for window_length and poly_order")
+            if ans == 'y':
+                L = L_sg
+                break
+            else:
+                try:
+                    ans = ans.split(' ')
+                    if len(ans) != 2:
+                        raise ValueError("The tuple was more than two elements long")
+                    window_length = int(ans[0])
+                    poly_order = int(ans[1])
+                except ValueError:
+                    print("You entered an incorrect answer! Trying again...")
+
+        # get the bg shift up automatically
+        b = min(data_bg_rm_y - L)  # whats the smallest difference between D and b? shift it up by that
+        L = L + b
+
+        # final question before exiting
+        fig, ax = plt.subplots()
+        ax.plot(x_data, L)
+        ax.plot(x_data, data_bg_rm_y)
+        ax.plot(x_data, data_bg_rm_y - L, 'b--')
+        print(f"Please look at the following bg with selected parameters")
+        plt.show(block=True)
+        ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
+                    "Typing repeat will add an additional bg subtraction to this one ")
+        if ans == 'y':
+            bg += L
+            data_bg_rm_y -= L
+            params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
+            break
+        elif ans == 'n':
+            pass
+        elif ans == 'repeat':
+            bg += L
+            data_bg_rm_y -= L  # remove the bg found here from the original data and go again
+            print("apply two bg removal steps, this will mean the background just specified will be removed "
+                  "from the data")
+            params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
+        else:
+            print("You entered an incorrect answer! Trying whole fitting routine again...")
+    return data_bg_rm_y, bg, params
+
+
+def scarf_from_dict(y_data, bg, data_bg_rm_y, scarf_params, params):
+    rad, window_length, poly_order = \
+        scarf_params['rad'], scarf_params['window_length'], scarf_params['poly_order']
+    D = rcf(data_bg_rm_y, rad)
+    L = smooth(D, window_length, poly_order)
+    try:
+        b = scarf_params['b']  # if passed then use it
+    except KeyError:  # otherwise find it
+        b = min(y_data - L)  # whats the smallest difference between D and b? shift it up by that
+    L = L + b
+    bg += L
+    data_bg_rm_y -= L
+    params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
+
+    return data_bg_rm_y, bg, params
+
+
 def perform_scarf(x_data, y_data, scarf_params=False):
+    """
+    Routine to perform the scarf background subtraction. decides whether to run a user guided routine or anything else
+    depending on the input for scarf_params
+    :param x_data: the x data as an np array
+    :param y_data: the y data as an np array
+    :param scarf_params: can be one of bool, dict or list of dicts.
+    :return:
+    """
     logging.debug('performing scarf bg subtraction')
 
-    bg = array([0 for _ in y_data], dtype=float64)
-    rad = 70
-    window_length, poly_order = 51, 3
-    L_sg = 0
+    bg = array([0 for _ in y_data], dtype=float64) #initialise
     data_bg_rm_y = y_data.copy()
     params = []
 
     if isinstance(scarf_params, bool) and not scarf_params:
         logging.debug('setting scarf parameters via user guided method')
-        while True:
-            # rcf step
-            while True:
-                try:
-                    D = rcf(data_bg_rm_y, rad)
-                    fig, ax = plt.subplots()
-                    ax.plot(x_data, D)
-                    ax.plot(x_data, data_bg_rm_y)
-                    print(f"SCARF background removal requires user input. Please look at the following bg with rad={rad}")
-                    plt.show(block=True)
-                    ans = input("If you are happy with the plot, type y. if not then please type a new rad")
-                    if ans == 'y':
-                        break
-                    else:
-                        try:
-                            rad = int(ans)
-                        except ValueError:
-                            print("You entered an incorrect answer! Trying again...")
-                except RuntimeError:
-                    print(f"Please enter a smaller radius, the radius must be less than half the number of data points:"
-                          f" {len(data_bg_rm_y)//2}")
-                    rad = 70
-
-            # then apply SG filter to D
-            while True:
-                try:
-                    L_sg = smooth(D, window_length, poly_order)
-                    fig, ax = plt.subplots()
-                    ax.plot(x_data, L_sg)
-                    ax.plot(x_data, data_bg_rm_y)
-                    print(
-                        f"Please look at the following bg with Sg filter parameters (window length, polynomial order): "
-                        f"{window_length}, {poly_order}")
-                    plt.show(block=True)
-                except ValueError as e:
-                    print(
-                        "Incorrect values for window_length and poly_order have been entered. Poly order must be less "
-                        "than window length and window length must be odd")
-                ans = input("please enter y if you are happy with these values, or enter two integers with a space "
-                            "for window_length and poly_order")
-                if ans == 'y':
-                    L = L_sg
-                    break
-                else:
-                    try:
-                        ans = ans.split(' ')
-                        if len(ans) != 2:
-                            raise ValueError("The tuple was more than two elements long")
-                        window_length = int(ans[0])
-                        poly_order = int(ans[1])
-                    except ValueError:
-                        print("You entered an incorrect answer! Trying again...")
-
-            # get the bg shift up automatically
-            b = min(data_bg_rm_y - L)  # whats the smallest difference between D and b? shift it up by that
-            L = L + b
-
-            # final question before exiting
-            fig, ax = plt.subplots()
-            ax.plot(x_data, L)
-            ax.plot(x_data, data_bg_rm_y)
-            ax.plot(x_data, data_bg_rm_y - L, 'b--')
-            print(f"Please look at the following bg with selected parameters")
-            plt.show(block=True)
-            ans = input("Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. \n"
-                        "Typing repeat will add an additional bg subtraction to this one ")
-            if ans == 'y':
-                bg += L
-                data_bg_rm_y -= L
-                params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
-                break
-            elif ans == 'n':
-                pass
-            elif ans == 'repeat':
-                bg += L
-                data_bg_rm_y -= L  # remove the bg found here from the original data and go again
-                print("apply two bg removal steps, this will mean the background just specified will be removed "
-                      "from the data")
-                params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
-            else:
-                print("You entered an incorrect answer! Trying whole fitting routine again...")
+        data_bg_rm_y, bg, params = user_guided_scarf(x_data, bg, data_bg_rm_y)
 
     elif isinstance(scarf_params, bool):
         # the user has passed True! recall this function and change it to false
@@ -215,20 +242,11 @@ def perform_scarf(x_data, y_data, scarf_params=False):
         data_bg_rm_y, bg, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=False)
         params += params_  # params_ is a list of one dictionary
         return data_bg_rm_y, bg, params
+
     elif isinstance(scarf_params, dict):
         logging.debug('using scarf params: {scarf_params}')
-        rad, window_length, poly_order = \
-            scarf_params['rad'], scarf_params['window_length'], scarf_params['poly_order']
-        D = rcf(data_bg_rm_y, rad)
-        L = smooth(D, window_length, poly_order)
-        try:
-            b = scarf_params['b']  # if passed then use it
-        except KeyError:  # otherwise find it
-            b = min(y_data - L)  # whats the smallest difference between D and b? shift it up by that
-        L = L + b
-        bg += L
-        data_bg_rm_y -= L
-        params.append({'rad': rad, 'b': b, 'window_length': window_length, 'poly_order': poly_order})
+        data_bg_rm_y, bg, params = scarf_from_dict(y_data, bg, data_bg_rm_y, scarf_params, params)
+
     elif isinstance(scarf_params, list):
         logging.debug(f'using scarf params: {scarf_params}')
         # the user wants multiple runs. call the function for each set of params, passing the new y data each time
@@ -236,12 +254,14 @@ def perform_scarf(x_data, y_data, scarf_params=False):
             data_bg_rm_y, bg_, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=param_dict)
             bg += bg_
             params += params_  # params_ is a list of a dictionary so use += here
+
     else:
         logging.warning(
             'an unexpected parameter has been passed as a scarf value, running interactively.')
         data_bg_rm_y, bg, params_ = perform_scarf(x_data, data_bg_rm_y, scarf_params=False)
         params += params_
         return data_bg_rm_y, bg, params
+
     plt.close()
     logging.debug('scarf bg parameters are: {params}')
     return data_bg_rm_y, bg, params

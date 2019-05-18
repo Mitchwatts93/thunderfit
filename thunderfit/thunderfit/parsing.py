@@ -95,8 +95,9 @@ def parse_user_args():
 
 def using_user_args(args):
     """
-    user a
-    :param args:
+    user args parsed depending on params file has been passed. if it hasn't then parse command line input,
+    if it has then parse that file instead
+    :param args: command line input
     :return:
     """
     logging.debug('parsing user args')
@@ -113,6 +114,12 @@ def using_user_args(args):
 
 
 def make_user_files(arguments, file_name=None):
+    """
+    make a directory to store all the user files in. name it with the file_name being analysed and the current time.
+    :param arguments: user args. actually only need the datapath element so will change in future
+    :param file_name: filename to save should actually be the only argument and basename should maybe be a bool option
+    :return: filename used and the dirname created
+    """
     logging.debug('making file to store data inside')
     curr_time = strftime('%d_%m_%Y_%l:%M%p')  # name directory with the current time
     if not file_name:
