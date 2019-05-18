@@ -10,6 +10,11 @@ from . import utilities as utili
 
 
 def str_or_none(value):
+    """
+    a type function to check if a value cN be either a string or nonr
+    :param value:
+    :return:
+    """
     try:
         return str(value)
     except:
@@ -17,6 +22,11 @@ def str_or_none(value):
 
 
 def str_or_arr(value):
+    """
+    an incomplete function to do type checking for string or np array..needs to try array(value)!
+    :param value:
+    :return:
+    """
     try:
         return str(value)
     except:
@@ -24,6 +34,10 @@ def str_or_arr(value):
 
 
 def parse_user_args():
+    """
+    a function to parse user arguments using argparse
+    :return:
+    """
     logging.debug('parsing command line args')
 
     parser = ArgumentParser(
@@ -54,23 +68,9 @@ def parse_user_args():
                              'will be used. if the dictionary is specified it should be of the form: \n'
                              '{"rad":70, "b":90, "window_length":51, "poly_order":3}'
                              '\n where window length must be odd and greater than poly_order, and all must be integers')
-    parser.add_argument('--peak_types', type=Union[None, List], default=None,
-                        help='a list (or none) or the types of peak to be fitted. '
-                             '\n e.g. ["LorentzianModel", "GaussianModel"] as strings! they must be implemented in lmfi'
+    parser.add_argument('--peak_info_dict', type=Union[None, List], default=None,
+                        help='a dictionary of peak information'
                              't')
-    parser.add_argument('--peak_centres', type=Union[None, List], default=None,
-                        help='a list (or none) or the centres values (x values) of the peaks to be fitted. '
-                             '\n e.g. [488, 365] as integers!')
-    parser.add_argument('--peak_widths', type=Union[None, List], default=None,
-                        help='a list (or none) or the width values (x values) of the peaks to be fitted. '
-                             '\n e.g. [10, 1] as integers!')
-    parser.add_argument('--peak_amps', type=Union[None, List], default=None,
-                        help='a list (or none) or the amplitude values (x values) of the peaks to be fitted. '
-                             '\n e.g. [10, 5] as integers!')
-    parser.add_argument('--tightness', type=str, default="med",
-                        help='a string indicating how tight the auto-generated bounds should be. not used if bounds'
-                             'are supplied. valid values are "low", "med" and "high", any other value will cause '
-                             'default to be used.')
     parser.add_argument('--bounds', type=Union[None, Dict], default=None,
                         help='a dictionary of the bounds for peak values. if none passed then will be auto-generated.'
                              '\n of the form: {"centers":[(365, 390), (283,285)],"widths":[(2, 3), (1, 4)],'
@@ -94,6 +94,11 @@ def parse_user_args():
 
 
 def using_user_args(args):
+    """
+    user a
+    :param args:
+    :return:
+    """
     logging.debug('parsing user args')
     if args.param_file_path:  # if there is a params file then use it
         # logging.warning('Using params file and ignoring all other user inputs from command line')

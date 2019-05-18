@@ -1,4 +1,3 @@
-from ast import literal_eval
 from copy import deepcopy
 from glob import glob
 from numpy import array, ndarray
@@ -26,9 +25,16 @@ from . import map_scan_tools
 # make option of passing in many params files - one for each data file
 
 class ThunderBag():
+    """
+    A 'bag' of thunder objects. these are collectively stored with some metadata in this object, so we can do some
+    cool things like store a thunderfit object for each coordinate and make mapscans etc
+    """
 
     def __init__(self, input):
-        # initialise everything first
+        """
+        initialise everything first
+        :param input: a dictionary of parameters to create the bag object with
+        """
         self.thunder_bag: {} = {}
         self.coordinates: {} = {}
         self.first: str = ''
@@ -51,6 +57,11 @@ class ThunderBag():
             raise TypeError('Cannot convert input to ThunderBag object')
 
     def create_bag(self, inp):
+        """
+        create a bag object given an inp
+        :param inp: this is a dictionary with all the necessary data on the bag
+        :return:
+        """
         logging.debug('creating bag object')
         self.x_ind = inp.get('x_ind', 2)
         self.y_ind = inp.get('y_ind', 3)
@@ -60,24 +71,25 @@ class ThunderBag():
 
         self.map = inp.get('map', None)  # if user passes map as True then the file will be treated as a map file
 
-        data_paths = inp.get('datapath', None)
-        self.datapath = data_paths  # this is a bit dangerous!!!!!
+        self.datapath = inp.get('datapath', None) # note this must be a list of datapaths, even if its just one element
 
-        for i, data in tqdm(enumerate(self.datapath)):
+        for i, data in tqdm(enumerate(self.datapath)): # iterate through the datapaths for each file to be loaded
             if len(self.datapath):
-                prefix = f'{i}_'  # if more than one datapath then we name them with i_j
+                prefix = f'{i}_'  # if more than one datapath then we name them with i_j prefix. if not its just j
+            else:
+                prefix = ''
             if isinstance(data, Thunder):
-                self.thunder_bag[i] = data
+                self.thunder_bag[i] = data # then its already loaded so just assign it
             elif isinstance(data, str):
                 # then read the data file
-                if self.map == True:
-                    prefix = ''
+                if self.map == True: # then we have a map file with 4 columns and lots of individual runs in it
                     self.x_coord_ind, self.y_coord_ind = inp.get('x_coord_ind', 0), inp.get('y_coord_ind', 1)
-                    map_path = glob(data)[0]  # save the filepath to the mapscan as self.map for later
+                    map_path = glob(data)[0]  # get the exact filepath to the data
                     x_data, y_data, x_coords, y_coords = self.read_map(map_path, self.x_ind, self.y_ind,
-                                                                       self.x_coord_ind, self.y_coord_ind)
+                                                                       self.x_coord_ind, self.y_coord_ind) # read the
+                    # map file into lists of x_data etc
 
-                    for j in range(len(x_data)):  # go through the list of x_data
+                    for j in range(len(x_data)):  # iterate through the list of data and coords
                         x_data_, y_data_ = x_data[j], y_data[j]  # the x and y data for each coordinate set
                         self.thunder_bag[f'{prefix}{j}'] = Thunder(inp, x_data=x_data_,
                                                                    y_data=y_data_)  # make a thunder obj
@@ -85,26 +97,32 @@ class ThunderBag():
                         x_coords_, y_coords_ = x_coords[j], y_coords[j]
                         self.coordinates[f'{prefix}{j}'] = (
                             x_coords_, y_coords_)  # for each i we will have a list of tuples of x and y coords
-                elif '*' in data:
-                    filematches = glob(data)
-                    for j, file in enumerate(filematches):
+                elif '*' in data: # then we need to load all the files in the filepath
+                    filematches = glob(data) # this is a list of the matches
+                    for j, file in enumerate(filematches): # for each file
                         try:
                             self.thunder_bag[f'{prefix}{j}'] = self.create_thunder(file,
                                                                                    inp)  # make a thunder object for
                             # each file
                         except ParserError as e:
                             logging.warning(f"A Thunder object could not be created for the datafile: {file}, skipping")
-                else:
+                else: # its possible the user has passed in a list of thunder objects for us
                     try:
                         self.thunder_bag[str(i)] = self.create_thunder(data, inp)
                     except ParserError as e:
                         logging.warning(f"A Thunder object could not be created for the datafile: {file}, skipping")
-            else:
+            else: # we can't load any other way
                 logging.warning(f"wrong format in data list detected for {i}th element: {data}. Skipping element")
                 pass
 
     @staticmethod
     def create_thunder(file, inp):
+        """
+        create a thunder object given a path and an inp
+        :param file: string
+        :param inp: correct filetype for thunder obj, i.e. a dict or a thunder obj
+        :return:
+        """
         logging.debug('creating thunder object')
         arguments = deepcopy(inp)
         arguments['datapath'] = file
@@ -113,6 +131,15 @@ class ThunderBag():
 
     @staticmethod
     def read_map(file_address, x_ind, y_ind, x_coord_ind, y_coord_ind):
+        """
+        read a map file and return four lists for data and coordinates
+        :param file_address: what is the path to the file
+        :param x_ind: which column is x data
+        :param y_ind: which column is y data
+        :param x_coord_ind: which column is x coords
+        :param y_coord_ind: which column is y coords
+        :return:
+        """
         logging.debug('reading in mapscan file')
         x_data, y_data, _ = utili.load_data(file_address, x_ind, y_ind)  # load the data. note these drop nan rows but
         # does that for the whole filepath so will be consistent for data and coordinates
@@ -123,16 +150,25 @@ class ThunderBag():
 
     @staticmethod
     def bag_iterator(bag, func, input_args, sett_args):
-
-        bagkeys = tqdm(bag.keys())
+        """
+        this is a generic method which will apply a func with arguments input_args to a bag one by one, and set the
+        outputs to the sett_args attributes for each thunder object
+        :param bag: bag should be a dictionary of thunder objects
+        :param func: the function to apply
+        :param input_args: the arguments for the function
+        :param sett_args: what to set the output of the function as
+        :return:
+        """
+        bagkeys = tqdm(bag.keys()) # progress bar
         bagkeys.set_description(f"Operating with: {func.__name__}, to find: {sett_args}")
         for key in bagkeys:
-            thund = bag.get(key)  # bag[key]
-            kwargs_ = [getattr(thund, arg) for arg in input_args]
-            _, val = utili.apply_func((key, kwargs_), func)
+            thund = bag.get(key)  # bag[key] is the thunder object
+            kwargs_ = [getattr(thund, arg) for arg in input_args] # get the input arg attributes from thunder obj
+            _, val = utili.apply_func((key, kwargs_), func) # we return _ which we ignore and val which is a list of
+            # output values
             for i, arg in enumerate(sett_args):
                 try:
-                    setattr(thund, arg, val[i])
+                    setattr(thund, arg, val[i]) # set the data as an attribute to the thunder object
                 except KeyError as e:
                     if isinstance(val, dict):
                         setattr(thund, arg, val)
@@ -140,10 +176,15 @@ class ThunderBag():
                         print(f'Weird KeyError encountered: {e}')
 
     def choose_spectrum(self):
+        """
+        when doing user guided routines e.g. clipping data or background removal, run this to choose which data in the
+        bag will be the piece its based on
+        :return:
+        """
         logging.debug('choosing which thunder object will be the user specified data for bg etc')
         # then we have to choose which spectrum we want
         first = next(iter(self.thunder_bag.keys()))  # changed from list to iter
-        while True:
+        while True: # keep going until we break
             try:
                 first_thunder = self.thunder_bag[first]
                 fig, ax = plt.subplots()
@@ -161,9 +202,14 @@ class ThunderBag():
             except KeyError:
                 print('incorrect key, please enter a lower index value')
                 first = next(iter(self.thunder_bag.keys()))
-        self.first = first
+        self.first = first # save the user decision
 
     def clip_data(self, clips=None):
+        """
+        method to clip the data for each thunder object
+        :param clips: if none wil do a user guided routine, if a list of two elements will use those elements as the clips
+        :return:
+        """
         logging.debug('clipping data based on user specified plot')
         first_thunder = self.thunder_bag[self.first]
         clip_left, clip_right = utili.clip_data(getattr(first_thunder, 'x_data'), getattr(first_thunder, 'y_data'), clips)
@@ -172,6 +218,10 @@ class ThunderBag():
             setattr(thund, 'y_data', getattr(thund, 'y_data')[clip_left:clip_right])
 
     def bg_param_setter(self):
+        """
+        method for setting the parameters for the background for all the thunder objects in the bag
+        :return:
+        """
         logging.debug('setting backgrounds for all based on background of user specified plot')
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = self.thunder_bag[self.first]
@@ -185,16 +235,28 @@ class ThunderBag():
                 setattr(thund, 'scarf_params', params)  # set all the values to this
 
     def remove_backgrounds(self):
+        """
+        method to remove the background for each object, and save the output as y_data_bg_rm in each
+        :return:
+        """
         # do some checks
         self.bag_iterator(getattr(self, 'thunder_bag'), bg_remove.background_finder,
                          ('x_data', 'y_data', 'background', 'scarf_params'),
                          ('background', 'y_data_bg_rm', 'params'))
 
     def normalise_data(self):
+        """
+        method to normalise the data and save the normalised data
+        :return:
+        """
         self.bag_iterator(getattr(self, 'thunder_bag'), utili.normalise_all, ('y_data_bg_rm', 'background', 'y_data'),
                          ('y_data_bg_rm', 'background', 'y_data'))
 
     def find_peaks(self):
+        """
+        method to find peaks using a peakfinder routine and then set peak attributes
+        :return:
+        """
         logging.debug('setting peak no, centres and types based on user specified plot details')
         # add step to find bg parameters for first one and use for the rest.
         first_thunder = self.thunder_bag[self.first]
@@ -210,6 +272,10 @@ class ThunderBag():
             thund.peak_info_dict = peak_info_dict
 
     def peaks_adj_params(self):
+        """
+        method to adjust the input peak centres by finding peaks in the data and matching the closest ones to the input centres to speed up fitting
+        :return:
+        """
         for thund in self.thunder_bag.values():  # set these first values for all of them
             center_indices = utili.find_closest_indices(thund.x_data, thund.peak_info_dict['center']) # get the indices from the x centres
             center_indices = peak_finding.match_peak_centres(center_indices, thund.y_data) # match to the peakfinding cents
@@ -217,6 +283,11 @@ class ThunderBag():
             thund.peak_info_dict['center'] = peak_centres # set values
 
     def bound_setter(self, bounds=None):
+        """
+        set bounds for all the thunder objects, if no bounds are given then will use a bound finding routine
+        :param bounds: a dicitonary on bounds on the data
+        :return:
+        """
         logging.debug('setting bounds based on user provided bounds or found for user specified plot')
         if not bounds:
             first_thunder = self.thunder_bag[self.first]
@@ -226,11 +297,19 @@ class ThunderBag():
             setattr(thund, 'bounds', bounds)  # set values
 
     def fit_peaks(self):
+        """
+        fit the peaks for each of the thunder objects
+        :return:
+        """
         self.bag_iterator(getattr(self, 'thunder_bag'), peak_fitting.fit_peaks,
                          ('x_data', 'y_data_bg_rm', 'peak_info_dict', 'bounds', 'method', 'tol'),
                          ('specs', 'model', 'peak_params', 'peaks'))  # fit peaks
 
     def make_map_matrices(self):
+        """
+        once the data has been fit for all the thunder objects, make a map matrix from the coordinates of each of the thunder objects
+        :return:
+        """
         if not isinstance(self.coordinates, ndarray):
             coordinates_array = array(list(getattr(self, 'coordinates').values()))
         else:
@@ -252,6 +331,10 @@ class ThunderBag():
         self.Y_coords = Y_dict
 
     def make_fit_params(self):
+        """
+        fit_params is a dictionary with the details of the fits, make map matrices will use this dictionary to make maps of e.g. amplitude at each coordinate
+        :return:
+        """
         logging.debug('generating fit params')
         fit_params = {}
         first_thunder = self.thunder_bag.get(self.first)
@@ -265,6 +348,10 @@ class ThunderBag():
         self.fit_params = fit_params
 
     def get_fit_stats(self):
+        """
+        make a fit statistics dictionary with chisq etc for each thunder obj
+        :return:
+        """
         logging.debug('generating fit stats')
         stats = {'chisq': {}, 'reduced_chi_sq': {}, 'free_params': {}}
         for key, thund in self.thunder_bag.items():
@@ -277,6 +364,11 @@ class ThunderBag():
         self.stats = stats
 
     def save_failed_plots(self, dirname):
+        """
+        If any of the thunderobjects failed to fit then this will save those in dirname directory
+        :param dirname: directory to save in
+        :return:
+        """
         logging.debug('saving failed plots')
         for key, thund in self.thunder_bag.items():
             if not getattr(getattr(thund, 'peaks'), 'success'):
@@ -286,6 +378,12 @@ class ThunderBag():
                 thund.plot.close()  # close so memory is conserved.
 
     def save_all_plots(self, dirname, plot_unc=True):
+        """
+        method to save all the plots
+        :param dirname: directory to save in
+        :param plot_unc: bool, if True then also plots uncertainty
+        :return:
+        """
         for key, thund in self.thunder_bag.items():
             thund.plot_all(plot_unc=plot_unc)
             utili.save_plot(thund.plot, path=dirname,
@@ -297,5 +395,10 @@ class ThunderBag():
 
 
 def main(arguments):
+    """
+    function to build a thunderbag objects
+    :param arguments:
+    :return:
+    """
     bag = ThunderBag(deepcopy(arguments))  # load object
     return bag

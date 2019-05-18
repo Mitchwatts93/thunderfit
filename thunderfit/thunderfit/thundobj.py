@@ -22,6 +22,13 @@ class Thunder():
     """
 
     def __init__(self, input, x_data=None, y_data=None, e_data=None):
+        """
+        initialise all the attributes which will be set later
+        :param input: a dictionary of all user inputs to be set
+        :param x_data: the x_data np array
+        :param y_data: y data np array
+        :param e_data: error dat anp array
+        """
         self.input: Union[Thunder, Dict] = input
 
         self.x_ind: int = 0
@@ -61,7 +68,7 @@ class Thunder():
 
         if isinstance(input, Thunder):  # if only pass one but its already a thunder object then just use that
             self.overwrite_thunder(input)  # add all the details in depending on args
-        elif isinstance(input, dict):
+        elif isinstance(input, dict): # if its a dict then we pull all the values from it
             self.create_thunder(input)  # add all the details in depending on args
         else:
             raise TypeError('Cannot convert input to Thunder object')
@@ -73,6 +80,11 @@ class Thunder():
                                                                     self.y_ind)  # load the data
 
     def overwrite_thunder(self, inp):
+        """
+        Methods for creating a thunder object from another, pull everything out from it and set it as our attributes here
+        :param inp: a thunder object
+        :return:
+        """
         logging.debug('overwriting thund obj')
         thun = inp
 
@@ -105,16 +117,16 @@ class Thunder():
     def create_thunder(self, inp: Dict):
         """
         Used to create a thunder object given different input types
-        :param args: a,b,c depending on type of input and
+        :inp: a dictionary containing attributes we will asign to the current thunder obj
         :return: None, we modify the object unless a spec1d object is passed, in which case we return that
         """
         logging.debug('creating thund obj')
-        try:  # only continue if its e_ind missing
+        try:  # if e_ind is missing we don't reallt care
             self.e_ind = inp['e_ind']
         except KeyError as e:
             logging.info(f"KeyError: Missing field in the data dictionary: {e}")
 
-        try:  # If its the others you need to fail here
+        try:  # If of these are missing then need to fail here
             self.datapath = inp['datapath']
             self.x_ind = inp['x_ind']
             self.y_ind = inp['y_ind']
@@ -123,7 +135,8 @@ class Thunder():
 
         self.no_peaks = inp.get('no_peaks', self.no_peaks)
         self.background = inp.get('background', self.background)
-        # do some check on background here to set it to an np array
+        # todo: do some check on background here to set it to an np array
+
         self.scarf_params = inp.get('scarf_params', self.scarf_params)
 
         self.peak_info_dict = inp.get('peak_info_dict', self.peak_info_dict)
@@ -134,11 +147,21 @@ class Thunder():
         self.tol = inp.get('tol', self.tol)
 
     def clip_data(self, clips=None):
+        """
+        method to clip the data. if clips passed then will not be interactive
+        :param clips: if a two element list of numbers then will use, otherwise will interactively get clips
+        :return:
+        """
         clip_left, clip_right = utili.clip_data(getattr(self, 'x_data'), getattr(self, 'y_data'), clips)
-        setattr(self, 'x_data', getattr(self, 'x_data')[clip_left:clip_right])
+        # the cli_data func will return the INDICES of the data to clip so we can just do it below
+        setattr(self, 'x_data', getattr(self, 'x_data')[clip_left:clip_right]) # clip the data points
         setattr(self, 'y_data', getattr(self, 'y_data')[clip_left:clip_right])
 
     def remove_bg(self):
+        """
+        call the background_finder function and then set attributes from it
+        :return:
+        """
         background, y_data_bg_rm, params = bg_remove.background_finder(getattr(self, 'x_data'),
                                                                        getattr(self, 'y_data'),
                                                                        getattr(self, 'background'),
@@ -148,12 +171,20 @@ class Thunder():
         setattr(self, 'params', params)
 
     def normalise(self):
+        """
+        normalise the data by calling the appropriate func and then setting attributes
+        :return:
+        """
         y_data_bg_rm, background, y_data_norm = utili.normalise_all('y_data_bg_rm', 'background', 'y_data')
         setattr(self, 'background', background)
         setattr(self, 'y_data_bg_rm', y_data_bg_rm)
         setattr(self, 'y_data_norm', y_data_norm)
 
     def find_peaks(self):
+        """
+        find peaks interactively then set the peak positions. currently this relies on peaks with the center att
+        :return:
+        """
         no_peaks, peak_info_dict, prominence = \
             peak_finding.find_peak_details(getattr(self, 'x_data'), getattr(self, 'y_data_bg_rm'),
                                            getattr(self, 'no_peaks'),
@@ -166,12 +197,21 @@ class Thunder():
         setattr(self, peak_info_dict, peak_info_dict)
 
     def bound_setter(self, bounds=None):
+        """
+        set the bounds for the attributes. this is a dictionary which will be used later
+        :param bounds:
+        :return:
+        """
         if not bounds:
             bounds = peak_finding.make_bounds(getattr(self, 'x_data'), getattr(self, 'y_data'), getattr(self, 'no_peaks'),
                                               self.peak_info_dict)
         setattr(self, 'bounds', bounds)  # set values
 
     def fit_peaks(self):
+        """
+        call the peak fitting routine
+        :return:
+        """
         specs, model, peak_params, peaks = peak_fitting.fit_peaks(getattr(self, 'x_data'),
                                                                           getattr(self, 'y_data_bg_rm'),
                                                                           getattr(self, 'peak_info_dict'),
@@ -185,6 +225,13 @@ class Thunder():
 
     ## plot_all and fit_report need imporovements e.g. to check which attributes exists in the object
     def plot_all(self, ax=None, plot_unc=True):
+        """
+        plot all the peaks, background, original and bg subtracted data and uncertainty if plot_unc is True. Will save
+        this plot and self.plot which can be accessed later to either save or show the plots
+        :param ax: if you want to plot on an existing plot then pass the matplotlib ax obj
+        :param plot_unc: bool, if true will plot the uncertainties, if not then it won't
+        :return:
+        """
         logging.debug('plotting all for thund obj')
         ax, plt, fig = plotting.plot_fits(self.x_data, self.peaks.eval_components(), ax=ax)  # plot each component of the model
         ax, plt, fig = plotting.plot_background(self.x_data, self.background, ax=ax, fig=fig)  # plot the background supplied by user
@@ -209,6 +256,11 @@ class Thunder():
         return ax, fig
 
     def gen_fit_report(self):
+        """
+        generate a fit report which will be a dicitonary containing useful info such as chi sq etc and the errors
+        on each of the model attributes
+        :return:
+        """
         logging.debug('genertaing fit report for thund obj')
         self.fit_report = {mod_no: {} for mod_no in range(len(self.peak_info_dict['type']))}
 
@@ -217,8 +269,6 @@ class Thunder():
         self.fit_report['free_params'] = self.free_params
         self.fit_report['p_value'] = 'not implemented'
 
-        ## individual parameter data
-        param_info = {"center": "center", "amplitude": "amplitude", "sigma": "sigma", "fwhm": False, "height": False}
         for parameter, param_obj in self.peaks.params.items():
             model_no = int(findall(r'\d+', parameter)[0])
             param_type = parameter.split('__')[1]
@@ -238,5 +288,10 @@ class Thunder():
 
 
 def main(arguments):
+    """
+    if you call this then it will create and return the thunder obj for you
+    :param arguments: a thunder object or a dicitonary to initialise the thunder obj
+    :return:
+    """
     thunder = Thunder(deepcopy(arguments))  # load object
     return thunder

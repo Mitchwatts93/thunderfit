@@ -35,32 +35,7 @@ To use ramananalyse::
 Using anaconda:
 ^^^^^^^^^^^^^^^
 
-OLD INSTRUCTIONS BELOW FOR REFERENCE ONLY. ANACONDA NOT CURRENTLY SUPPORTED.
-First have conda installed: https://www.anaconda.com/distribution/
-Be sure to install python >=3.6
-
-(optional - recommended): 
-    Create a new environment in python so that packages aren't corrupted. Maintenance of this package won't be great so dependencies are set to specific releases.
-
-    1. Choose a directory you will store your python environment in. recommended to be somewhere convenient to access
-    2. `conda create --n thunder python=3.6`
-    3. When it comes time to use your environment (when installing the package or when using it):
-
-        i. `conda activate thunder`
-        ii. (Do this step whenever you're finished using thunderfit) to deactivate just type `conda deactivate`
-
-Now with you environment active (if using one) type::
-
-    conda skeleton pypi thunderfit
-    conda build thunderfit
-
-You can check the correct script for ramananalyse (or any other script in future releases) is present by typing::
-
-    command -v ramananalyse
-
-To use ramananalyse::
-
-    ramananalyse --param_file_path path_to_param_file --datapath path_to_data_file
+ANACONDA NOT CURRENTLY SUPPORTED.
 
 Windows:
 --------
@@ -93,10 +68,10 @@ Using windows subsystem for linux (WSL):
 Follow instructions for Mac/Linux
 
 
-Creating a thunderfit object
-============================
+Using Thunderfit
+================
 
-To create a thunderfit object, call the Thunder class in the thundobj module. This class has many inputs currently, but is going to be cleaned up in the near future. Currently the primary usage of this code is via the ramananalyse command which is created. This takes in two main arguments: --param_file_path and --datapath (it also takes in many more object but this will also be cleaned up soon). The datapath argument is self explanatory, and is just a relative path to the data to be analysed. The --param_file_path argu,emt specifies a relative path to a parameters file, which contains all the Thunder class variables needed. NOTE: not all inputs are passified yet so please be careful with input and follow guidelines below.
+To create a thunderfit object, call the Thunder class in the thundobj module with correct inputs. See code for this.
 
 Alternatively a thunderfit object can be created by passing a thunderfit object to the Thunder class, and all attributes will be copied into a new object.
 
@@ -105,47 +80,87 @@ The param file
 
 The param file is in json format and an example is below:::
 
-    {"x_ind" : 0, "y_ind" : 1, "e_ind" : null, "datapath": "data.txt", "no_peaks":3, "background": "SCARF", "scarf_params":{"rad":70, "b":90, "window_length":51, "poly_order":3}, "peak_types": [], "peak_centres": [], "peak_widths":[], "peak_amps":[], "tightness":"med", "bounds" : {"centers":null,"widths":null,"amps":null}}
+    {"x_ind": 2, "y_ind": 3,"x_coord_ind":1, "y_coord_ind":0, "map": true, "background": "no",
+    "clip_data": true, "clips":[3100, 1100], "method": "leastsq", "tol": 0.001, "no_peaks": 4,
+    "peak_info_dict":
+    {
+    "type": ["LorentzianModel", "LorentzianModel", "LorentzianModel", "PowerLawModel", "LinearModel"],
+    "center": [1350, 1590, 2700],
+    "sigma": [15, 10, 30],
+    "height": [100, 1000, 500],
+    "amplitude":[null,null,null,0],
+    "exponent":[null,null,null,1],
+    "slope":[null,null,null,null,0],
+    "intercept":[null,null,null,null,0]
+    },
+    "bounds":
+    {
+    "center": [[1330, 1370], [1570, 1610], [2680, 2730]],
+    "sigma": [[8, 40], [10, 30], [30, 60]],
+    "amplitude": [[0.0001,null], [0.0001,null], [0.0001,null]]
+    }
+    }
 
-Arguments are:
+Possible Arguments are:
 
 1. x_ind - the data should be in a csv format only currently. x_ind speicifies which column of the csv data is the x data
 2. y_ind - the data should be in a csv format only currently. y_ind speicifies which column of the csv data is the y data
 3. e_ind - (optional) the data should be in a csv format only currently. e_ind speicifies which column of the csv data is the e data. If not specified then only x and y data will be loaded
-4. datapath - the relative path to the data. Data should be in csv format. note and nan rows will be removed.
-5. no_peaks - the number of peaks to be fitted. Can either be null or can be an integer. Note that increasing the number of peaks without specifying bounds etc may result in a bad fit
-6. yfit - null (I think no longer used - will be cleaned up in future version)
-7. background - either a numpy array (of same length as the data! - data with nan rows removed!) containing numerical values or a string: "SCARF" for a rolling ball-GS smoothed background to be fitted (see parameters below or will be interactive) reference in relevant functions or "OLD" which uses a numerical method to fit the background, which usually struggles somewhat - need to put reference in for this method soon. Can also be "no" if no backgorund subtraction is wanted.
-8. scarf_params - a dictionary containing parameters for the "SCARF" background method. if null then it will launch an interactive procedure for choosing the parameters which could be passed in here.
+
+4. x_coord_ind - which column of the map has the x coordinates
+5. y_coord_ind - which column of the map has the x coordinates
+6. map - is this a mapscan? defaults to no
+7. background - either "SCARF" or "no" to subtract either a scarf generated background or no background before fitting (note using e.g. linear models and powerlaw models is a good way to do a background simultaneously with the peaks)
+8. clip_data - true or false. should the data be clipped? defaults to false
+9. clips - if the data is being clipped this will be read. should be a list, e.g. `[10,20]` where the two elements are the left clip and right clip of the data. Note the order is important and if the data file has x read in backwards then the first number should be the right clip
+10. method - what type of fitting method to use. uses same names as lmfit methods
+11. tol - what tolerance to use. currently defaults to same as lmfit and tol is set for xtol and ftol
+12. no_peaks - how many peaks to fit (will be depreciated soon)
+13. peak_info_dict - this is a dictionary of information about the models to fit. the very minimum is to include type as a key. pass in the format {"key": value}. the value for all should be a list `[]` which is comma seperated. note that the element number will correspond to the model. if its not appropriate for that model type null. default is to not set parameters for models unless specified
+
+    a. type - a key to specify models. the value. currently most of lmfits models are supported. expression model and split lorentzian currently aren't
+    b. model parameters - see lmfit built in models to see which parameters can be passed
+
+14. bounds - this has the same format as peak_info_dict except the values should be a list of list, with each sublist being two elements for a lower and upper bound on that parameter
+
+    a.model parameters - [[low,upp],[low,upp]] replace low and upp with numerical bound values
+
+15. datapath - the relative path to the data. Data should be in csv format. note and nan rows will be removed. - if passed into command line then that always takes precedence.
+16. scarf_params - a dictionary containing parameters for the "SCARF" background method. if null then it will launch an interactive procedure for choosing the parameters which could be passed in here.
 
     a. rad - a number which corresponds to the radius of the rolling ball
     b. b - a number which corresponds to the shift in the background generated by rolling ball method
     c. window_length - a parameter for Savgol filter (current implementation uses scipy savgol_filter from signal)
     d. poly_order - a parameter for Savgol filter (current implementation uses scipy savgol_filter from signal)
 
-9. peak_types - a list of peak types, these will be models used by lmfit, see documentation for lmfit for supported models, currently using "LorentzianModel", "GaussianModel" or "VoigtModel" only others not implemented yet. VoigtModel will have gamma set as sigma for now. if less are specified than no_peaks then these will be ignored. if more are specified then will clip the list to [:no_peaks]
-10. peak_centres - a list of peak centre values, these must be the x values, not the indices of the peaks from y_data. if less are specified than no_peaks then these will be ignored. if more are specified then will clip the list to [:no_peaks]
-11. peak_widths - a list of widths. if less are specified than no_peaks then these will be ignored. if more are specified then will clip the list to [:no_peaks]
-12. peak_amps - a list of amplitudes. if less are specified than no_peaks then these will be ignored. if more are specified then will clip the list to [:no_peaks]
-13. tightness - either "low" "med" or "high" which controls how relaxed the bounds will be around the peaks found or specified if bounds are not given
-14. bounds - a dictionary of the following:
+17. normalise - bool - should the data be normalised
+18. bg_first_only - bool- if finding a background with a user guided routine, should the routine only be for the first spectra
+19. bounds_first_only - bool - if finding bounds interactively should do this for only first
+20. peakf_first_only - bool - find peaks interactively only for first
+21. find_peaks - find peaks interactively
+22. adj_params - should the parameters be adjusted for each spectra e.g. by peak finding to slightly move the guess and improve covergence time?
+23. find_bounds - interactively find the bounds
+24. make_gif - make a gif of all the fits
+25. peak_finder_type - what type of peak finding should be performed?
 
-    a. centers - peak center bounds. a list of tuples, which each tuple is length=2. Each tuple contains the low and high bounds for each peak - if an empty list, list not the same length as no_peaks or null then bounds will automatically be generated.
-    b. widths - peak width bounds. a list of tuples, which each tuple is length=2. Each tuple contains the low and high bounds for each peak - if an empty list, list not the same length as no_peaks or null then bounds will automatically be generated.
-    c. amps - peak amplitude bounds. a list of tuples, which each tuple is length=2. Each tuple contains the low and high bounds for each peak - if an empty list, list not the same length as no_peaks or null then bounds will automatically be generated.
 
-The very minimum which can be supplied is the datapath, x_ind and y_ind so that the data can be loaded. If this isn't specified in param file (or on command line by --datapath --x_ind and --y_ind) then it will fail.
+Scripts
+=======
+
+The below scripts will install with Thunderfit by default. They are useful for either analysing a single Raman spectra, a mapscan or generating a parameters file with user guided routine.
 
 The ramananalyse script
 -----------------------
 
-Currently this script processes user inputs and parses everything, it then creates a new directory in the current directory named analysed_{time}. This will contain all the analysis data (and in a future version also a log file - currently logs are output directly to user). Then it creates a Thunder object based on input and params file. The background and the data with the background removed are then saved as variables in the object. Currenly it doesn't normalise but in the future there will be an option to perform normalisation on the background subtracted data, and then on the generated background and original data in order to make a nice plot at the end (currently only svn normalisation is implemented and bg and original data use the mean and stddev from the background subtracted data).  Then it determines if peak information has been passed by the user, and finds the peak information automatically or just uses the information if correct. Then bounds are either used or generated for these peaks. Then peaks are fitted to the data using the peak information and the bounds information (and of course the y data with the bg removed). Then the original data, fitted peaks, background, the fit sum and the uncertainties on the fitted peaks (if available - will be improved in future release) are all plotted using matplot lib and the plot object returned. A fit report is then generated. The plots are then saved in the generated directory from earlier, as is the fit report and the Thunder object (using dill).
+needs user input for the param file location at a minimum
+
+Currently this script processes user inputs and parses everything, it then creates a new directory in the current directory named analysed_{time}. This will contain all the analysis data . Then it creates a Thunder object based on input and params file. The background and the data with the background removed are then saved as variables in the object. Then peaks are fitted to the data using the peak information and the bounds information (and of course the y data with the bg removed). Then the original data, fitted peaks, background, the fit sum and the uncertainties on the fitted peaks are all plotted using matplot lib and the plot object returned. A fit report is then generated. The plots are then saved in the generated directory from earlier, as is the fit report and the Thunder object (using dill).
 
 The map_scan script
 -------------------
 
-Further details coming soon. Run in the same way as:
+same to run as ramananalyse
 
-mapscan --param_file_path ../bag_params.txt --datapath "['./map.txt',]"
+Further details coming soon. Run like:
 
-where the list within quotes at the end should contain a comma seperated list of files to analyse. It will assume a map so currently only works with one file which is a map file from Raman.
+mapscan --param_file_path ../bag_params.txt --datapath './map.txt'

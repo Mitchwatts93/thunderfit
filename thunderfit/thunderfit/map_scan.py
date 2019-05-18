@@ -89,7 +89,7 @@ def main():
         bag.bound_setter()
     else:
         logging.info("setting all bounds to either user supplied or preset: {'amplitude': False, 'center': False, 'sigma': False}")
-        bounds = arguments.get('bounds', {'amplitude': False, 'center': False, 'sigma': False})  # should really do this in the thunderobj
+        bounds = arguments.get('bounds', {})  # should really do this in the thunderobj # also don't set as these presets!
         bag.bound_setter(bounds)
 
     ###### fit peaks

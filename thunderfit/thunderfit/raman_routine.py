@@ -13,9 +13,9 @@ from .background import background_removal as bg_remove
 
 def main():
 
-    args = parsing.parse_user_args()
+    args = parsing.parse_user_args() #
 
-    arguments = parsing.using_user_args(args)
+    arguments = parsing.using_user_args(args) #
 
     # save a plot of the figure and the thunder object
     file_name = arguments['datapath']

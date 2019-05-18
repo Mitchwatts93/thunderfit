@@ -11,6 +11,13 @@ from sklearn.mixture import GaussianMixture
 
 #AG1/AG2 ratio histogram
 def plot_ag1_ag2_ratio(bag, key='center', path='./',):
+    """
+
+    :param bag:
+    :param key:
+    :param path:
+    :return:
+    """
     foursix_vals = np.array([fit[5] for fit in bag.fit_params[key].values()])
     threesix_vals = np.array([fit[4] for fit in bag.fit_params[key].values()])
     u_vals = threesix_vals/foursix_vals
@@ -25,6 +32,14 @@ def plot_ag1_ag2_ratio(bag, key='center', path='./',):
 
 #histogram for key at each peak # commented out is the gaussian mixture model for this
 def plot_histogram(bag, key='center', gmm=False, path='./'):
+    """
+
+    :param bag:
+    :param key:
+    :param gmm:
+    :param path:
+    :return:
+    """
     for i in range(len(bag.fit_params[key]['0'])):
         key_ = key
         u_vals = np.array([fit[i] for fit in bag.fit_params[key].values()])
@@ -49,6 +64,13 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 def corr_all_mats(bag, key='center', path='./'):
+    """
+
+    :param bag:
+    :param key:
+    :param path:
+    :return:
+    """
     peaks = bag.map_matrices[key].keys()
     for pair in itertools.combinations(peaks, 2):
         map_0 = bag.map_matrices[key][pair[0]]
@@ -59,4 +81,10 @@ def corr_all_mats(bag, key='center', path='./'):
                                f"{np.nanmean(bag.map_matrices['center'][pair[1]])}.svg"), transparent=True, format='svg')
 
 def corr_mats(mat1,mat2):
+    """
+
+    :param mat1:
+    :param mat2:
+    :return:
+    """
     return np.square(mat1-mat2)
