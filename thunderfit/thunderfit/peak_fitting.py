@@ -6,6 +6,12 @@ from numpy import nan
 from . import utilities as utils
 
 def get_tols(method, tol):
+    """
+    quick function to set the tolerances as a dictionary depending on the method being used
+    :param method: str: method to use
+    :param tol: tolerance as a float
+    :return:
+    """
     if method in ['leastsq', 'least_squares']:
         tols = {'ftol': tol, 'xtol': tol}  # warning: need to experiment with these/allow control maybe?
     else:
@@ -13,40 +19,58 @@ def get_tols(method, tol):
     return tols
 
 def prep_algo(method, tols):
+    """
+    depending on the algorithm either set the tolerances, give a warning or set a parameter which is depreciated to True.
+    will be overhauled in future
+    :param method: str: method to use
+    :param tols: float tolerance
+    :return:
+    """
     if method == 'basinhopping' or method == 'ampgo':
         print('Warning: This is a very slow but thorough algorithm')
     if method == 'differential_evolution':
         all_bounds = True
-    if method in ['leastsq', 'least_squares', 'nelder', 'cobyla']:
+    if method in ['leastsq', 'least_squares', 'nelder', 'cobyla']: # do this for all of them??
         tols  = get_tols(method, tols)
     return tols
 
 def fit_peaks(x_data, y_data, peak_info_dict, bounds, method='leastsq', tol=0.0000001):
+    """
+    function which does the peak fitting.
+    :param x_data: np array of x data
+    :param y_data: np array of y data
+    :param peak_info_dict: dictionary containing information about the peaks which will be used
+    :param bounds: bounds with same keys as peak_info_dict and each is a list of tuples containing lower and upper bounds
+    :param method: str: minimisation method to use
+    :param tol: tolerance on minimisation.
+    :return: specifications dictionary for the model used, the model object iteself, the parameters of the best fitted
+    values and the model_result object
+    """
     impl_methods = ['leastsq', 'least_squares', 'nelder', 'lbfgsb', 'powell', 'cg', 'cobyla', 'bfgsb',
                     'differential_evolution', 'basinhopping', 'ampgo']
     if not method in impl_methods:
         raise ValueError(f"The method supplied is not supported. Available methods: {impl_methods}")
     logging.debug(f'fitting peaks:  {peak_info_dict}')
 
-    tols = prep_algo(method, tol)
-    model_specs = build_specs(peak_info_dict, bounds)
-    model, peak_params = generate_model(model_specs)
+    tols = prep_algo(method, tol) # prep for the fitting
+    model_specs = build_specs(peak_info_dict, bounds) # build a correctly formatted dictionary for fitting
+    model, peak_params = generate_model(model_specs) # generate the composite model for fitting
 
     if method in ['leastsq', 'least_squares', 'nelder', 'cobyla']:
-        peaks = model.fit(y_data, peak_params, x=x_data, method=method, fit_kws=tols)
-        if not peaks.success:
+        peaks = model.fit(y_data, peak_params, x=x_data, method=method, fit_kws=tols) # fit the model to the data
+        if not peaks.success: # then raise tolerance and try again
             print('peaks failed to fit, raising tolerance by one order magnitude and trying again')
             tols = {key:value*10 for key, value in tols.items()} # try raising the tolerance if it fails by one order
             peaks = model.fit(y_data, peak_params, x=x_data, method=method, fit_kws=tols)
     else:
         peaks = model.fit(y_data, peak_params, x=x_data, method=method)
 
-    peak_params = peaks.best_values
-    if not peaks.success:
+    peak_params = peaks.best_values # what are the best parameters used # shoudl create a function as an abstraction barrier for this
+    if not peaks.success: # then didn't fit for some reason, so set everything to nan in results
         print('peaks failed to fit')
         peak_params = {key: nan for key in peak_params}
 
-    return model_specs, model, peak_params, peaks
+    return model_specs, model, peak_params, peaks # really should clean this up but allows flexibility for user by passing the actual objects back too
 
 def safe_list_get (l, idx, default):
     """fetch items safely from a list, if it isn't long enough return a default value"""
@@ -57,6 +81,14 @@ def safe_list_get (l, idx, default):
 
 ##### Call this with correct arguments, should always call with all the arguments!
 def build_specs(peak_info_dict: dict={}, bounds: dict={}):
+    """
+    should be depreciated in future. can get by with bypassing this, currently acts to cleanse inputs so maybe could be
+    shortened/changed with that goal in mind
+    :param peak_info_dict:
+    :param bounds:
+    :return:
+    """
+
     """Build a specs list, which has the peak specification details for each element corresponding to a peak to fit.
     Note that each element is a dictionary containing either None, or a value for that peak i.e. the parameter guess,
     or the bounds for that value. Only some will be valid for each peak type, which will be handled elsewhere"""
@@ -169,6 +201,11 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     return specs
 
 def generate_model(model_specs):
+    """
+    generate a composite model given information of the models to create, their guesses of params and bounds on parameters
+    :param model_specs: a dictionary containing all the info on the model
+    :return: a composite lmfit model
+    """
     logging.debug('generating model specs')
     composite_model = None
     params = None
@@ -195,6 +232,12 @@ def generate_model(model_specs):
     return composite_model, params
 
 def decide_model_actions(spec, model):
+    """
+    either set the param hints or the bounds depending on the spec dict
+    :param spec: dictionary of the params to be set on the model
+    :param model: lmfit model object
+    :return: the updated model object
+    """
     for param_key, param_value in spec['params'].items():
         if param_value: # then set this value
             model.set_param_hint(param_key, value=param_value)

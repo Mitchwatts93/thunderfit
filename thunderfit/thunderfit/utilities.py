@@ -20,37 +20,78 @@ from . import normalisation
 
 # tools
 def save_thunder(obj, path, filename='thunder.d'):
+    """
+    save a thunder object to a path using the dill package
+    :param obj:
+    :param path:
+    :param filename:
+    :return:
+    """
     logging.debug(f'saving using dill {filename}')
     d_dump(obj, open(join(path, filename), 'wb'))
 
 
 def load_thunder(path):
+    """
+    load a dill dumped object
+    :param path:
+    :return:
+    """
     logging.debug('loading using dill')
     obj = d_load(open(path, 'rb'))
     return obj
 
 
-def save_plot(plot, path='.', figname='figure.png'):
+def save_plot(plot, path='.', figname='figure.svg'):
+    """
+    save a plot as a svg
+    :param plot:
+    :param path:
+    :param figname:
+    :return:
+    """
     logging.debug(f'saving figure {figname}')
     plot.savefig(join(path, figname), transparent=True, format='svg')
 
 
 def save_fit_report(obj, path, filename="report.json"):
+    """
+    save a fit report dictionary as a json
+    :param obj:
+    :param path:
+    :param filename:
+    :return:
+    """
     logging.debug(f'saving report {filename}')
     j_dumps(obj, open(join(path, filename), 'w'), indent=4)
 
 
 def find_closest_indices(list1, list2):
+    """
+    given two lists returns list of indices indicating which indices in list 1 match each index in list 2. i.e. index 0
+    of the returned list indicates which index in list 1 matches index 0 in list 2
+    :param list1: a list of numbers
+    :param list2: a list of numbers
+    :return: a list of indices of matches
+    """
     try:
         list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(list1[i] - cent))
-                                    for cent in list2]
+                                    for cent in list2] #  the lambda function is what min uses
     except ValueError:
-        print('this dataset has no peaks!')
+        print('this dataset has no values!')
         return
     return list_of_matching_indices
 
 
 def normalise_all(y_bg_rem, bg, y_raw):
+    """
+    given data with background removed, a background and the raw data, normalise the data with the bg removed and then
+    normalise the others according to this normalisation (i.e. use the mean and std from that)
+    :param y_bg_rem: np array of data after bg removed
+    :param bg: np array of bg
+    :param y_raw: np array of data before bg removed
+    :return: data np arrays normalised by svn normalisaiton
+    """
     logging.debug('normalising many objects')
     y_data_bg_rm, (mean_y_data, std_dev) = normalisation.svn(y_bg_rem)  # normalise the data
     background, _ = normalisation.svn(bg, mean_y_data, std_dev)  # normalise with data from bg subtracted data
@@ -66,6 +107,12 @@ def safe_list_get(l, idx, default):
         return default
 
 def sharpening_routine(x_data, y_data):
+    """
+    a function to run a user guided routine to sharpen data using peak_sharpening function
+    :param x_data: np array of x data
+    :param y_data: np array of y data
+    :return: y_data sharpened by user chosen factors
+    """
     sharpening_factor = (0, 0)
     res_enhanced = y_data
     while True:
@@ -91,6 +138,13 @@ def sharpening_routine(x_data, y_data):
 
 
 def peak_sharpening(y_data, _type, sharpening_factor):
+    """
+    function to sharpen peaks. can use power or derivative methods
+    :param y_data: np array of y data
+    :param _type: the type of sharpening to be used
+    :param sharpening_factor: the factors to sharpen with
+    :return: the data sharpened
+    """
     if _type == 'power':
         res_enhanced = y_data ** sharpening_factor[0]  # raise to the power
     elif _type == 'deriv':
@@ -108,8 +162,12 @@ def peak_sharpening(y_data, _type, sharpening_factor):
 # user inputs and loading etc
 def load_data(datapath, x_ind, y_ind, e_ind=None):
     """
-    load in data as a pandas df - save by modifying self.data, use object params to load
-    :return: None
+    load in data as an np arra. can load from a csv or hs5 pandas
+    :param datapath: where to get data from
+    :param x_ind: which column to find x data
+    :param y_ind: which column to find y data
+    :param e_ind: optional, which column to find error data
+    :return: np arrays of the data loaded with nan values dropped across all values (note might break with error values)
     """
     logging.debug('loading data')
     if '.h5' in datapath:  # if the data is already stored as a pandas df
@@ -141,6 +199,15 @@ def load_data(datapath, x_ind, y_ind, e_ind=None):
 
 
 def map_unique_coords(x_data, y_data, x_coords, y_coords):
+    """
+    function to get the unique coordinate values out from np arrays of data and coordinates
+    :param x_data:np array of x data
+    :param y_data: np array of y data
+    :param x_coords: np array of x coordinates, index corresponds to x and y data
+    :param y_coords: np array of y coordinates, index corresponds to x and y data
+    :return: lists of np arrays, each element matches, x_coords and y_coords contain lists of numbers only. so e.g.
+    index 0 of all has the x and y coordinates in coords lists at 0, and x and y data in those lists at 0 as np arrays
+    """
     logging.debug('parsing coordinates')
     data = vstack((x_coords, y_coords, x_data, y_data)).transpose()  # now have columns as the data
     df = pd.DataFrame(data=data, columns=['x_coords', 'y_coords', 'x_data', 'y_data'])
@@ -220,6 +287,13 @@ def make_dir(dirname, i=1):
 
 
 def clip_data(x_data, y_data, clips=None):
+    """
+    given data either clip it or run a user guided routine to clip it
+    :param x_data: np array of x data
+    :param y_data: np array of y data
+    :param clips: either none or a list of two values which are left and right clips in terms of x values
+    :return: the indices of the clips to use
+    """
     logging.debug('clipping data')
     if clips:
         clip_left, clip_right = clips
@@ -255,6 +329,12 @@ def clip_data(x_data, y_data, clips=None):
 
 
 def apply_func(key_kwargs_, func):
+    """
+    given some keywords and a function call the function
+    :param key_kwargs_: a tuple of (key, args) to use
+    :param func: function to call
+    :return: the key for this and the value returned from calling the func
+    """
     key = key_kwargs_[0]
     kwargs_ = key_kwargs_[1]
     val = func(*kwargs_)
@@ -262,6 +342,11 @@ def apply_func(key_kwargs_, func):
 
 
 def setup_logger(log_name):
+    """
+    function to setup a logger to save to file
+    :param log_name:
+    :return:
+    """
     curr_time = strftime('%d_%m_%Y_%l:%M%p')
     log_filename = f"{log_name}_{curr_time}.log"
     logging.getLogger().setLevel(logging.DEBUG)
@@ -273,6 +358,12 @@ def setup_logger(log_name):
 
 
 def gif_maker(bag, filename):
+    """
+    function to make a gif of all the plots (with no uncertainty) and save it at filename
+    :param bag: a dictionary of the thunder objects which have been fit etc and are to be plotted
+    :param filename: where to save the gif
+    :return:
+    """
     bags = iter(bag.values())
 
     def update(i):

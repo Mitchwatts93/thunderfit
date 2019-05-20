@@ -4,6 +4,10 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import logging
 
+"""
+These functions all plot slightly different things, in future these will be combined into one or two functions and cleaned up
+for now they are fairly self explanatory so no details docstrings added
+"""
 
 # todo fix the assertions in these
 def plot_data(x, y, fig=False, ax=False, line='r-', linethickness=0.5):
