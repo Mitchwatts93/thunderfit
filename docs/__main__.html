@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>__main__.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>__main__.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <p>thunderfit.<strong>main</strong>: executed when thunderfit directory is called as script.
+from .thundobj import main
+import utilities as utili</p>
+<p>import argparse
+import logging
+LOGGER = logging.getLogger(<strong>name</strong>)
+LOGGER.setLevel(logging.INFO)
+import time
+import os</p>
+<p>parser = argparse.ArgumentParser(
+    description=&rsquo;fit peaks and background to the given data given a set of parameter&rsquo;
+)
+parser.add_argument(&lsquo;&ndash;param_file_path&rsquo;, type=str, default=&rsquo;./params.txt&rsquo;,
+                    help=&rsquo;input filepath to param file, if you want to use it&rsquo;)
+parser.add_argument(&lsquo;&ndash;x_label&rsquo;, type=str, default=&rsquo;x_axis&rsquo;,
+                    help=&rsquo;the label for independent variables&rsquo;)
+parser.add_argument(&lsquo;&ndash;y_label&rsquo;, type=str, default=&rsquo;y_axis&rsquo;,
+                    help=&rsquo;the label for dependent variables&rsquo;)
+parser.add_argument(&lsquo;&ndash;e_label&rsquo;, type=str, default=&rsquo;y_error&rsquo;,
+                    help=&rsquo;the label for uncertainties in y&rsquo;)
+parser.add_argument(&lsquo;&ndash;x_ind&rsquo;, type=int, default=0,
+                    help=&rsquo;the column in data which is the independent data&rsquo;)
+parser.add_argument(&lsquo;&ndash;y_ind&rsquo;, type=int, default=1,
+                    help=&rsquo;the column in data which is the dependent data&rsquo;)
+parser.add_argument(&lsquo;&ndash;e_ind&rsquo;, type=Union[int, None], default=None,
+                    help=&rsquo;the column in data which is the independent data uncertainties&rsquo;)
+parser.add_argument(&lsquo;&ndash;datapath&rsquo;, type=str, default=&rsquo;./data.txt&rsquo;,
+                    help=&rsquo;relative path to the datafile from where python script is called&rsquo;)
+parser.add_argument(&lsquo;&ndash;user_params&rsquo;, type=Dict, default={&lsquo;yfit&rsquo;: None, &lsquo;background&rsquo;: None, &lsquo;peak_types&rsquo;: [],
+                        &lsquo;peak_centres&rsquo;: [], &lsquo;peak_widths&rsquo;:[], &lsquo;peak_amps&rsquo;: [], &lsquo;chisq&rsquo;: None, &lsquo;free_params&rsquo;: None,
+                                                      &lsquo;p_value&rsquo;:None, &lsquo;tightness&rsquo;:None},
+                    help=&rsquo;the fit data as specified in the Thunder <strong>init</strong>&rsquo;)
+args = parser.parse_args()  # this allows us to now use them all</p>
+<p>if args.param_file_path: # if there is a params file then use it
+    LOGGER.info(&lsquo;Using params file&rsquo;)
+    arguments = utili.parse_param_file(args.param_file_path) # parse it
+else:
+    print(&lsquo;not using params file&rsquo;)
+    arguments = utili.parse_args(args) # else use argparse but put in dictionary form</p>
+<p>curr_time = time.localtime(time.time())
+dirname = utili.make_dir(f&rsquo;analysed_{curr_time}&rsquo;)  # make a dict for the processed data to be saved in</p>
+<p>thunder = main(arguments)</p>
+<h1>save a plot of the figure and the thunder object</h1>
+<p>dataname = os.path.basename(arguments[&lsquo;datapath&rsquo;])
+utili.save_plot(thunder.plot, path=dirname, figname=f&rdquo;{dataname}.svg&rdquo;)
+utili.save_thunder(thunder, path=dirname, filename=f&rdquo;{dataname}.p&rdquo;)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">fit_data</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{dataname}_report.json&quot;</span><span class="p">)</span><span class="s2">&quot;&quot;&quot;</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

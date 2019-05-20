@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>model_creation.py</title>
+  <link rel="stylesheet" href="pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>model_creation.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">make_gauss_or_lor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">all_bounds</span><span class="p">):</span>
+    <span class="n">w_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;sigma&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">w_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;sigma&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">w_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">w_max</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;center&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">x_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">x_max</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">all_bounds</span><span class="p">:</span>  <span class="c1"># for differential_evolution algorithm this is needed</span>
+        <span class="n">y_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;amplitude&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">y_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">y_max</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># otherwise we don&#39;t put any bounds on</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;amplitude&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">model</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">make_split_lor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">all_bounds</span><span class="p">):</span>
+    <span class="n">w_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;sigma&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">w_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;sigma&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">w_r_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;sigma_r&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">w_r_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;sigma_r&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;center&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">x_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;sigma&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">w_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">w_max</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;sigma_r&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;sigma_r&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">w_r_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">w_r_max</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;center&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">x_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">x_max</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">all_bounds</span><span class="p">:</span>  <span class="c1"># for differential_evolution algorithm this is needed</span>
+        <span class="n">y_min</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">y_max</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[</span><span class="s1">&#39;bounds&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;amplitude&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="n">y_min</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">y_max</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># otherwise we don&#39;t put any bounds on</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">set_param_hint</span><span class="p">(</span><span class="s1">&#39;amplitude&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">spec</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">][</span><span class="s1">&#39;amplitude&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>
