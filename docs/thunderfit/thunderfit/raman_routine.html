@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>raman_routine.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>raman_routine.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">rename</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">parsing</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_finding</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_fitting</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">thundobj</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span>
+<span class="kn">from</span> <span class="nn">.background</span> <span class="kn">import</span> <span class="n">background_removal</span> <span class="k">as</span> <span class="n">bg_remove</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <pre><code>script to run analysis on a single raman spectra. may need updating to be more like map_scan
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">args</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">parse_user_args</span><span class="p">()</span>
+
+    <span class="n">arguments</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">using_user_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>save a plot of the figure and the thunder object</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">file_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
+    <span class="n">log_filename</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">setup_logger</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;creating thunder obj&#39;</span><span class="p">)</span>
+    <span class="n">thunder</span> <span class="o">=</span> <span class="n">thundobj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span> <span class="c1"># create a Thunder object</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <h3>clip data</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;clipping data&#39;</span><span class="p">)</span>
+        <span class="n">clip_left</span><span class="p">,</span> <span class="n">clip_right</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">clip_data</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">thunder</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">thunder</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+        <span class="n">thunder</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data</span> <span class="o">=</span> <span class="n">thunder</span><span class="o">.</span><span class="n">x_data</span><span class="p">[</span><span class="n">clip_left</span><span class="p">:</span><span class="n">clip_right</span><span class="p">],</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data</span><span class="p">[</span><span class="n">clip_left</span><span class="p">:</span><span class="n">clip_right</span><span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <h3>subtract background</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting and subtracting bg&#39;</span><span class="p">)</span>
+    <span class="n">thunder</span><span class="o">.</span><span class="n">background</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">bg_remove</span><span class="o">.</span><span class="n">background_finder</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data</span><span class="p">,</span>
+                                                                           <span class="n">thunder</span><span class="o">.</span><span class="n">background</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">scarf_params</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>determine the background</p>
+<h3>normalise data</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">normalise</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;normalising data&#39;</span><span class="p">)</span>
+        <span class="n">thunder</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">background</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data_norm</span> <span class="o">=</span> \
+                                                 <span class="n">utili</span><span class="o">.</span><span class="n">normalise_all</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">background</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <h3>find the peaks</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_peaks&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting peak info&#39;</span><span class="p">)</span>
+        <span class="n">thunder</span><span class="o">.</span><span class="n">no_peaks</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">find_peak_details</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span>
+                                                                                     <span class="n">thunder</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">)</span> <span class="c1"># find peaks/use them if supplied</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <h3>find the bounds</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_bounds&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;finding bounds via user guided routine&#39;</span><span class="p">)</span>
+        <span class="n">thunder</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">make_bounds</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">no_peaks</span><span class="p">,</span>
+                                              <span class="n">thunder</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">)</span> <span class="c1"># make bounds</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <h3>fit the peaks</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;fitting peaks&#39;</span><span class="p">)</span>
+    <span class="n">thunder</span><span class="o">.</span><span class="n">specs</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">peak_params</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">peaks</span> <span class="o">=</span> <span class="n">peak_fitting</span><span class="o">.</span><span class="n">fit_peaks</span><span class="p">(</span>
+        <span class="n">thunder</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">method</span><span class="p">,</span> <span class="n">thunder</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span> <span class="c1"># fit peaks</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <h3>save stats etc as object</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting stats etc&#39;</span><span class="p">)</span>
+    <span class="n">thunder</span><span class="o">.</span><span class="n">chi_sq</span> <span class="o">=</span> <span class="n">thunder</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">chisqr</span> <span class="c1"># set the stats from the fits</span>
+    <span class="n">reduced_chi_sq</span> <span class="o">=</span> <span class="n">thunder</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">redchi</span>
+    <span class="n">thunder</span><span class="o">.</span><span class="n">free_params</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">chi_sq</span> <span class="o">/</span> <span class="n">reduced_chi_sq</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <h3>plot and generate a fit report</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plotting and genertaing fit reports&#39;</span><span class="p">)</span>
+    <span class="n">thunder</span><span class="o">.</span><span class="n">plot_all</span><span class="p">()</span> <span class="c1"># plot the data in full and save as an object</span>
+    <span class="n">thunder</span><span class="o">.</span><span class="n">gen_fit_report</span><span class="p">()</span> <span class="c1"># generate a fit report</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>create a directory to save everything in</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">file_name</span><span class="p">,</span> <span class="n">dirname</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">make_user_files</span><span class="p">(</span><span class="n">arguments</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <h3>save everything</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving plots, reports and thund obj&#39;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_plot</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">figname</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}.svg&quot;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">thunder</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}.d&quot;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span><span class="n">thunder</span><span class="o">.</span><span class="n">fit_report</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_report.json&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p>move the log file in with all the rest of it</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{file_name}.log&#39;</span><span class="p">))</span>
+    <span class="n">rename</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="n">log_filename_</span><span class="p">)</span>  <span class="c1"># use os.rename to move the log file to the final destination</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

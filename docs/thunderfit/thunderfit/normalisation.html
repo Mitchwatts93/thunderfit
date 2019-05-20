@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>normalisation.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>normalisation.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <pre><code>svn normalisation function
+:param y_data: np array of y data points
+:param mean_y_data: if you want to normalise relative to other data can pass in a mean
+:param std_dev: same as for mean but with std dev
+:return: svn normlaised data as np array, tuple of mean and std dev of data
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">svn</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">mean_y_data</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">std_dev</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>normalise using std variance normalisation</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;normalising using svn normalisation&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="ow">not</span> <span class="n">mean_y_data</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">std_dev</span><span class="p">:</span>
+        <span class="n">mean_y_data</span> <span class="o">=</span> <span class="n">mean</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+        <span class="n">std_dev</span> <span class="o">=</span> <span class="n">std</span><span class="p">(</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="n">shifted_y_data</span> <span class="o">=</span> <span class="n">y_data</span> <span class="o">-</span> <span class="n">mean_y_data</span>
+    <span class="n">normalised_y</span> <span class="o">=</span> <span class="n">shifted_y_data</span> <span class="o">/</span> <span class="n">std_dev</span>
+    <span class="k">return</span> <span class="n">normalised_y</span><span class="p">,</span> <span class="p">(</span><span class="n">mean_y_data</span><span class="p">,</span> <span class="n">std_dev</span><span class="p">)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

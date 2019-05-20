@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>setup.py</title>
+  <link rel="stylesheet" href="../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>setup.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">setuptools</span> <span class="kn">import</span> <span class="n">setup</span><span class="p">,</span> <span class="n">find_packages</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">readme</span><span class="p">():</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;README.rst&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+<span class="n">setup</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;thunderfit&#39;</span><span class="p">,</span>
+    <span class="n">python_requires</span><span class="o">=</span><span class="s1">&#39;&gt;3.6&#39;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s1">&#39;1.7&#39;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s1">&#39;Thunderfit fitting code&#39;</span><span class="p">,</span>
+    <span class="n">long_description</span><span class="o">=</span><span class="n">readme</span><span class="p">(),</span>
+    <span class="n">classifiers</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;Programming Language :: Python :: 3.6&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;License :: OSI Approved :: MIT License&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Operating System :: OS Independent&quot;</span>
+    <span class="p">],</span>
+    <span class="n">keywords</span><span class="o">=</span><span class="s1">&#39;raman analysis fitting&#39;</span><span class="p">,</span>
+    <span class="n">url</span><span class="o">=</span><span class="s1">&#39;https://github.com/Mitchwatts93/thunderfit&#39;</span><span class="p">,</span>
+    <span class="n">author</span><span class="o">=</span><span class="s1">&#39;https://github.com/Mitchwatts93&#39;</span><span class="p">,</span>
+    <span class="n">author_email</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span>
+    <span class="n">license</span><span class="o">=</span><span class="s1">&#39;MIT&#39;</span><span class="p">,</span>
+    <span class="n">packages</span><span class="o">=</span><span class="n">find_packages</span><span class="p">(),</span>
+    <span class="n">install_requires</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;jsonschema==2.6.0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;dill==0.2.9&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;scipy==1.1.0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;numpy==1.15.1&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;matplotlib==2.2.3&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pandas==0.23.4&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;lmfit==0.9.13&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;tqdm==4.26.0&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;asteval==0.9.13&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;typing==3.6.6&#39;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="n">include_package_data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">test_suite</span><span class="o">=</span><span class="s1">&#39;nose.collector&#39;</span><span class="p">,</span>
+    <span class="n">tests_require</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;nose&#39;</span><span class="p">],</span>
+    <span class="n">entry_points</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;console_scripts&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;ramananalyse = thunderfit.raman_routine:main&#39;</span><span class="p">,</span> <span class="s1">&#39;mapscan = thunderfit.map_scan:main&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;genparams = thunderfit.create_params:main&#39;</span><span class="p">]},</span>
+    <span class="p">)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

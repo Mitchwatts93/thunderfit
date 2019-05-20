@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>multi_obj.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>multi_obj.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">ndarray</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="nb">round</span>
+<span class="kn">from</span> <span class="nn">pandas.errors</span> <span class="kn">import</span> <span class="n">ParserError</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">.thundobj</span> <span class="kn">import</span> <span class="n">Thunder</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span>
+<span class="kn">from</span> <span class="nn">.background</span> <span class="kn">import</span> <span class="n">background_removal</span> <span class="k">as</span> <span class="n">bg_remove</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_finding</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_fitting</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">map_scan_tools</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <p>TODO
+make option of passing in many params files - one for each data file</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>A &lsquo;bag&rsquo; of thunder objects. these are collectively stored with some metadata in this object, so we can do some
+cool things like store a thunderfit object for each coordinate and make mapscans etc</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">ThunderBag</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>initialise everything first
+:param input: a dictionary of parameters to create the bag object with</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_coord_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_coord_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Thunder</span><span class="p">):</span>  <span class="c1"># if only pass one but its already a thunder object then just use that</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Thunder</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="c1"># add all the details in depending on args</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_bag</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="c1"># add all the details in depending on args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Cannot convert input to ThunderBag object&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>create a bag object given an inp
+:param inp: this is a dictionary with all the necessary data on the bag
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_bag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creating bag object&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x_ind&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;y_ind&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;e_ind&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">img_path</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;imgpath&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coords&#39;</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">map</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;map&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>  <span class="c1"># if user passes map as True then the file will be treated as a map file</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;datapath&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="c1"># note this must be a list of datapaths, even if its just one element</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">)):</span> <span class="c1"># iterate through the datapaths for each file to be loaded</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">):</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{i}_&#39;</span>  <span class="c1"># if more than one datapath then we name them with i_j prefix. if not its just j</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Thunder</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span> <span class="c1"># then its already loaded so just assign it</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>then read the data file</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span> <span class="c1"># then we have a map file with 4 columns and lots of individual runs in it</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x_coord_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_coord_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x_coord_ind&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;y_coord_ind&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="n">map_path</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># get the exact filepath to the data</span>
+                    <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_map</span><span class="p">(</span><span class="n">map_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span><span class="p">,</span>
+                                                                       <span class="bp">self</span><span class="o">.</span><span class="n">x_coord_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_coord_ind</span><span class="p">)</span> <span class="c1"># read the</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>map file into lists of x_data etc</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_data</span><span class="p">)):</span>  <span class="c1"># iterate through the list of data and coords</span>
+                        <span class="n">x_data_</span><span class="p">,</span> <span class="n">y_data_</span> <span class="o">=</span> <span class="n">x_data</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">y_data</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>  <span class="c1"># the x and y data for each coordinate set</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{prefix}{j}&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Thunder</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span> <span class="n">x_data</span><span class="o">=</span><span class="n">x_data_</span><span class="p">,</span>
+                                                                   <span class="n">y_data</span><span class="o">=</span><span class="n">y_data_</span><span class="p">)</span>  <span class="c1"># make a thunder obj</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>with this data</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="n">x_coords_</span><span class="p">,</span> <span class="n">y_coords_</span> <span class="o">=</span> <span class="n">x_coords</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">y_coords</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{prefix}{j}&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">x_coords_</span><span class="p">,</span> <span class="n">y_coords_</span><span class="p">)</span>  <span class="c1"># for each i we will have a list of tuples of x and y coords</span>
+                <span class="k">elif</span> <span class="s1">&#39;*&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span> <span class="c1"># then we need to load all the files in the filepath</span>
+                    <span class="n">filematches</span> <span class="o">=</span> <span class="n">glob</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="c1"># this is a list of the matches</span>
+                    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="nb">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">filematches</span><span class="p">):</span> <span class="c1"># for each file</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="n">f</span><span class="s1">&#39;{prefix}{j}&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_thunder</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span>
+                                                                                   <span class="n">inp</span><span class="p">)</span>  <span class="c1"># make a thunder object for</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>each file</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>                        <span class="k">except</span> <span class="n">ParserError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;A Thunder object could not be created for the datafile: {file}, skipping&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span> <span class="c1"># its possible the user has passed in a list of thunder objects for us</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_thunder</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">inp</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">ParserError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;A Thunder object could not be created for the datafile: {file}, skipping&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># we can&#39;t load any other way</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;wrong format in data list detected for {i}th element: {data}. Skipping element&quot;</span><span class="p">)</span>
+                <span class="k">pass</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>create a thunder object given a path and an inp
+:param file: string
+:param inp: correct filetype for thunder obj, i.e. a dict or a thunder obj
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">create_thunder</span><span class="p">(</span><span class="nb">file</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creating thunder object&#39;</span><span class="p">)</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">inp</span><span class="p">)</span>
+        <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">file</span>
+        <span class="n">thund_obj</span> <span class="o">=</span> <span class="n">Thunder</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">thund_obj</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p>read a map file and return four lists for data and coordinates
+:param file_address: what is the path to the file
+:param x_ind: which column is x data
+:param y_ind: which column is y data
+:param x_coord_ind: which column is x coords
+:param y_coord_ind: which column is y coords
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">read_map</span><span class="p">(</span><span class="n">file_address</span><span class="p">,</span> <span class="n">x_ind</span><span class="p">,</span> <span class="n">y_ind</span><span class="p">,</span> <span class="n">x_coord_ind</span><span class="p">,</span> <span class="n">y_coord_ind</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;reading in mapscan file&#39;</span><span class="p">)</span>
+        <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">file_address</span><span class="p">,</span> <span class="n">x_ind</span><span class="p">,</span> <span class="n">y_ind</span><span class="p">)</span>  <span class="c1"># load the data. note these drop nan rows but</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <p>does that for the whole filepath so will be consistent for data and coordinates</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">file_address</span><span class="p">,</span> <span class="n">x_coord_ind</span><span class="p">,</span> <span class="n">y_coord_ind</span><span class="p">)</span>  <span class="c1"># load the coordinates</span>
+        <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">map_unique_coords</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">)</span>  <span class="c1">#</span>
+
+        <span class="k">return</span> <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      <p>this is a generic method which will apply a func with arguments input_args to a bag one by one, and set the
+outputs to the sett_args attributes for each thunder object
+:param bag: bag should be a dictionary of thunder objects
+:param func: the function to apply
+:param input_args: the arguments for the function
+:param sett_args: what to set the output of the function as
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">bag_iterator</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">input_args</span><span class="p">,</span> <span class="n">sett_args</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">bagkeys</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">bag</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="c1"># progress bar</span>
+        <span class="n">bagkeys</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Operating with: {func.__name__}, to find: {sett_args}&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">bagkeys</span><span class="p">:</span>
+            <span class="n">thund</span> <span class="o">=</span> <span class="n">bag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>  <span class="c1"># bag[key] is the thunder object</span>
+            <span class="n">kwargs_</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">input_args</span><span class="p">]</span> <span class="c1"># get the input arg attributes from thunder obj</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">apply_func</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">kwargs_</span><span class="p">),</span> <span class="n">func</span><span class="p">)</span> <span class="c1"># we return _ which we ignore and val which is a list of</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      <p>output values</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sett_args</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="c1"># set the data as an attribute to the thunder object</span>
+                <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="n">arg</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Weird KeyError encountered: {e}&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>when doing user guided routines e.g. clipping data or background removal, run this to choose which data in the
+bag will be the piece its based on
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">choose_spectrum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;choosing which thunder object will be the user specified data for bg etc&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      <p>then we have to choose which spectrum we want</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>  <span class="c1"># changed from list to iter</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span> <span class="c1"># keep going until we break</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">first_thunder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="n">first</span><span class="p">]</span>
+                <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">))</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Need a decision on which plot is representitive of data, the following is for index {first}&quot;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;If you are happy with using this data file, type y, otherwise enter a new index&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">first</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;You entered an incorrect answer! Trying again...&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;incorrect key, please enter a lower index value&#39;</span><span class="p">)</span>
+                <span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">first</span> <span class="c1"># save the user decision</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      <p>method to clip the data for each thunder object
+:param clips: if none wil do a user guided routine, if a list of two elements will use those elements as the clips
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">clip_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clips</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;clipping data based on user specified plot&#39;</span><span class="p">)</span>
+        <span class="n">first_thunder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">]</span>
+        <span class="n">clip_left</span><span class="p">,</span> <span class="n">clip_right</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">clip_data</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span> <span class="n">clips</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">)[</span><span class="n">clip_left</span><span class="p">:</span><span class="n">clip_right</span><span class="p">])</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">)[</span><span class="n">clip_left</span><span class="p">:</span><span class="n">clip_right</span><span class="p">])</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>method for setting the parameters for the background for all the thunder objects in the bag
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">bg_param_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;setting backgrounds for all based on background of user specified plot&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>add step to find bg parameters for first one and use for the rest.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">first_thunder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">),</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;SCARF&quot;</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">bg_remove</span><span class="o">.</span><span class="n">background_finder</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span>
+                                                       <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span>
+                                                       <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">),</span>
+                                                       <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;scarf_params&#39;</span><span class="p">))</span>
+            <span class="p">[</span><span class="n">param</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">]</span>  <span class="c1"># we want to find b each time so don&#39;t set it for all others</span>
+            <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;scarf_params&#39;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="c1"># set all the values to this</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      <p>method to remove the background for each object, and save the output as y_data_bg_rm in each
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">remove_backgrounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      <p>do some checks</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">bag_iterator</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;thunder_bag&#39;</span><span class="p">),</span> <span class="n">bg_remove</span><span class="o">.</span><span class="n">background_finder</span><span class="p">,</span>
+                         <span class="p">(</span><span class="s1">&#39;x_data&#39;</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;scarf_params&#39;</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      <p>method to normalise the data and save the normalised data
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">normalise_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">bag_iterator</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;thunder_bag&#39;</span><span class="p">),</span> <span class="n">utili</span><span class="o">.</span><span class="n">normalise_all</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      <p>method to find peaks using a peakfinder routine and then set peak attributes
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_peaks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;setting peak no, centres and types based on user specified plot details&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      <p>add step to find bg parameters for first one and use for the rest.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">first_thunder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">]</span>
+        <span class="n">no_peaks</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">prominence</span> <span class="o">=</span> \
+            <span class="n">peak_finding</span><span class="o">.</span><span class="n">find_peak_details</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">),</span>
+                                           <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;no_peaks&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;peak_finder_type&#39;</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>  <span class="c1"># set these first values for all of them</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;no_peaks&#39;</span><span class="p">,</span> <span class="n">no_peaks</span><span class="p">)</span>  <span class="c1"># set values</span>
+            <span class="n">center_indices</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">find_closest_indices</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">])</span> <span class="c1"># get the indices from the x centres</span>
+            <span class="n">center_indices</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">match_peak_centres</span><span class="p">(</span><span class="n">center_indices</span><span class="p">,</span> <span class="n">thund</span><span class="o">.</span><span class="n">y_data</span><span class="p">)</span> <span class="c1"># match to the peakfinding cents</span>
+            <span class="n">peak_centres</span> <span class="o">=</span> <span class="n">thund</span><span class="o">.</span><span class="n">x_data</span><span class="p">[</span><span class="n">center_indices</span><span class="p">]</span> <span class="c1"># convert back to x values</span>
+            <span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_centres</span> <span class="c1"># set values</span>
+            <span class="n">thund</span><span class="o">.</span><span class="n">peak_info_dict</span> <span class="o">=</span> <span class="n">peak_info_dict</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-35'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-35'>#</a>
+      </div>
+      <p>method to adjust the input peak centres by finding peaks in the data and matching the closest ones to the input centres to speed up fitting
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">peaks_adj_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-36'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-36'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>  <span class="c1"># set these first values for all of them</span>
+            <span class="n">center_indices</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">find_closest_indices</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thund</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">])</span> <span class="c1"># get the indices from the x centres</span>
+            <span class="n">center_indices</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">match_peak_centres</span><span class="p">(</span><span class="n">center_indices</span><span class="p">,</span> <span class="n">thund</span><span class="o">.</span><span class="n">y_data</span><span class="p">)</span> <span class="c1"># match to the peakfinding cents</span>
+            <span class="n">peak_centres</span> <span class="o">=</span> <span class="n">thund</span><span class="o">.</span><span class="n">x_data</span><span class="p">[</span><span class="n">center_indices</span><span class="p">]</span> <span class="c1"># convert back to x values</span>
+            <span class="n">thund</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_centres</span> <span class="c1"># set values</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-37'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-37'>#</a>
+      </div>
+      <p>set bounds for all the thunder objects, if no bounds are given then will use a bound finding routine
+:param bounds: a dicitonary on bounds on the data
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">bound_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-38'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-38'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;setting bounds based on user provided bounds or found for user specified plot&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bounds</span><span class="p">:</span>
+            <span class="n">first_thunder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">]</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">make_bounds</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;no_peaks&#39;</span><span class="p">),</span>
+                                              <span class="n">first_thunder</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>  <span class="c1"># set these first values for all of them</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>  <span class="c1"># set values</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-39'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-39'>#</a>
+      </div>
+      <p>fit the peaks for each of the thunder objects
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">fit_peaks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-40'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-40'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">bag_iterator</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;thunder_bag&#39;</span><span class="p">),</span> <span class="n">peak_fitting</span><span class="o">.</span><span class="n">fit_peaks</span><span class="p">,</span>
+                         <span class="p">(</span><span class="s1">&#39;x_data&#39;</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="s1">&#39;peak_info_dict&#39;</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;tol&#39;</span><span class="p">),</span>
+                         <span class="p">(</span><span class="s1">&#39;specs&#39;</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;peak_params&#39;</span><span class="p">,</span> <span class="s1">&#39;peaks&#39;</span><span class="p">))</span>  <span class="c1"># fit peaks</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-41'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-41'>#</a>
+      </div>
+      <p>once the data has been fit for all the thunder objects, make a map matrix from the coordinates of each of the thunder objects
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">make_map_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-42'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-42'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">coordinates_array</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coordinates_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coordinates</span>
+        <span class="n">coordinates_array</span> <span class="o">=</span> <span class="n">map_scan_tools</span><span class="o">.</span><span class="n">shift_map_matr</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">)):</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">)[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># reassign in the correct format</span>
+        <span class="n">map_matrices</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">X_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">Y_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">data_mat</span><span class="p">,</span> <span class="n">X_</span><span class="p">,</span> <span class="n">Y_</span> <span class="o">=</span> <span class="n">map_scan_tools</span><span class="o">.</span><span class="n">map_scan_matrices_from_dicts</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+            <span class="n">map_matrices</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_mat</span>
+            <span class="n">X_dict</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">X_</span>
+            <span class="n">Y_dict</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y_</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_matrices</span> <span class="o">=</span> <span class="n">map_matrices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X_coords</span> <span class="o">=</span> <span class="n">X_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Y_coords</span> <span class="o">=</span> <span class="n">Y_dict</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-43'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-43'>#</a>
+      </div>
+      <p>fit_params is a dictionary with the details of the fits, make map matrices will use this dictionary to make maps of e.g. amplitude at each coordinate
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">make_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-44'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-44'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;generating fit params&#39;</span><span class="p">)</span>
+        <span class="n">fit_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">first_thunder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first</span><span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_thunder</span><span class="p">,</span> <span class="s1">&#39;peak_params&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">fit_params</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># e.g. &#39;center&#39;</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">fit_details</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="s1">&#39;peak_params&#39;</span><span class="p">)</span>
+                <span class="n">fit_details</span> <span class="o">=</span> <span class="p">{</span><span class="n">key_</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span><span class="n">fit_details</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key_</span><span class="p">)</span> <span class="k">for</span> <span class="n">key_</span> <span class="ow">in</span> <span class="n">fit_details</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key_</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">param</span><span class="p">}</span>
+                <span class="n">fit_params</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_details</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="n">fit_params</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-45'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-45'>#</a>
+      </div>
+      <p>make a fit statistics dictionary with chisq etc for each thunder obj
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">get_fit_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-46'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-46'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;generating fit stats&#39;</span><span class="p">)</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;chisq&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;reduced_chi_sq&#39;</span><span class="p">:</span> <span class="p">{},</span> <span class="s1">&#39;free_params&#39;</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">chisq</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;peaks&#39;</span><span class="p">),</span> <span class="s1">&#39;chisqr&#39;</span><span class="p">)</span>
+            <span class="n">reduced_chi_sq</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;peaks&#39;</span><span class="p">),</span> <span class="s1">&#39;redchi&#39;</span><span class="p">)</span>
+            <span class="n">free_params</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">chisq</span> <span class="o">/</span> <span class="n">reduced_chi_sq</span><span class="p">)</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chisq&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">chisq</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;reduced_chi_sq&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">reduced_chi_sq</span>
+            <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;free_params&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">free_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-47'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-47'>#</a>
+      </div>
+      <p>If any of the thunderobjects failed to fit then this will save those in dirname directory
+:param dirname: directory to save in
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">save_failed_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-48'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-48'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;saving failed plots&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">thund</span><span class="p">,</span> <span class="s1">&#39;peaks&#39;</span><span class="p">),</span> <span class="s1">&#39;success&#39;</span><span class="p">):</span>
+                <span class="n">thund</span><span class="o">.</span><span class="n">plot_all</span><span class="p">()</span>
+                <span class="n">utili</span><span class="o">.</span><span class="n">save_plot</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+                                <span class="n">figname</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;failed_plot_{key}_at_position_{self.coordinates.get(key)}.svg&quot;</span><span class="p">)</span>
+                <span class="n">thund</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># close so memory is conserved.</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-49'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-49'>#</a>
+      </div>
+      <p>method to save all the plots
+:param dirname: directory to save in
+:param plot_unc: bool, if True then also plots uncertainty
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">save_all_plots</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">plot_unc</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-50'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-50'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">thund</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">thund</span><span class="o">.</span><span class="n">plot_all</span><span class="p">(</span><span class="n">plot_unc</span><span class="o">=</span><span class="n">plot_unc</span><span class="p">)</span>
+            <span class="n">utili</span><span class="o">.</span><span class="n">save_plot</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">plot</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+                            <span class="n">figname</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;plot_no_{key}_at_position_{self.coordinates.get(key)}.svg&quot;</span><span class="p">)</span>
+            <span class="n">thund</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># close so memory is conserved.</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-51'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-51'>#</a>
+      </div>
+      <p>function to build a thunderbag objects
+:param arguments:
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-52'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-52'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">bag</span> <span class="o">=</span> <span class="n">ThunderBag</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>  <span class="c1"># load object</span>
+    <span class="k">return</span> <span class="n">bag</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

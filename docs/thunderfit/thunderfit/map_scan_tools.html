@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>map_scan_tools.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>map_scan_tools.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">unique</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">nanmin</span><span class="p">,</span> <span class="n">nanmax</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nanpercentile</span><span class="p">,</span> <span class="n">nanmean</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
+
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <p>funcs for plotting</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">shift_map_matr</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <pre><code>function to shift all the coordinates in a coordinates array so that it start from zero.
+:param coordinates_array: an np array of mxn with the coordinates of each scan at each position
+:return: the shifted coordinates array
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;shifting coordinates array&#39;</span><span class="p">)</span>
+    <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">coordinates_array</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <pre><code>function to generate a map matrix based on a dictionary of coordinates and peak_label_vals. both have matching keys
+and the coordinates values are (x,y) tuples, peak_label_vals is a dictionary of values of what is being mapped.
+:param coordinates: dictionary of keys corresponding to thunder objects, values are (x,y)
+:param peak_label_vals: same keys as coordinates but with values which will be mapped to a matrix
+:return: a matrix of dimensions from coordinates. each
+element corresponds to a new scan, so assumes a uniform grid. the spacing of scans isn't coded in here, but can be
+accessed from the X and Y which are returned (lists of the coodinates)
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">generate_map_matrix</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">peak_label_vals</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#initialise these</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">peak_label_vals</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> <span class="c1"># corresponding to a pixel</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="c1">#coordinates</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">peak_label_vals</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="c1">#value at those coordinates</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span> <span class="c1"># not sure why this is here.</span>
+            <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span> <span class="c1">#probably will break if this happens. better to raise an error</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># append to coordinates and values to the lists</span>
+        <span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">x_step</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#what are the step sizes in x</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">X</span> <span class="o">/</span> <span class="n">x_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="c1"># turn the x coordinates into an array of integer steps</span>
+    <span class="n">y_step</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">unique</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">Y</span> <span class="o">/</span> <span class="n">y_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">data_</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span> <span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">xx</span><span class="p">)))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="c1">#build a dense array by using sparse array notation and converting</span>
+    <span class="n">data_</span><span class="p">[</span><span class="n">data_</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span> <span class="c1">#if its zero we assume thats because there was no data taken there.</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">data_</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <pre><code>function to generate dictionaries of X and Y coordiantes, as well as dict of data matrices. does this for all
+the peak types in the passed in dictionaries. keys are the properties e.g. 'center' etc
+:param coordinates: dictionary of coordinates for each property (usually doesn't differ though so is a repeat of the same ones)
+:param values: dict of values for each property (key). e.g. 'center' has value which is a dict of run keys and values at that key
+:return: data dict, and X_, Y_ coordinate dicts. same keys as input
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">map_scan_matrices_from_dicts</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;generating map matrices&#39;</span><span class="p">)</span>
+    <span class="n">peak_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">X_</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">Y_</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">peak_label</span> <span class="ow">in</span> <span class="n">peak_labels</span><span class="p">:</span>
+        <span class="n">peak_label_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">nan</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">data_</span> <span class="o">=</span> <span class="n">generate_map_matrix</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">peak_label_vals</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_</span>
+        <span class="n">X_</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="n">Y_</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">X_</span><span class="p">,</span> <span class="n">Y_</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <pre><code>function to plot a mapscan given a data matrix and the actual coordinates to plot on the map
+:param data: np array of values
+:param X: x coordinates corresponding to each element in data in x direction
+:param Y: same as for x
+:return: figure and axis to be reused/saved etc later
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">map_plotter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+    <span class="n">magma_cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;magma&#39;</span><span class="p">)</span>
+    <span class="n">magma_cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">magma_cmap</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">Y</span><span class="p">)],</span>
+                    <span class="n">vmax</span><span class="o">=</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">97</span><span class="p">))</span>  <span class="c1"># we plot the 99th percentile and 1st percentil as the max and min</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>colours</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x coordinates&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y coordinates&#39;</span><span class="p">)</span>
+    <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+    <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;5%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">ax</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <pre><code>plot all the data and save all the plots into dicts which are returned
+:param data_mat: data matrices as dicts. keys are for the properties for which each map matrix is the value
+:param X_coords: x coordinates as dicts. keys same as data_mat
+:param Y_coords: same as for x
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">map_scan_plot_dicts</span><span class="p">(</span><span class="n">data_mat</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;plotting mapscans&#39;</span><span class="p">)</span>
+    <span class="n">peak_labels</span> <span class="o">=</span> <span class="n">data_mat</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">figs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">axs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">peak_label</span> <span class="ow">in</span> <span class="n">peak_labels</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data_mat</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X_coords</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">Y_coords</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">map_plotter</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="n">figs</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="n">axs</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">ax</span>
+    <span class="k">return</span> <span class="n">figs</span><span class="p">,</span> <span class="n">axs</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <pre><code>function to return the mean center values from fit_params dict. isn't a great abstraction barrier though!
+:param peak_label: the label of the peak you want the mean center value for e.g. 'm0' for mdoel 0
+:param fit_params: fit params dict with keys of properties for peaks e.g. 'center' and 'amplitude'
+</code></pre>
+<p>these have values which are dicts which include peak_label as a key. those values are the values for that property
+for each peak
+    :return: the mean center value</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">get_cent_mean</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">cents</span> <span class="o">=</span> <span class="p">[</span><span class="n">cent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+    <span class="n">cent_mean</span> <span class="o">=</span> <span class="n">nanmean</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cent_mean</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <pre><code>given a mapscan plot save it and add a title
+:param peak_label: the label of the peak the mapscan is for
+:param fit_params: the dicitonary of all peak properties and peaks values
+:param plot: the plot to save
+:param dirname: str: where to save it
+:param p: str: what is the peak being saved
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">save_mapscan</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">cent_mean</span> <span class="o">=</span> <span class="n">get_cent_mean</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">)</span>
+    <span class="n">plot</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{p}_{peak_label}_heatmap. peak {peak_label} is centered at:  {cent_mean}&quot;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_plot</span><span class="p">(</span><span class="n">plot</span><span class="p">[</span><span class="n">peak_label</span><span class="p">],</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">figname</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{p}_{peak_label}.svg&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <pre><code>given the map matrices coordinates dictionaries and fit parameters, plot all the mapscans and then call them all to be saved
+:param map_matrices: a dict of map matrices, keys are the type of map to save e.g. 'center'. the values are dicts of
+actual data matrices as values and keys correspond to the model keys e.g. 'm0'
+:param X_coords: coordinates dict with keys same as map_matrices
+:param Y_coords: same as for x
+:param p: key for what mapscan to access
+:param fit_params: fit parameters dictionary as made by multi_obj method
+:param dirname: where to save the mapscans
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">data_mat</span> <span class="o">=</span> <span class="n">map_matrices</span><span class="p">[</span><span class="n">p</span><span class="p">]</span>
+    <span class="n">plot</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">map_scan_plot_dicts</span><span class="p">(</span><span class="n">data_mat</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">Y_coords</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">peak_label</span> <span class="ow">in</span> <span class="n">plot</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">save_mapscan</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      <pre><code>function to plot the mapscans given user input on what to plot for.
+:param fit_params: a dictionary of dicts. 1st keys are properties e.g. 'center' and second keys are for each model
+e.g. 'm0'. values are a dict of the actual values for each pixel in the map
+:param map_matrices: same as fit_params but the values are map matrices instead of dicts
+:param X_coords: same as map_matrices except the values are lists of X_coords
+:param Y_coords: same as x
+:param dirname: str: where to save the plots
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">plot_map_scan</span><span class="p">(</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;runnning user input routine to generate/save user chosen variables in maps&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;making map scans, please input which property you would like to scan. options are:&quot;</span>
+                    <span class="n">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> {[p_ for p_ in fit_params.keys()]}, or type &#39;all&#39; to plot all, or type e to exit&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+            <span class="k">break</span> <span class="c1">#break the while loop</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">ans</span>
+                <span class="n">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;wrong answer entered, trying again!&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">return</span> <span class="n">map_matrices</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

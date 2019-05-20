@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>thundobj.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>thundobj.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">difflib</span> <span class="kn">import</span> <span class="n">get_close_matches</span>
+<span class="kn">from</span> <span class="nn">re</span> <span class="kn">import</span> <span class="n">findall</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">lmfit.model</span> <span class="kn">import</span> <span class="n">ModelResult</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ndarray</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">plotting</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span>
+<span class="kn">from</span> <span class="nn">.background</span> <span class="kn">import</span> <span class="n">background_removal</span> <span class="k">as</span> <span class="n">bg_remove</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_finding</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_fitting</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <p>TODO: need to fail if peak fitting doesn&rsquo;t work!</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>thunder object with all the methods we love inside it. Name generated using WuTang Clan name generator.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">class</span> <span class="nc">Thunder</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>initialise all the attributes which will be set later
+:param input: a dictionary of all user inputs to be set
+:param x_data: the x_data np array
+:param y_data: y data np array
+:param e_data: error dat anp array</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">x_data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">y_data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">e_data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Thunder</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="nb">input</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="bp">None</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">y_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="n">e_data</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_data_bg_rm</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_data_norm</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;./data.txt&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_peaks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;SCARF&quot;</span>  <span class="c1"># fix this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scarf_params</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_finder_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span><span class="p">:</span> <span class="n">ModelResult</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span><span class="p">:</span> <span class="n">plt</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_report</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_params</span><span class="p">:</span> <span class="p">{}</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c1"># give type!</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">free_params</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chisq</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;leastsq&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0000001</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Thunder</span><span class="p">):</span>  <span class="c1"># if only pass one but its already a thunder object then just use that</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overwrite_thunder</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="c1"># add all the details in depending on args</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span> <span class="c1"># if its a dict then we pull all the values from it</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_thunder</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="c1"># add all the details in depending on args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Cannot convert input to Thunder object&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y_data</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">pass</span>  <span class="c1"># they&#39;re already loaded as they&#39;ve been passed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">e_data</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">,</span>
+                                                                    <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span><span class="p">)</span>  <span class="c1"># load the data</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>Methods for creating a thunder object from another, pull everything out from it and set it as our attributes here
+:param inp: a thunder object
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">overwrite_thunder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;overwriting thund obj&#39;</span><span class="p">)</span>
+        <span class="n">thun</span> <span class="o">=</span> <span class="n">inp</span>
+
+        <span class="k">if</span> <span class="n">thun</span><span class="o">.</span><span class="n">x_data</span> <span class="ow">and</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_data</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_data</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">x_data</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_data</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">x_ind</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_ind</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">e_ind</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">e_ind</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">datapath</span>
+
+        <span class="k">if</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_data_bg_rm</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_data_bg_rm</span>
+        <span class="k">if</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_data_norm</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_data_norm</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">y_data_norm</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_peaks</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">no_peaks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">background</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scarf_params</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">scarf_params</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">peak_info_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_finder_type</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">peak_finder_type</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">bounds</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">thun</span><span class="o">.</span><span class="n">tol</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>Used to create a thunder object given different input types
+:inp: a dictionary containing attributes we will asign to the current thunder obj
+:return: None, we modify the object unless a spec1d object is passed, in which case we return that</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">create_thunder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;creating thund obj&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># if e_ind is missing we don&#39;t reallt care</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">e_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="s1">&#39;e_ind&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;KeyError: Missing field in the data dictionary: {e}&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># If of these are missing then need to fail here</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="s1">&#39;x_ind&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="p">[</span><span class="s1">&#39;y_ind&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Missing vital information to load object: {e}&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_peaks</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;no_peaks&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_peaks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">background</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>todo: do some check on background here to set it to an np array</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">scarf_params</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scarf_params&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scarf_params</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;peak_info_dict&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">peak_finder_type</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;peak_finder_type&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peak_finder_type</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>method to clip the data. if clips passed then will not be interactive
+:param clips: if a two element list of numbers then will use, otherwise will interactively get clips
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">clip_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">clips</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">clip_left</span><span class="p">,</span> <span class="n">clip_right</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">clip_data</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span> <span class="n">clips</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <p>the cli_data func will return the INDICES of the data to clip so we can just do it below</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">)[</span><span class="n">clip_left</span><span class="p">:</span><span class="n">clip_right</span><span class="p">])</span> <span class="c1"># clip the data points</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">)[</span><span class="n">clip_left</span><span class="p">:</span><span class="n">clip_right</span><span class="p">])</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p>call the background_finder function and then set attributes from it
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">remove_bg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">background</span><span class="p">,</span> <span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">bg_remove</span><span class="o">.</span><span class="n">background_finder</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span>
+                                                                       <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span>
+                                                                       <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">),</span>
+                                                                       <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;scarf_params&#39;</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="n">background</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="n">y_data_bg_rm</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;params&#39;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <p>normalise the data by calling the appropriate func and then setting attributes
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">normalise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">background</span><span class="p">,</span> <span class="n">y_data_norm</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">normalise_all</span><span class="p">(</span><span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="n">background</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">,</span> <span class="n">y_data_bg_rm</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data_norm&#39;</span><span class="p">,</span> <span class="n">y_data_norm</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      <p>find peaks interactively then set the peak positions. currently this relies on peaks with the center att
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">find_peaks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">no_peaks</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">prominence</span> <span class="o">=</span> \
+            <span class="n">peak_finding</span><span class="o">.</span><span class="n">find_peak_details</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">),</span>
+                                           <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;no_peaks&#39;</span><span class="p">),</span>
+                                           <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;peak_finder_type&#39;</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;no_peaks&#39;</span><span class="p">,</span> <span class="n">no_peaks</span><span class="p">)</span>  <span class="c1"># set values</span>
+        <span class="n">center_indices</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">find_closest_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">])</span>  <span class="c1"># get the indices from the x centres</span>
+        <span class="n">center_indices</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">match_peak_centres</span><span class="p">(</span><span class="n">center_indices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_data</span><span class="p">)</span>  <span class="c1"># match to the peakfinding cents</span>
+        <span class="n">peak_centres</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">[</span><span class="n">center_indices</span><span class="p">]</span>  <span class="c1"># convert back to x values</span>
+        <span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_centres</span>  <span class="c1"># set values</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>set the bounds for the attributes. this is a dictionary which will be used later
+:param bounds:
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">bound_setter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">if</span> <span class="ow">not</span> <span class="n">bounds</span><span class="p">:</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">make_bounds</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data&#39;</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;no_peaks&#39;</span><span class="p">),</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>  <span class="c1"># set values</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      <p>call the peak fitting routine
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">fit_peaks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">specs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">peaks</span> <span class="o">=</span> <span class="n">peak_fitting</span><span class="o">.</span><span class="n">fit_peaks</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;x_data&#39;</span><span class="p">),</span>
+                                                                          <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;y_data_bg_rm&#39;</span><span class="p">),</span>
+                                                                          <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;peak_info_dict&#39;</span><span class="p">),</span>
+                                                                          <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;bounds&#39;</span><span class="p">),</span>
+                                                                          <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;method&#39;</span><span class="p">),</span>
+                                                                          <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;tol&#39;</span><span class="p">))</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;specs&#39;</span><span class="p">,</span> <span class="n">specs</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;peak_params&#39;</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;peaks&#39;</span><span class="p">,</span> <span class="n">peaks</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      <h1>plot_all and fit_report need imporovements e.g. to check which attributes exists in the object</h1>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">plot_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">plot_unc</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>plot all the peaks, background, original and bg subtracted data and uncertainty if plot_unc is True. Will save
+this plot and self.plot which can be accessed later to either save or show the plots
+:param ax: if you want to plot on an existing plot then pass the matplotlib ax obj
+:param plot_unc: bool, if true will plot the uncertainties, if not then it won&rsquo;t
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;plotting all for thund obj&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_fits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">eval_components</span><span class="p">(),</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>  <span class="c1"># plot each component of the model</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_background</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">background</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>  <span class="c1"># plot the background supplied by user</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">plot_unc</span><span class="p">:</span>
+                <span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_uncertainty_curve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">eval_uncertainty</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">best_fit</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>  <span class="c1"># plot a band of uncertainty</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;There are not uncertainties available because the bounds are too restrictive.&#39;</span>
+                            <span class="s1">&#39;The covariance matrix is not valid near the bounds so widen the bounds for whatever is &#39;</span>
+                            <span class="s1">&#39;causing the issue&#39;</span><span class="p">)</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_data</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>  <span class="c1"># plot the raw data</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_fit_sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">best_fit</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>  <span class="c1"># plot the fitted data</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">plt</span><span class="p">,</span> <span class="n">fig</span> <span class="o">=</span> <span class="n">plotting</span><span class="o">.</span><span class="n">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="s1">&#39;g--&#39;</span><span class="p">,</span> <span class="n">fig</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>  <span class="c1"># plot the raw data bg rm</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">minorticks_on</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s1">&#39;minor&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s1">&#39;major&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot</span> <span class="o">=</span> <span class="n">plt</span>
+
+        <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">fig</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      <p>generate a fit report which will be a dicitonary containing useful info such as chi sq etc and the errors
+on each of the model attributes
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">def</span> <span class="nf">gen_fit_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;genertaing fit report for thund obj&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_report</span> <span class="o">=</span> <span class="p">{</span><span class="n">mod_no</span><span class="p">:</span> <span class="p">{}</span> <span class="k">for</span> <span class="n">mod_no</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]))}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      <h1>total fit data</h1>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">fit_report</span><span class="p">[</span><span class="s1">&#39;chi_sq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi_sq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_report</span><span class="p">[</span><span class="s1">&#39;free_params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_report</span><span class="p">[</span><span class="s1">&#39;p_value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;not implemented&#39;</span>
+
+        <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">param_obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">peaks</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">model_no</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\d+&#39;</span><span class="p">,</span> <span class="n">parameter</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">param_type</span> <span class="o">=</span> <span class="n">parameter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">param_type</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">param_obj</span><span class="o">.</span><span class="n">value</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="n">param_obj</span><span class="o">.</span><span class="n">stderr</span>
+                <span class="nb">type</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">safe_list_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">peak_info_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="p">[</span><span class="bp">False</span><span class="p">,]),</span> <span class="n">model_no</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">safe_list_get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{param_type}&#39;</span><span class="p">,</span> <span class="p">[</span><span class="bp">False</span><span class="p">,]),</span> <span class="n">model_no</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+                <span class="n">fit_info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+                            <span class="s2">&quot;stderr&quot;</span><span class="p">:</span> <span class="n">err</span><span class="p">,</span>
+                            <span class="s2">&quot;peak_type&quot;</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span>
+                            <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">bounds</span><span class="p">}</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">fit_report</span><span class="p">[</span><span class="n">model_no</span><span class="p">][</span><span class="n">param_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit_info</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      <p>if you call this then it will create and return the thunder obj for you
+:param arguments: a thunder object or a dicitonary to initialise the thunder obj
+:return:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">thunder</span> <span class="o">=</span> <span class="n">Thunder</span><span class="p">(</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>  <span class="c1"># load object</span>
+    <span class="k">return</span> <span class="n">thunder</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

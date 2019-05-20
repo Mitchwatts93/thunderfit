@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>parsing.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>parsing.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">strftime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <pre><code>a type function to check if a value cN be either a string or nonr
+:param value:
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">str_or_none</span><span class="p">(</span><span class="n">value</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <pre><code>an incomplete function to do type checking for string or np array..needs to try array(value)!
+:param value:
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">str_or_arr</span><span class="p">(</span><span class="n">value</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># does this work?</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <pre><code>a function to parse user arguments using argparse
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">parse_user_args</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;parsing command line args&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="s1">&#39;fit peaks and background to the given data given a set of parameter&#39;</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--param_file_path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">str_or_none</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;input filepath to param file, if you want to use it&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--datapath&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">str_or_none</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;relative path to the datafile from where python script is called&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--x_ind&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">str_or_none</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;the column in data which is the independent data&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--y_ind&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">str_or_none</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;the column in data which is the dependent data&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--e_ind&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="bp">None</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;NOT IMPLEMENTED YET. the column in data which is the independent data uncertainties&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--no_peaks&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;the number of peaks you would like fitted. If you have specified bounds or peak infomation&#39;</span>
+                             <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> e.g. centres then please make sure this is the same length as that list&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--background&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">str_or_arr</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;SCARF&quot;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;The stype of background you&#39;d like to fit. &#39;SCARF&#39; is a rolling ball solgay_filter &quot;</span>
+                             <span class="s2">&quot;background subtraction. </span><span class="se">\n</span><span class="s2"> &#39;OLD&#39; uses a soon-to-be not implemented numerical method&quot;</span>
+                             <span class="s2">&quot;which doesn&#39;t work too well. </span><span class="se">\n</span><span class="s2"> &#39;no&#39; specifies that you would like no background fitted.&quot;</span>
+                             <span class="s2">&quot;NOT IMPLEMENTED YET: An np array of background can also be passed by passing the path to &quot;</span>
+                             <span class="s2">&quot;the file, but please note that it must be the same length as the datafile (once rows &quot;</span>
+                             <span class="s2">&quot;containing nan values have been removed).&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--scarf_params&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;a dictionary (or None) of parameters for scarf algorithm. If none an interactive routine&#39;</span>
+                             <span class="s1">&#39;will be used. if the dictionary is specified it should be of the form: </span><span class="se">\n</span><span class="s1">&#39;</span>
+                             <span class="s1">&#39;{&quot;rad&quot;:70, &quot;b&quot;:90, &quot;window_length&quot;:51, &quot;poly_order&quot;:3}&#39;</span>
+                             <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> where window length must be odd and greater than poly_order, and all must be integers&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--peak_info_dict&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">List</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;a dictionary of peak information&#39;</span>
+                             <span class="s1">&#39;t&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--bounds&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="n">Dict</span><span class="p">],</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;a dictionary of the bounds for peak values. if none passed then will be auto-generated.&#39;</span>
+                             <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> of the form: {&quot;centers&quot;:[(365, 390), (283,285)],&quot;widths&quot;:[(2, 3), (1, 4)],&#39;</span>
+                             <span class="s1">&#39;&quot;amps&quot;:[(2, 3), (1, 4)]}&#39;</span>
+                             <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> the list elements correspond to the peaks supplied earlier, the tuple elements&#39;</span>
+                             <span class="s1">&#39;correspond to the low and high bounds on that specific value&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--normalise&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;bool, True or False for should I normalise data or not&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--mapscan&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;bool, True or False is this a mapscan?&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--method&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;which minimisation algorithm to use&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--tol&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0000001</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;tolerance when fitting&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--amp_bounds&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;whether to create bounds for the amplitude or not&#39;</span><span class="p">)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>  <span class="c1"># this allows us to now use them all</span>
+
+    <span class="k">return</span> <span class="n">args</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <pre><code>user args parsed depending on params file has been passed. if it hasn't then parse command line input,
+if it has then parse that file instead
+:param args: command line input
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">using_user_args</span><span class="p">(</span><span class="n">args</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;parsing user args&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">param_file_path</span><span class="p">:</span>  <span class="c1"># if there is a params file then use it</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>logging.warning(&lsquo;Using params file and ignoring all other user inputs from command line&rsquo;)</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">arguments</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">parse_param_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">param_file_path</span><span class="p">)</span>  <span class="c1"># parse it</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">datapath</span><span class="p">:</span>
+            <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">datapath</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;not using params file&#39;</span><span class="p">)</span>
+        <span class="n">arguments</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>  <span class="c1"># else use argparse but put in dictionary form</span>
+
+    <span class="k">return</span> <span class="n">arguments</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <pre><code>make a directory to store all the user files in. name it with the file_name being analysed and the current time.
+:param arguments: user args. actually only need the datapath element so will change in future
+:param file_name: filename to save should actually be the only argument and basename should maybe be a bool option
+:return: filename used and the dirname created
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">make_user_files</span><span class="p">(</span><span class="n">arguments</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;making file to store data inside&#39;</span><span class="p">)</span>
+    <span class="n">curr_time</span> <span class="o">=</span> <span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">_%m_%Y_%l:%M%p&#39;</span><span class="p">)</span>  <span class="c1"># name directory with the current time</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_name</span><span class="p">:</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">])</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># the name of the file</span>
+    <span class="n">dirname</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">make_dir</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{file_name}_analysed_{curr_time}&#39;</span><span class="p">)</span>  <span class="c1"># make a dict for the processed data to be saved in)</span>
+
+    <span class="k">return</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">dirname</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

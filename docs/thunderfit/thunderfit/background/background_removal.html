@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>background_removal.py</title>
+  <link rel="stylesheet" href="../../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>background_removal.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <h4>old method</h4>
+<p>def find_background(data, residual_baseline_func, baseline_asl_func):
+   params = (array([0.01, 10 <strong> 5]))
+   bounds = [array([0.001, 10 </strong> 5]), array([0.1, 10 ** 9])]
+   baseline_values = least_squares(residual_baseline_func, params[:], args=(data.values,), bounds=bounds)
+   p, lam = baseline_values[&lsquo;x&rsquo;]
+   baseline_values = baseline_asl_func(data.values, lam, p, niter=10)
+   return baseline_values</p>
+<p>def residual_baseline(params, y):
+   p, lam = params
+   niter = 10
+   baseline = baseline_als(y, lam, p, niter)
+   residual = y - baseline
+   return residual</p>
+<p>def baseline_als(y, lam, p, niter=10):
+   L = len(y)
+   D = diags([1, -2, 1], [0, -1, -2], shape=(L, L - 2))
+   w = ones(L)
+   if niter &lt; 1:
+       raise ValueError(&ldquo;n iter is too small!&rdquo;)
+   for i in range(niter):
+       W = spdiags(w, 0, L, L)
+       Z = W + lam * D.dot(D.transpose())
+       z = spsolve(Z, w * y)
+       w = p * (y &gt; z) + (1 - p) * (y &lt; z)
+   return z</p>
+<h4></h4>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">array</span><span class="p">,</span> <span class="n">ndarray</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">scarf</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <pre><code>function to shift the bg and the y data with the bg removed up if there are negative values.
+:param y_bg_rm: the y data with bg removed
+:param bg: the bg as an np array
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">correct_negative_bg</span><span class="p">(</span><span class="n">y_bg_rm</span><span class="p">,</span> <span class="n">bg</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">y_min</span> <span class="o">=</span> <span class="n">y_bg_rm</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">y_min</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">y_bg_rm</span> <span class="o">+=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_min</span><span class="p">)</span>  <span class="c1"># then shift all the data up so no points are below zero</span>
+        <span class="n">bg</span> <span class="o">-=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y_min</span><span class="p">)</span>  <span class="c1"># and lower the bg we have calculated by that shift too</span>
+    <span class="k">return</span> <span class="n">y_bg_rm</span><span class="p">,</span> <span class="n">bg</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <pre><code>function to find the background given bg which is either a string or an np array specifying the type of background to remove.
+:param x_data: x data as np array
+:param y_data: y data as np array. npte x and y must be same length
+:param bg: an np array of size y_data or a string specifying the type of bg to remove
+:param scarf_params: the parameters for scarf background removal. if nothing is passed it defaults to none
+:return: bg as np array, y data with the bg removed, the parameters relating to the background
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">background_finder</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">bg</span> <span class="o">==</span> <span class="s1">&#39;no&#39;</span><span class="p">:</span>  <span class="c1"># then user doesn&#39;t want to make a background</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Warning: no background specified, so not using a background,&quot;</span>
+            <span class="s2">&quot; this may prevent algorithm from converging&quot;</span><span class="p">)</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">y_data</span><span class="p">])</span>  <span class="c1"># set the background as 0 everywhere</span>
+        <span class="n">data_bg_rm_y</span> <span class="o">=</span> <span class="n">y_data</span>  <span class="c1"># no background subtracted</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="s1">&#39;no&#39;</span>
+
+    <span class="k">elif</span> <span class="n">bg</span> <span class="o">==</span> <span class="s1">&#39;SCARF&#39;</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;using SCARF method for background subtraction&#39;</span><span class="p">)</span>
+        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">scarf</span><span class="o">.</span><span class="n">perform_scarf</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">scarf_params</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bg</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">bg</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_data</span><span class="p">),</span> \
+            <span class="s2">&quot;the background generated or passed is of incorrect length&quot;</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;using numpy array as supplied by user&#39;</span><span class="p">)</span>
+        <span class="n">data_bg_rm_y</span> <span class="o">=</span> <span class="n">y_data</span> <span class="o">-</span> <span class="n">bg</span>  <span class="c1"># subtract user supplied background from the data</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="s1">&#39;user_specified&#39;</span>
+
+    <span class="k">elif</span> <span class="n">bg</span> <span class="o">==</span> <span class="s1">&#39;OLD&#39;</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;user specified old bg subtraction method which is no longer supported&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>bg = find_background(y_data, residual_baseline, baseline_als) # find a background the old way
+data_bg_rm_y = y_data - bg  # subtract background from the data
+params = &lsquo;old_method&rsquo;</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;old method is no longer supported&#39;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># then it is the incorrect type</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;user specified unknown bg subtraction method&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;the background passed is in the incorrect format, please pass as type np array&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bg</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">params</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>

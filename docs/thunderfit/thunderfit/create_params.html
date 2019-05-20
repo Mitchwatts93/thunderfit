@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>create_params.py</title>
+  <link rel="stylesheet" href="../../pycco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <div class='section'>
+    <div class='docs'><h1>create_params.py</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span>
+<span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">literal_eval</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">parsing</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">multi_obj</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">thundobj</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">peak_finding</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <pre><code>simple function to guide the user to making a parameters file and saving it for them.
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">():</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">args</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">parse_user_args</span><span class="p">()</span>
+
+    <span class="n">arguments</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">using_user_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;map&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># a user can pass in a list of filenames or just one</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">SyntaxError</span><span class="p">:</span>  <span class="c1"># assume its just a string and not a list passed</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">log_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
+            <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;[&#39;{arguments[&#39;datapath&#39;]}&#39;,]&quot;</span>  <span class="c1"># as this is what multiobj needs</span>
+        <span class="n">bag</span> <span class="o">=</span> <span class="n">multi_obj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># create a Thunder object</span>
+
+        <span class="n">bag</span><span class="o">.</span><span class="n">choose_spectrum</span><span class="p">()</span> <span class="c1"># get the user to choose which spectrum to create params from</span>
+        <span class="n">thund</span> <span class="o">=</span> <span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="n">bag</span><span class="o">.</span><span class="n">first</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">thund</span> <span class="o">=</span> <span class="n">thundobj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># create a Thunder object</span>
+
+
+    <span class="n">thund</span><span class="o">.</span><span class="n">y_data</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">sharpening_routine</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thund</span><span class="o">.</span><span class="n">y_data</span><span class="p">)</span>
+
+    <span class="n">peak_info</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">peak_finding</span><span class="o">.</span><span class="n">interactive_peakfinder</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">x_data</span><span class="p">,</span> <span class="n">thund</span><span class="o">.</span><span class="n">y_data</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">)</span>
+    <span class="n">utilities</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span><span class="n">peak_info</span><span class="p">,</span> <span class="s1">&#39;./&#39;</span><span class="p">,</span> <span class="s1">&#39;generated_params.txt&#39;</span><span class="p">)</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
+</body>
