@@ -9,6 +9,7 @@ from . import multi_obj
 from . import thundobj
 from . import peak_finding
 
+
 def main():
     """
     simple function to guide the user to making a parameters file and saving it for them.
@@ -24,17 +25,17 @@ def main():
         except SyntaxError:  # assume its just a string and not a list passed
             file_name = None
             log_name = arguments['datapath']
-            arguments['datapath'] = f"['{arguments['datapath']}',]"  # as this is what multiobj needs
+            # as this is what multiobj needs
+            arguments['datapath'] = f"['{arguments['datapath']}',]"
         bag = multi_obj.main(arguments)  # create a Thunder object
 
-        bag.choose_spectrum() # get the user to choose which spectrum to create params from
+        bag.choose_spectrum()  # get the user to choose which spectrum to create params from
         thund = bag.thunder_bag[bag.first]
     else:
         thund = thundobj.main(arguments)  # create a Thunder object
 
-
     thund.y_data = utilities.sharpening_routine(thund.x_data, thund.y_data)
 
-    peak_info, _ = peak_finding.interactive_peakfinder(thund.x_data, thund.y_data, type='user')
+    peak_info, _ = peak_finding.interactive_peakfinder(
+        thund.x_data, thund.y_data, type='user')
     utilities.save_fit_report(peak_info, './', 'generated_params.txt')
-

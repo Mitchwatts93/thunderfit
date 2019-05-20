@@ -45,8 +45,10 @@ def correct_negative_bg(y_bg_rm, bg):
     """
     y_min = y_bg_rm.min()
     if y_min < 0:
-        y_bg_rm += abs(y_min)  # then shift all the data up so no points are below zero
-        bg -= abs(y_min)  # and lower the bg we have calculated by that shift too
+        # then shift all the data up so no points are below zero
+        y_bg_rm += abs(y_min)
+        # and lower the bg we have calculated by that shift too
+        bg -= abs(y_min)
     return y_bg_rm, bg
 
 
@@ -69,7 +71,8 @@ def background_finder(x_data, y_data, bg, scarf_params=False):
 
     elif bg == 'SCARF':
         logging.debug('using SCARF method for background subtraction')
-        data_bg_rm_y, bg, params = scarf.perform_scarf(x_data, y_data, scarf_params)
+        data_bg_rm_y, bg, params = scarf.perform_scarf(
+            x_data, y_data, scarf_params)
 
     elif isinstance(bg, ndarray):
         assert len(bg) == len(y_data), \
@@ -79,7 +82,8 @@ def background_finder(x_data, y_data, bg, scarf_params=False):
         params = 'user_specified'
 
     elif bg == 'OLD':
-        logging.warning('user specified old bg subtraction method which is no longer supported')
+        logging.warning(
+            'user specified old bg subtraction method which is no longer supported')
         # bg = find_background(y_data, residual_baseline, baseline_als) # find a background the old way
         # data_bg_rm_y = y_data - bg  # subtract background from the data
         # params = 'old_method'
@@ -87,6 +91,7 @@ def background_finder(x_data, y_data, bg, scarf_params=False):
 
     else:  # then it is the incorrect type
         logging.warning('user specified unknown bg subtraction method')
-        raise TypeError('the background passed is in the incorrect format, please pass as type np array')
+        raise TypeError(
+            'the background passed is in the incorrect format, please pass as type np array')
 
     return bg, data_bg_rm_y, params

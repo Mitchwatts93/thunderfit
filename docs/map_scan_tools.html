@@ -20,16 +20,15 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib</span>
+      <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">unique</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">nanmin</span><span class="p">,</span> <span class="n">nanmax</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nanpercentile</span><span class="p">,</span> <span class="n">nanmean</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
 
-<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
-<span class="kn">import</span> <span class="nn">logging</span>
-
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utili</span></pre></div>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -57,8 +56,10 @@
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;shifting coordinates array&#39;</span><span class="p">)</span>
-    <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-    <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> \
+        <span class="nb">min</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> \
+        <span class="nb">min</span><span class="p">(</span><span class="n">coordinates_array</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">coordinates_array</span></pre></div>
     </div>
   </div>
@@ -90,26 +91,19 @@ accessed from the X and Y which are returned (lists of the coodinates)
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1">#initialise these</span>
+      <div class="highlight"><pre>    <span class="n">X</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># initialise these</span>
     <span class="n">Y</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">Z</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">peak_label_vals</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> <span class="c1"># corresponding to a pixel</span>
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="c1">#coordinates</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">peak_label_vals</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="c1">#value at those coordinates</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span> <span class="c1"># not sure why this is here.</span>
-            <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span> <span class="c1">#probably will break if this happens. better to raise an error</span>
-        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="c1"># append to coordinates and values to the lists</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">peak_label_vals</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>  <span class="c1"># corresponding to a pixel</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">coordinates</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>  <span class="c1"># coordinates</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">peak_label_vals</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>  <span class="c1"># value at those coordinates</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># not sure why this is here.</span>
+            <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span>  <span class="c1"># probably will break if this happens. better to raise an error</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># append to coordinates and values to the lists</span>
         <span class="n">Y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="n">Z</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
-    <span class="n">x_step</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#what are the step sizes in x</span>
-    <span class="n">xx</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">X</span> <span class="o">/</span> <span class="n">x_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="c1"># turn the x coordinates into an array of integer steps</span>
-    <span class="n">y_step</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">unique</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">yy</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">Y</span> <span class="o">/</span> <span class="n">y_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-    <span class="n">data_</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span> <span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">xx</span><span class="p">)))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="c1">#build a dense array by using sparse array notation and converting</span>
-    <span class="n">data_</span><span class="p">[</span><span class="n">data_</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span> <span class="c1">#if its zero we assume thats because there was no data taken there.</span>
-
-    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">data_</span></pre></div>
+    <span class="n">x_step</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">unique</span><span class="p">(</span><span class="n">X</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># what are the step sizes in x</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -117,6 +111,46 @@ accessed from the X and Y which are returned (lists of the coodinates)
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <p>turn the x coordinates into an array of integer steps</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">xx</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">X</span> <span class="o">/</span> <span class="n">x_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">y_step</span> <span class="o">=</span> <span class="n">unique</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">unique</span><span class="p">(</span><span class="n">Y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">yy</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">Y</span> <span class="o">/</span> <span class="n">y_step</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      <p>build a dense array by using sparse array notation and converting</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">data_</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">Z</span><span class="p">,</span> <span class="p">(</span><span class="n">yy</span><span class="p">,</span> <span class="n">xx</span><span class="p">)))</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <p>if its zero we assume thats because there was no data taken there.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">data_</span><span class="p">[</span><span class="n">data_</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">nan</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">data_</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
       </div>
       <pre><code>function to generate dictionaries of X and Y coordiantes, as well as dict of data matrices. does this for all
 the peak types in the passed in dictionaries. keys are the properties e.g. 'center' etc
@@ -130,10 +164,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-6'>
+  <div class='section' id='section-9'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-6'>#</a>
+        <a class='octothorpe' href='#section-9'>#</a>
       </div>
       
     </div>
@@ -144,7 +178,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     <span class="n">X_</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">Y_</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">peak_label</span> <span class="ow">in</span> <span class="n">peak_labels</span><span class="p">:</span>
-        <span class="n">peak_label_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">nan</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+        <span class="n">peak_label_vals</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">peak_label</span><span class="p">,</span>
+                <span class="n">nan</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
         <span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">data_</span> <span class="o">=</span> <span class="n">generate_map_matrix</span><span class="p">(</span><span class="n">coordinates</span><span class="p">,</span> <span class="n">peak_label_vals</span><span class="p">)</span>
         <span class="n">data</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_</span>
         <span class="n">X_</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span>
@@ -153,10 +190,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-7'>
+  <div class='section' id='section-10'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-7'>#</a>
+        <a class='octothorpe' href='#section-10'>#</a>
       </div>
       <pre><code>function to plot a mapscan given a data matrix and the actual coordinates to plot on the map
 :param data: np array of values
@@ -170,10 +207,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-8'>
+  <div class='section' id='section-11'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-8'>#</a>
+        <a class='octothorpe' href='#section-11'>#</a>
       </div>
       
     </div>
@@ -182,15 +219,27 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
     <span class="n">magma_cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">&#39;magma&#39;</span><span class="p">)</span>
     <span class="n">magma_cmap</span><span class="o">.</span><span class="n">set_bad</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
-    <span class="n">im</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">magma_cmap</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">Y</span><span class="p">)],</span>
-                    <span class="n">vmax</span><span class="o">=</span><span class="n">nanpercentile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">97</span><span class="p">))</span>  <span class="c1"># we plot the 99th percentile and 1st percentil as the max and min</span></pre></div>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="n">cmap</span><span class="o">=</span><span class="n">magma_cmap</span><span class="p">,</span>
+        <span class="n">vmin</span><span class="o">=</span><span class="n">nanpercentile</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="mi">3</span><span class="p">),</span>
+        <span class="n">extent</span><span class="o">=</span><span class="p">[</span>
+            <span class="nb">min</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+            <span class="nb">max</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span>
+            <span class="nb">min</span><span class="p">(</span><span class="n">Y</span><span class="p">)],</span>
+        <span class="n">vmax</span><span class="o">=</span><span class="n">nanpercentile</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="mi">97</span><span class="p">))</span>  <span class="c1"># we plot the 99th percentile and 1st percentil as the max and min</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-9'>
+  <div class='section' id='section-12'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-9'>#</a>
+        <a class='octothorpe' href='#section-12'>#</a>
       </div>
       <p>colours</p>
     </div>
@@ -205,10 +254,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-10'>
+  <div class='section' id='section-13'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-10'>#</a>
+        <a class='octothorpe' href='#section-13'>#</a>
       </div>
       <pre><code>plot all the data and save all the plots into dicts which are returned
 :param data_mat: data matrices as dicts. keys are for the properties for which each map matrix is the value
@@ -222,10 +271,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-11'>
+  <div class='section' id='section-14'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-11'>#</a>
+        <a class='octothorpe' href='#section-14'>#</a>
       </div>
       
     </div>
@@ -245,10 +294,10 @@ the peak types in the passed in dictionaries. keys are the properties e.g. 'cent
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-12'>
+  <div class='section' id='section-15'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-12'>#</a>
+        <a class='octothorpe' href='#section-15'>#</a>
       </div>
       <pre><code>function to return the mean center values from fit_params dict. isn't a great abstraction barrier though!
 :param peak_label: the label of the peak you want the mean center value for e.g. 'm0' for mdoel 0
@@ -263,24 +312,29 @@ for each peak
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-13'>
+  <div class='section' id='section-16'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-13'>#</a>
+        <a class='octothorpe' href='#section-16'>#</a>
       </div>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">cents</span> <span class="o">=</span> <span class="p">[</span><span class="n">cent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+      <div class="highlight"><pre>    <span class="n">cents</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">cent</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">peak_label</span><span class="p">,</span>
+            <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">&#39;center&#39;</span><span class="p">,</span>
+            <span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
     <span class="n">cent_mean</span> <span class="o">=</span> <span class="n">nanmean</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">cent_mean</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-14'>
+  <div class='section' id='section-17'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-14'>#</a>
+        <a class='octothorpe' href='#section-17'>#</a>
       </div>
       <pre><code>given a mapscan plot save it and add a title
 :param peak_label: the label of the peak the mapscan is for
@@ -296,24 +350,28 @@ for each peak
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-15'>
+  <div class='section' id='section-18'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-15'>#</a>
+        <a class='octothorpe' href='#section-18'>#</a>
       </div>
       
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="n">cent_mean</span> <span class="o">=</span> <span class="n">get_cent_mean</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">)</span>
-    <span class="n">plot</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{p}_{peak_label}_heatmap. peak {peak_label} is centered at:  {cent_mean}&quot;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_plot</span><span class="p">(</span><span class="n">plot</span><span class="p">[</span><span class="n">peak_label</span><span class="p">],</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">figname</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{p}_{peak_label}.svg&quot;</span><span class="p">)</span></pre></div>
+    <span class="n">plot</span><span class="p">[</span><span class="n">peak_label</span><span class="p">]</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span>
+        <span class="n">f</span><span class="s2">&quot;{p}_{peak_label}_heatmap. peak {peak_label} is centered at:  {cent_mean}&quot;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_plot</span><span class="p">(</span>
+        <span class="n">plot</span><span class="p">[</span><span class="n">peak_label</span><span class="p">],</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+        <span class="n">figname</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{p}_{peak_label}.svg&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-16'>
+  <div class='section' id='section-19'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-16'>#</a>
+        <a class='octothorpe' href='#section-19'>#</a>
       </div>
       <pre><code>given the map matrices coordinates dictionaries and fit parameters, plot all the mapscans and then call them all to be saved
 :param map_matrices: a dict of map matrices, keys are the type of map to save e.g. 'center'. the values are dicts of
@@ -327,14 +385,20 @@ actual data matrices as values and keys correspond to the model keys e.g. 'm0'
 </code></pre>
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">mapscans_for_parameter</span><span class="p">(</span>
+        <span class="n">map_matrices</span><span class="p">,</span>
+        <span class="n">X_coords</span><span class="p">,</span>
+        <span class="n">Y_coords</span><span class="p">,</span>
+        <span class="n">p</span><span class="p">,</span>
+        <span class="n">fit_params</span><span class="p">,</span>
+        <span class="n">dirname</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-17'>
+  <div class='section' id='section-20'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-17'>#</a>
+        <a class='octothorpe' href='#section-20'>#</a>
       </div>
       
     </div>
@@ -347,10 +411,10 @@ actual data matrices as values and keys correspond to the model keys e.g. 'm0'
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-18'>
+  <div class='section' id='section-21'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-18'>#</a>
+        <a class='octothorpe' href='#section-21'>#</a>
       </div>
       <pre><code>function to plot the mapscans given user input on what to plot for.
 :param fit_params: a dictionary of dicts. 1st keys are properties e.g. 'center' and second keys are for each model
@@ -367,37 +431,41 @@ e.g. 'm0'. values are a dict of the actual values for each pixel in the map
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-19'>
+  <div class='section' id='section-22'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-19'>#</a>
+        <a class='octothorpe' href='#section-22'>#</a>
       </div>
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;runnning user input routine to generate/save user chosen variables in maps&#39;</span><span class="p">)</span>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s1">&#39;runnning user input routine to generate/save user chosen variables in maps&#39;</span><span class="p">)</span>
     <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;making map scans, please input which property you would like to scan. options are:&quot;</span>
-                    <span class="n">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> {[p_ for p_ in fit_params.keys()]}, or type &#39;all&#39; to plot all, or type e to exit&quot;</span><span class="p">)</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+            <span class="s2">&quot;making map scans, please input which property you would like to scan. options are:&quot;</span>
+            <span class="n">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> {[p_ for p_ in fit_params.keys()]}, or type &#39;all&#39; to plot all, or type e to exit&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span>
             <span class="k">break</span>
         <span class="k">elif</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
-            <span class="k">break</span> <span class="c1">#break the while loop</span>
+                <span class="n">mapscans_for_parameter</span><span class="p">(</span>
+                    <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+            <span class="k">break</span>  <span class="c1"># break the while loop</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">p</span> <span class="o">=</span> <span class="n">ans</span>
-                <span class="n">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+                <span class="n">mapscans_for_parameter</span><span class="p">(</span>
+                    <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
                 <span class="k">print</span><span class="p">(</span><span class="s1">&#39;wrong answer entered, trying again!&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-20'>
+  <div class='section' id='section-23'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-20'>#</a>
+        <a class='octothorpe' href='#section-23'>#</a>
       </div>
       
     </div>

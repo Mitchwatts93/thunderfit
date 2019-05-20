@@ -1,8 +1,10 @@
+from . import normalisation
+import matplotlib.pyplot as plt
 import logging
 from json import dump as j_dumps
 from json import load as j_load
 from os import mkdir
-from os.path import join
+from os.path import join, abspath
 from time import strftime
 
 import matplotlib
@@ -12,10 +14,6 @@ from dill import load as d_load
 from numpy import vstack, pad, diff, frombuffer
 
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-
-from . import normalisation
 
 
 # tools
@@ -28,7 +26,7 @@ def save_thunder(obj, path, filename='thunder.d'):
     :return:
     """
     logging.debug(f'saving using dill {filename}')
-    d_dump(obj, open(join(path, filename), 'wb'))
+    d_dump(obj, open(abspath(join(path, filename)), 'wb'))
 
 
 def load_thunder(path):
@@ -63,7 +61,7 @@ def save_fit_report(obj, path, filename="report.json"):
     :return:
     """
     logging.debug(f'saving report {filename}')
-    j_dumps(obj, open(join(path, filename), 'w'), indent=4)
+    j_dumps(obj, open(abspath(join(path, filename)), 'w'), indent=4)
 
 
 def find_closest_indices(list1, list2):
@@ -75,8 +73,8 @@ def find_closest_indices(list1, list2):
     :return: a list of indices of matches
     """
     try:
-        list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(list1[i] - cent))
-                                    for cent in list2] #  the lambda function is what min uses
+        list_of_matching_indices = [min(range(len(list1)), key=lambda i: abs(
+            list1[i] - cent)) for cent in list2]  # the lambda function is what min uses
     except ValueError:
         print('this dataset has no values!')
         return
@@ -93,11 +91,15 @@ def normalise_all(y_bg_rem, bg, y_raw):
     :return: data np arrays normalised by svn normalisaiton
     """
     logging.debug('normalising many objects')
-    y_data_bg_rm, (mean_y_data, std_dev) = normalisation.svn(y_bg_rem)  # normalise the data
-    background, _ = normalisation.svn(bg, mean_y_data, std_dev)  # normalise with data from bg subtracted data
-    y_data_norm, _ = normalisation.svn(y_raw, mean_y_data, std_dev)  # normalise with data from bg subtracted data
+    y_data_bg_rm, (mean_y_data, std_dev) = normalisation.svn(
+        y_bg_rem)  # normalise the data
+    # normalise with data from bg subtracted data
+    background, _ = normalisation.svn(bg, mean_y_data, std_dev)
+    # normalise with data from bg subtracted data
+    y_data_norm, _ = normalisation.svn(y_raw, mean_y_data, std_dev)
 
     return y_data_bg_rm, background, y_data_norm
+
 
 def safe_list_get(l, idx, default):
     """fetch items safely from a list, if it isn't long enough return a default value"""
@@ -105,6 +107,7 @@ def safe_list_get(l, idx, default):
         return l[idx]
     except IndexError:
         return default
+
 
 def sharpening_routine(x_data, y_data):
     """
@@ -117,12 +120,14 @@ def sharpening_routine(x_data, y_data):
     res_enhanced = y_data
     while True:
         plt.plot(x_data, res_enhanced)
-        print(f"Do you want to sharpen the peaks to help find components? Note this will not edit the actual data. "
-              f"Current sharpening factor is: {sharpening_factor}")
+        print(
+            f"Do you want to sharpen the peaks to help find components? Note this will not edit the actual data. "
+            f"Current sharpening factor is: {sharpening_factor}")
         plt.show()
-        ans = input("Please enter the method (either 'power' or 'deriv'), then a comma, then a new sharpening factors "
-                    "(comma seperated if mutliple i.e. for derivative), "
-                    "or type y to continue with the current factor")
+        ans = input(
+            "Please enter the method (either 'power' or 'deriv'), then a comma, then a new sharpening factors "
+            "(comma seperated if mutliple i.e. for derivative), "
+            "or type y to continue with the current factor")
         if ans == 'y':
             plt.close()
             return y_data
@@ -132,8 +137,9 @@ def sharpening_routine(x_data, y_data):
                 _type = ans[0]
                 ans = ans[1:]
                 sharpening_factor = [float(fac) for fac in ans]
-                res_enhanced = peak_sharpening(y_data, _type, sharpening_factor)
-            except:
+                res_enhanced = peak_sharpening(
+                    y_data, _type, sharpening_factor)
+            except BaseException:
                 print("You entered an incorrect answer! Trying again...")
 
 
@@ -160,6 +166,8 @@ def peak_sharpening(y_data, _type, sharpening_factor):
 # tools
 
 # user inputs and loading etc
+
+
 def load_data(datapath, x_ind, y_ind, e_ind=None):
     """
     load in data as an np arra. can load from a csv or hs5 pandas
@@ -174,18 +182,28 @@ def load_data(datapath, x_ind, y_ind, e_ind=None):
         store = pd.HDFStore(datapath)
         keys = store.keys()
         if len(keys) > 1:
-            logging.warning("Too many keys in the hdfstore, will assume all should be concated")
+            logging.warning(
+                "Too many keys in the hdfstore, will assume all should be concated")
             logging.warning("not sure this concat works yet")
-            data = store.concat([store[key] for key in keys])  # not sure this will work! concat all keys dfs together
+            # not sure this will work! concat all keys dfs together
+            data = store.concat([store[key] for key in keys])
         else:
-            data = store[keys[0]]  # if only one key then we use it as the datafile
+            # if only one key then we use it as the datafile
+            data = store[keys[0]]
     else:  # its a txt or csv file
-        data = pd.read_csv(datapath, header=None, sep='\t', dtype='float')  # load in, works for .txt and .csv
+        # load in, works for .txt and .csv
+        data = pd.read_csv(datapath, header=None, sep='\t', dtype='float')
         if len(data.columns) < 2:
-            data = pd.read_csv(datapath, header=None, sep='\s+', dtype='float')  # load in, works for .txt and .csv
+            # load in, works for .txt and .csv
+            data = pd.read_csv(
+                datapath,
+                header=None,
+                sep=r'\s+',
+                dtype='float')
         # this needs to be made more flexible/user defined
     if e_ind:  # if we have specified this column then we use it, otherwise just x and y
-        assert (len(data.columns) >= 2), "You have specified an e_ind but there are less than 3 columns in the data"
+        assert (len(data.columns) >=
+                2), "You have specified an e_ind but there are less than 3 columns in the data"
         e_data = data[e_ind].values
     else:
         e_data = None
@@ -209,10 +227,19 @@ def map_unique_coords(x_data, y_data, x_coords, y_coords):
     index 0 of all has the x and y coordinates in coords lists at 0, and x and y data in those lists at 0 as np arrays
     """
     logging.debug('parsing coordinates')
-    data = vstack((x_coords, y_coords, x_data, y_data)).transpose()  # now have columns as the data
-    df = pd.DataFrame(data=data, columns=['x_coords', 'y_coords', 'x_data', 'y_data'])
-    unique_dict = dict(tuple(df.groupby(['x_coords', 'y_coords'])))  # get a dictionary of the unique values for
-    # coordinates (as tuples of (x,y)) and then the whole df rows for these values
+    data = vstack((x_coords, y_coords, x_data, y_data)
+                  ).transpose()  # now have columns as the data
+    df = pd.DataFrame(
+        data=data,
+        columns=[
+            'x_coords',
+            'y_coords',
+            'x_data',
+            'y_data'])
+    # get a dictionary of the unique values for
+    unique_dict = dict(tuple(df.groupby(['x_coords', 'y_coords'])))
+    # coordinates (as tuples of (x,y)) and then the whole df rows for these
+    # values
 
     x_data, y_data, x_coords, y_coords = [], [], [], []
     for key in unique_dict.keys():
@@ -304,23 +331,28 @@ def clip_data(x_data, y_data, clips=None):
         while True:
             fig, ax = plt.subplots()
             ax.plot(x_data[clip_left:clip_right], y_data[clip_left:clip_right])
-            print(f"Removing background, please type two x values seperated by a space for the clips. \n"
-                  f"Current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
-                  f"PLEASE MAKE SURE YOU ENTER IN THE SAME ORDER AS HERE. i.e. if first value is larger than right then the "
-                  f"first value will be the large x_clip second small")
+            print(
+                f"Removing background, please type two x values seperated by a space for the clips. \n"
+                f"Current values are: {x_data[clip_left]}, {x_data[clip_right]}. \n"
+                f"PLEASE MAKE SURE YOU ENTER IN THE SAME ORDER AS HERE. i.e. if first value is larger than right then the "
+                f"first value will be the large x_clip second small")
             plt.show(block=True)
-            ans = input("If you are happy with the clips type y. If not then please type a new pair of values ")
+            ans = input(
+                "If you are happy with the clips type y. If not then please type a new pair of values ")
             if ans == 'y':
                 break
             else:
                 try:
                     ans = ans.split(' ')
                     if len(ans) != 2:
-                        raise ValueError("The tuple was more than two elements long")
+                        raise ValueError(
+                            "The tuple was more than two elements long")
                     clip_left = float(ans[0])
-                    clip_left = find_closest_indices(list(x_data), [clip_left])[0]
+                    clip_left = find_closest_indices(
+                        list(x_data), [clip_left])[0]
                     clip_right = float(ans[1])
-                    clip_right = find_closest_indices(list(x_data), [clip_right])[0]
+                    clip_right = find_closest_indices(
+                        list(x_data), [clip_right])[0]
                 except ValueError:
                     print("You entered an incorrect answer! Trying again...")
 
@@ -347,7 +379,7 @@ def setup_logger(log_name):
     :param log_name:
     :return:
     """
-    curr_time = strftime('%d_%m_%Y_%l:%M%p')
+    curr_time = strftime('%d_%m_%Y__%H;%M')
     log_filename = f"{log_name}_{curr_time}.log"
     logging.getLogger().setLevel(logging.DEBUG)
     logger = logging.getLogger('')
@@ -369,7 +401,13 @@ def gif_maker(bag, filename):
     def update(i):
         thund = next(bags)
         ax, fig = thund.plot_all(plot_unc=False)
-        plt.text(0.1, 0.9, f'PLOT_{i}', horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        plt.text(
+            0.1,
+            0.9,
+            f'PLOT_{i}',
+            horizontalalignment='center',
+            verticalalignment='center',
+            transform=ax.transAxes)
         fig.canvas.draw()
         img = frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
         img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))

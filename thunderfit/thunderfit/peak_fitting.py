@@ -5,6 +5,7 @@ from numpy import nan
 
 from . import utilities as utils
 
+
 def get_tols(method, tol):
     """
     quick function to set the tolerances as a dictionary depending on the method being used
@@ -13,10 +14,12 @@ def get_tols(method, tol):
     :return:
     """
     if method in ['leastsq', 'least_squares']:
-        tols = {'ftol': tol, 'xtol': tol}  # warning: need to experiment with these/allow control maybe?
+        # warning: need to experiment with these/allow control maybe?
+        tols = {'ftol': tol, 'xtol': tol}
     else:
         tols = {'ftol': tol}
     return tols
+
 
 def prep_algo(method, tols):
     """
@@ -30,11 +33,22 @@ def prep_algo(method, tols):
         print('Warning: This is a very slow but thorough algorithm')
     if method == 'differential_evolution':
         all_bounds = True
-    if method in ['leastsq', 'least_squares', 'nelder', 'cobyla']: # do this for all of them??
-        tols  = get_tols(method, tols)
+    if method in [
+        'leastsq',
+        'least_squares',
+        'nelder',
+            'cobyla']:  # do this for all of them??
+        tols = get_tols(method, tols)
     return tols
 
-def fit_peaks(x_data, y_data, peak_info_dict, bounds, method='leastsq', tol=0.0000001):
+
+def fit_peaks(
+        x_data,
+        y_data,
+        peak_info_dict,
+        bounds,
+        method='leastsq',
+        tol=0.0000001):
     """
     function which does the peak fitting.
     :param x_data: np array of x data
@@ -46,41 +60,73 @@ def fit_peaks(x_data, y_data, peak_info_dict, bounds, method='leastsq', tol=0.00
     :return: specifications dictionary for the model used, the model object iteself, the parameters of the best fitted
     values and the model_result object
     """
-    impl_methods = ['leastsq', 'least_squares', 'nelder', 'lbfgsb', 'powell', 'cg', 'cobyla', 'bfgsb',
-                    'differential_evolution', 'basinhopping', 'ampgo']
-    if not method in impl_methods:
-        raise ValueError(f"The method supplied is not supported. Available methods: {impl_methods}")
+    impl_methods = [
+        'leastsq',
+        'least_squares',
+        'nelder',
+        'lbfgsb',
+        'powell',
+        'cg',
+        'cobyla',
+        'bfgsb',
+        'differential_evolution',
+        'basinhopping',
+        'ampgo']
+    if method not in impl_methods:
+        raise ValueError(
+            f"The method supplied is not supported. Available methods: {impl_methods}")
     logging.debug(f'fitting peaks:  {peak_info_dict}')
 
-    tols = prep_algo(method, tol) # prep for the fitting
-    model_specs = build_specs(peak_info_dict, bounds) # build a correctly formatted dictionary for fitting
-    model, peak_params = generate_model(model_specs) # generate the composite model for fitting
+    tols = prep_algo(method, tol)  # prep for the fitting
+    # build a correctly formatted dictionary for fitting
+    model_specs = build_specs(peak_info_dict, bounds)
+    # generate the composite model for fitting
+    model, peak_params = generate_model(model_specs)
 
     if method in ['leastsq', 'least_squares', 'nelder', 'cobyla']:
-        peaks = model.fit(y_data, peak_params, x=x_data, method=method, fit_kws=tols) # fit the model to the data
-        if not peaks.success: # then raise tolerance and try again
-            print('peaks failed to fit, raising tolerance by one order magnitude and trying again')
-            tols = {key:value*10 for key, value in tols.items()} # try raising the tolerance if it fails by one order
-            peaks = model.fit(y_data, peak_params, x=x_data, method=method, fit_kws=tols)
+        peaks = model.fit(
+            y_data,
+            peak_params,
+            x=x_data,
+            method=method,
+            fit_kws=tols)  # fit the model to the data
+        if not peaks.success:  # then raise tolerance and try again
+            print(
+                'peaks failed to fit, raising tolerance by one order magnitude and trying again')
+            # try raising the tolerance if it fails by one order
+            tols = {key: value * 10 for key, value in tols.items()}
+            peaks = model.fit(
+                y_data,
+                peak_params,
+                x=x_data,
+                method=method,
+                fit_kws=tols)
     else:
         peaks = model.fit(y_data, peak_params, x=x_data, method=method)
 
-    peak_params = peaks.best_values # what are the best parameters used # shoudl create a function as an abstraction barrier for this
-    if not peaks.success: # then didn't fit for some reason, so set everything to nan in results
+    # what are the best parameters used # shoudl create a function as an
+    # abstraction barrier for this
+    peak_params = peaks.best_values
+    if not peaks.success:  # then didn't fit for some reason, so set everything to nan in results
         print('peaks failed to fit')
         peak_params = {key: nan for key in peak_params}
 
-    return model_specs, model, peak_params, peaks # really should clean this up but allows flexibility for user by passing the actual objects back too
+    # really should clean this up but allows flexibility for user by passing
+    # the actual objects back too
+    return model_specs, model, peak_params, peaks
 
-def safe_list_get (l, idx, default):
+
+def safe_list_get(l, idx, default):
     """fetch items safely from a list, if it isn't long enough return a default value"""
     try:
         return l[idx]
     except IndexError:
         return default
 
-##### Call this with correct arguments, should always call with all the arguments!
-def build_specs(peak_info_dict: dict={}, bounds: dict={}):
+# Call this with correct arguments, should always call with all the arguments!
+
+
+def build_specs(peak_info_dict: dict = {}, bounds: dict = {}):
     """
     should be depreciated in future. can get by with bypassing this, currently acts to cleanse inputs so maybe could be
     shortened/changed with that goal in mind
@@ -95,7 +141,8 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     logging.debug('building specs')
     type_ = peak_info_dict.get('type', ())
     if 'SplitLorentzianModel' in type_ or 'ExponentialGaussianModel' in type_:
-        raise NotImplementedError("No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel")
+        raise NotImplementedError(
+            "No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel")
     if 'ExpressionModel' in type_:
         raise NotImplementedError("no support for expression models yet!")
     center = peak_info_dict.get('center', ())
@@ -130,7 +177,6 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
     c6 = peak_info_dict.get('c6', ())
     c7 = peak_info_dict.get('c7', ())
 
-
     specs = [
         {
             'type': type_[i],
@@ -163,7 +209,7 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
                        'c6': utils.safe_list_get(c6, i, None),
                        'c7': utils.safe_list_get(c7, i, None)
                        },
-            'bounds': {'center': utils.safe_list_get(bounds.get('center', []), i,(None, None)),
+            'bounds': {'center': utils.safe_list_get(bounds.get('center', []), i, (None, None)),
                        'amplitude': utils.safe_list_get(bounds.get('amplitude', []), i, (None, None)),
                        'sigma': utils.safe_list_get(bounds.get('sigma', []), i, (None, None)),
                        'sigma_r': utils.safe_list_get(bounds.get('sigma_r', []), i, (None, None)),
@@ -200,6 +246,7 @@ def build_specs(peak_info_dict: dict={}, bounds: dict={}):
 
     return specs
 
+
 def generate_model(model_specs):
     """
     generate a composite model given information of the models to create, their guesses of params and bounds on parameters
@@ -214,22 +261,29 @@ def generate_model(model_specs):
         if spec['type'] == 'ExpressionModel':
             expr = spec['expr']
             model = models.ExpressionModel(expr)
-        elif spec['type'] in ['StepModel','RectangleModel']:
+        elif spec['type'] in ['StepModel', 'RectangleModel']:
             form = spec['form']
             model = getattr(models, spec['type'])(prefix=prefix, form=form)
         elif spec['type'] == 'PolynomialModel':
-            model = getattr(models, spec['type'])(prefix=prefix, degree = spec['degree'])
+            model = getattr(
+                models,
+                spec['type'])(
+                prefix=prefix,
+                degree=spec['degree'])
         else:
-            model = getattr(models, spec['type'])(prefix=prefix)  # generate the lmfit model based on the type specified
-        model = decide_model_actions(spec, model) # call another function to decide what to do
-        model_params = model.make_params() # make the params object
-        if params is None: # first loop
+            # generate the lmfit model based on the type specified
+            model = getattr(models, spec['type'])(prefix=prefix)
+        # call another function to decide what to do
+        model = decide_model_actions(spec, model)
+        model_params = model.make_params()  # make the params object
+        if params is None:  # first loop
             params = model_params
             composite_model = model
-        else: # subsequent loops
+        else:  # subsequent loops
             params.update(model_params)
             composite_model = composite_model + model
     return composite_model, params
+
 
 def decide_model_actions(spec, model):
     """
@@ -239,11 +293,11 @@ def decide_model_actions(spec, model):
     :return: the updated model object
     """
     for param_key, param_value in spec['params'].items():
-        if param_value: # then set this value
+        if param_value:  # then set this value
             model.set_param_hint(param_key, value=param_value)
     for bound_key, bound_value in spec['bounds'].items():
-        if bound_value[0]: # then set lower bound
+        if bound_value[0]:  # then set lower bound
             model.set_param_hint(bound_key, min=bound_value[0])
-        if bound_value[1]: # then set upper bound
+        if bound_value[1]:  # then set upper bound
             model.set_param_hint(bound_key, max=bound_value[1])
     return model

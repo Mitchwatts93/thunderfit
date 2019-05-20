@@ -20,7 +20,8 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">import</span> <span class="nn">matplotlib</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="nb">min</span><span class="p">,</span> <span class="n">float64</span>
@@ -28,8 +29,7 @@
 <span class="kn">from</span> <span class="nn">pandas.core.series</span> <span class="kn">import</span> <span class="n">Series</span>
 <span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">savgol_filter</span>
 
-<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span></pre></div>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -62,7 +62,8 @@
     <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Incorrect format passed for A&quot;</span><span class="p">)</span>
 
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rad</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">rad</span><span class="p">)</span> <span class="o">==</span> <span class="n">rad</span><span class="p">,</span> <span class="s2">&quot;rad needs to be a positive integer&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rad</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span>
+        <span class="n">rad</span><span class="p">)</span> <span class="o">==</span> <span class="n">rad</span><span class="p">,</span> <span class="s2">&quot;rad needs to be a positive integer&quot;</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A needs to be a single column&quot;</span>
 
     <span class="n">RC</span> <span class="o">=</span> <span class="n">semi_circle_array</span><span class="p">(</span><span class="n">rad</span><span class="p">)</span>
@@ -70,7 +71,8 @@
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">RC</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;something has gone wrong&#39;</span><span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The data has less points than the selected radius!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;The data has less points than the selected radius!&quot;</span><span class="p">)</span>
 
     <span class="n">A_sub</span><span class="p">,</span> <span class="n">RC_sub</span> <span class="o">=</span> <span class="n">generate_sub_matrices</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">rad</span><span class="p">,</span> <span class="n">RC</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
 
@@ -234,7 +236,15 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">user_guided_scarf</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">[],</span> <span class="n">rad</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span> <span class="n">window_length</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span> <span class="n">poly_order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">L_sg</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">user_guided_scarf</span><span class="p">(</span>
+        <span class="n">x_data</span><span class="p">,</span>
+        <span class="n">bg</span><span class="p">,</span>
+        <span class="n">data_bg_rm_y</span><span class="p">,</span>
+        <span class="n">params</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">rad</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+        <span class="n">window_length</span><span class="o">=</span><span class="mi">51</span><span class="p">,</span>
+        <span class="n">poly_order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">L_sg</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="k">while</span> <span class="bp">True</span><span class="p">:</span></pre></div>
     </div>
   </div>
@@ -253,9 +263,11 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
                 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
                 <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">)</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;SCARF background removal requires user input. Please look at the following bg with rad={rad}&quot;</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span>
+                    <span class="n">f</span><span class="s2">&quot;SCARF background removal requires user input. Please look at the following bg with rad={rad}&quot;</span><span class="p">)</span>
                 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-                <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;If you are happy with the plot, type y. if not then please type a new rad&quot;</span><span class="p">)</span>
+                <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+                    <span class="s2">&quot;If you are happy with the plot, type y. if not then please type a new rad&quot;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
                     <span class="k">break</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -264,8 +276,9 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
                     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
                         <span class="k">print</span><span class="p">(</span><span class="s2">&quot;You entered an incorrect answer! Trying again...&quot;</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Please enter a smaller radius, the radius must be less than half the number of data points:&quot;</span>
-                      <span class="n">f</span><span class="s2">&quot; {len(data_bg_rm_y)//2}&quot;</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span>
+                    <span class="n">f</span><span class="s2">&quot;Please enter a smaller radius, the radius must be less than half the number of data points:&quot;</span>
+                    <span class="n">f</span><span class="s2">&quot; {len(data_bg_rm_y)//2}&quot;</span><span class="p">)</span>
                 <span class="n">rad</span> <span class="o">=</span> <span class="mi">70</span></pre></div>
     </div>
   </div>
@@ -292,8 +305,9 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
                 <span class="k">print</span><span class="p">(</span>
                     <span class="s2">&quot;Incorrect values for window_length and poly_order have been entered. Poly order must be less &quot;</span>
                     <span class="s2">&quot;than window length and window length must be odd&quot;</span><span class="p">)</span>
-            <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;please enter y if you are happy with these values, or enter two integers with a space &quot;</span>
-                        <span class="s2">&quot;for window_length and poly_order&quot;</span><span class="p">)</span>
+            <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+                <span class="s2">&quot;please enter y if you are happy with these values, or enter two integers with a space &quot;</span>
+                <span class="s2">&quot;for window_length and poly_order&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
                 <span class="n">L</span> <span class="o">=</span> <span class="n">L_sg</span>
                 <span class="k">break</span>
@@ -301,7 +315,8 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">ans</span> <span class="o">=</span> <span class="n">ans</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
                     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ans</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The tuple was more than two elements long&quot;</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s2">&quot;The tuple was more than two elements long&quot;</span><span class="p">)</span>
                     <span class="n">window_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ans</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                     <span class="n">poly_order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ans</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
                 <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -314,10 +329,11 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
       <div class='octowrap'>
         <a class='octothorpe' href='#section-14'>#</a>
       </div>
-      <p>get the bg shift up automatically</p>
+      <p>get the bg shift up automatically
+whats the smallest difference between D and b? shift it up by that</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">data_bg_rm_y</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>  <span class="c1"># whats the smallest difference between D and b? shift it up by that</span>
+      <div class="highlight"><pre>        <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">data_bg_rm_y</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>
         <span class="n">L</span> <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">b</span></pre></div>
     </div>
   </div>
@@ -336,23 +352,32 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
         <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span> <span class="o">-</span> <span class="n">L</span><span class="p">,</span> <span class="s1">&#39;b--&#39;</span><span class="p">)</span>
         <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Please look at the following bg with selected parameters&quot;</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. </span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="s2">&quot;Typing repeat will add an additional bg subtraction to this one &quot;</span><span class="p">)</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+            <span class="s2">&quot;Are you happy with this bg? If yes, type y, else type n. n will restart the fitting. </span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;Typing repeat will add an additional bg subtraction to this one &quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span>
             <span class="n">bg</span> <span class="o">+=</span> <span class="n">L</span>
             <span class="n">data_bg_rm_y</span> <span class="o">-=</span> <span class="n">L</span>
-            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">rad</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s1">&#39;window_length&#39;</span><span class="p">:</span> <span class="n">window_length</span><span class="p">,</span> <span class="s1">&#39;poly_order&#39;</span><span class="p">:</span> <span class="n">poly_order</span><span class="p">})</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">rad</span><span class="p">,</span>
+                           <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>
+                           <span class="s1">&#39;window_length&#39;</span><span class="p">:</span> <span class="n">window_length</span><span class="p">,</span>
+                           <span class="s1">&#39;poly_order&#39;</span><span class="p">:</span> <span class="n">poly_order</span><span class="p">})</span>
             <span class="k">break</span>
         <span class="k">elif</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">elif</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;repeat&#39;</span><span class="p">:</span>
             <span class="n">bg</span> <span class="o">+=</span> <span class="n">L</span>
             <span class="n">data_bg_rm_y</span> <span class="o">-=</span> <span class="n">L</span>  <span class="c1"># remove the bg found here from the original data and go again</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;apply two bg removal steps, this will mean the background just specified will be removed &quot;</span>
-                  <span class="s2">&quot;from the data&quot;</span><span class="p">)</span>
-            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">rad</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s1">&#39;window_length&#39;</span><span class="p">:</span> <span class="n">window_length</span><span class="p">,</span> <span class="s1">&#39;poly_order&#39;</span><span class="p">:</span> <span class="n">poly_order</span><span class="p">})</span>
+            <span class="k">print</span><span class="p">(</span>
+                <span class="s2">&quot;apply two bg removal steps, this will mean the background just specified will be removed &quot;</span>
+                <span class="s2">&quot;from the data&quot;</span><span class="p">)</span>
+            <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">rad</span><span class="p">,</span>
+                           <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>
+                           <span class="s1">&#39;window_length&#39;</span><span class="p">:</span> <span class="n">window_length</span><span class="p">,</span>
+                           <span class="s1">&#39;poly_order&#39;</span><span class="p">:</span> <span class="n">poly_order</span><span class="p">})</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;You entered an incorrect answer! Trying whole fitting routine again...&quot;</span><span class="p">)</span>
+            <span class="k">print</span><span class="p">(</span>
+                <span class="s2">&quot;You entered an incorrect answer! Trying whole fitting routine again...&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span></pre></div>
     </div>
   </div>
@@ -372,14 +397,7 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
     <span class="n">L</span> <span class="o">=</span> <span class="n">smooth</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">window_length</span><span class="p">,</span> <span class="n">poly_order</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">scarf_params</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span>  <span class="c1"># if passed then use it</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># otherwise find it</span>
-        <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_data</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>  <span class="c1"># whats the smallest difference between D and b? shift it up by that</span>
-    <span class="n">L</span> <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">b</span>
-    <span class="n">bg</span> <span class="o">+=</span> <span class="n">L</span>
-    <span class="n">data_bg_rm_y</span> <span class="o">-=</span> <span class="n">L</span>
-    <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">rad</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span> <span class="s1">&#39;window_length&#39;</span><span class="p">:</span> <span class="n">window_length</span><span class="p">,</span> <span class="s1">&#39;poly_order&#39;</span><span class="p">:</span> <span class="n">poly_order</span><span class="p">})</span>
-
-    <span class="k">return</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span></pre></div>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># otherwise find it</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -387,6 +405,27 @@ formed by the difference of AC_sub_i and RC_sub_i at each i (element).
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      <p>whats the smallest difference between D and b? shift it up by that</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">b</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y_data</span> <span class="o">-</span> <span class="n">L</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">L</span> <span class="o">+</span> <span class="n">b</span>
+    <span class="n">bg</span> <span class="o">+=</span> <span class="n">L</span>
+    <span class="n">data_bg_rm_y</span> <span class="o">-=</span> <span class="n">L</span>
+    <span class="n">params</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">rad</span><span class="p">,</span>
+                   <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="n">b</span><span class="p">,</span>
+                   <span class="s1">&#39;window_length&#39;</span><span class="p">:</span> <span class="n">window_length</span><span class="p">,</span>
+                   <span class="s1">&#39;poly_order&#39;</span><span class="p">:</span> <span class="n">poly_order</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
       </div>
       <pre><code>Routine to perform the scarf background subtraction. decides whether to run a user guided routine or anything else
 depending on the input for scarf_params
@@ -401,17 +440,17 @@ depending on the input for scarf_params
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-18'>
+  <div class='section' id='section-19'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-18'>#</a>
+        <a class='octothorpe' href='#section-19'>#</a>
       </div>
       
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;performing scarf bg subtraction&#39;</span><span class="p">)</span>
 
-    <span class="n">bg</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">y_data</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64</span><span class="p">)</span> <span class="c1">#initialise</span>
+    <span class="n">bg</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="mi">0</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">y_data</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64</span><span class="p">)</span>  <span class="c1"># initialise</span>
     <span class="n">data_bg_rm_y</span> <span class="o">=</span> <span class="n">y_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -423,10 +462,10 @@ depending on the input for scarf_params
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-19'>
+  <div class='section' id='section-20'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-19'>#</a>
+        <a class='octothorpe' href='#section-20'>#</a>
       </div>
       <p>the user has passed True! recall this function and change it to false</p>
     </div>
@@ -434,36 +473,41 @@ depending on the input for scarf_params
       <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
             <span class="s1">&#39;scarf has been passed the True bool value for scarf params. This is invalid, assuming you meant &#39;</span>
             <span class="s1">&#39;False as no parameters were specified.&#39;</span><span class="p">)</span>
-        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params_</span> <span class="o">=</span> <span class="n">perform_scarf</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params_</span> <span class="o">=</span> <span class="n">perform_scarf</span><span class="p">(</span>
+            <span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">+=</span> <span class="n">params_</span>  <span class="c1"># params_ is a list of one dictionary</span>
         <span class="k">return</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span>
 
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scarf_params</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;using scarf params: {scarf_params}&#39;</span><span class="p">)</span>
-        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">scarf_from_dict</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span> <span class="o">=</span> <span class="n">scarf_from_dict</span><span class="p">(</span>
+            <span class="n">y_data</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scarf_params</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;using scarf params: {scarf_params}&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-20'>
+  <div class='section' id='section-21'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-20'>#</a>
+        <a class='octothorpe' href='#section-21'>#</a>
       </div>
-      <p>the user wants multiple runs. call the function for each set of params, passing the new y data each time</p>
+      <p>the user wants multiple runs. call the function for each set of
+params, passing the new y data each time</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>        <span class="k">for</span> <span class="n">param_dict</span> <span class="ow">in</span> <span class="n">scarf_params</span><span class="p">:</span>
-            <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg_</span><span class="p">,</span> <span class="n">params_</span> <span class="o">=</span> <span class="n">perform_scarf</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="n">param_dict</span><span class="p">)</span>
+            <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg_</span><span class="p">,</span> <span class="n">params_</span> <span class="o">=</span> <span class="n">perform_scarf</span><span class="p">(</span>
+                <span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="n">param_dict</span><span class="p">)</span>
             <span class="n">bg</span> <span class="o">+=</span> <span class="n">bg_</span>
             <span class="n">params</span> <span class="o">+=</span> <span class="n">params_</span>  <span class="c1"># params_ is a list of a dictionary so use += here</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
             <span class="s1">&#39;an unexpected parameter has been passed as a scarf value, running interactively.&#39;</span><span class="p">)</span>
-        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params_</span> <span class="o">=</span> <span class="n">perform_scarf</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params_</span> <span class="o">=</span> <span class="n">perform_scarf</span><span class="p">(</span>
+            <span class="n">x_data</span><span class="p">,</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">scarf_params</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">+=</span> <span class="n">params_</span>
         <span class="k">return</span> <span class="n">data_bg_rm_y</span><span class="p">,</span> <span class="n">bg</span><span class="p">,</span> <span class="n">params</span>
 

@@ -40,28 +40,27 @@ ANACONDA NOT CURRENTLY SUPPORTED.
 Windows:
 --------
 
-Currenlty untested, coming soon. Below may or may not work.
-
-First have pip installed: https://www.makeuseof.com/tag/install-pip-for-python/
+install python:
+https://www.python.org/downloads/
 Be sure to install python >=3.6
+pip should be automatically installed
 
 (optional - recommended): 
     Create a new environment in python so that packages aren't corrupted. Maintenance of this package won't be great so dependencies are set to specific releases.
 
     1. Choose a directory you will store your python environment in. recommended to be somewhere convenient to access
-    2. `py -m pip install --user virtualenv`
+    2. `py -m pip install virtualenv`
     3. `py -m virtualenv thunder`
     4. When it comes time to use your environment (when installing the package or when using it):
 
-        i. `.\path_to_env\thunder\Scripts\activate`
+        i. `.\path_to_env\thunder\Scripts\activate.bat`
         ii. (Do this step whenever you're finished using thunderfit) to deactivate just type `deactivate`
 
 Now with you environment active (if using one) type::
 
-    pip install thunderfit
+    py -m pip install thunderfit
 
-scripts in windows install as .exe so check inside you env inside the thunderfit directory and see if the .exe exists
-
+scripts in windows install as .exe inside the environment created above in scripts. type the path to this followed by any arguments as usual
 
 Using windows subsystem for linux (WSL):
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

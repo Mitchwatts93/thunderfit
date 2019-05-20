@@ -53,11 +53,7 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">]:</span>
-        <span class="n">tols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s1">&#39;xtol&#39;</span><span class="p">:</span> <span class="n">tol</span><span class="p">}</span>  <span class="c1"># warning: need to experiment with these/allow control maybe?</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">tols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="n">tol</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">tols</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">]:</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -65,6 +61,21 @@
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>warning: need to experiment with these/allow control maybe?</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">tols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s1">&#39;xtol&#39;</span><span class="p">:</span> <span class="n">tol</span><span class="p">}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="n">tol</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">tols</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
       </div>
       <pre><code>depending on the algorithm either set the tolerances, give a warning or set a parameter which is depreciated to True.
 will be overhauled in future
@@ -78,10 +89,10 @@ will be overhauled in future
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-4'>
+  <div class='section' id='section-5'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-4'>#</a>
+        <a class='octothorpe' href='#section-5'>#</a>
       </div>
       
     </div>
@@ -90,16 +101,20 @@ will be overhauled in future
         <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Warning: This is a very slow but thorough algorithm&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;differential_evolution&#39;</span><span class="p">:</span>
         <span class="n">all_bounds</span> <span class="o">=</span> <span class="bp">True</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">,</span> <span class="s1">&#39;nelder&#39;</span><span class="p">,</span> <span class="s1">&#39;cobyla&#39;</span><span class="p">]:</span> <span class="c1"># do this for all of them??</span>
-        <span class="n">tols</span>  <span class="o">=</span> <span class="n">get_tols</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">tols</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s1">&#39;leastsq&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;least_squares&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;nelder&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cobyla&#39;</span><span class="p">]:</span>  <span class="c1"># do this for all of them??</span>
+        <span class="n">tols</span> <span class="o">=</span> <span class="n">get_tols</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">tols</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">tols</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-5'>
+  <div class='section' id='section-6'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-5'>#</a>
+        <a class='octothorpe' href='#section-6'>#</a>
       </div>
       <pre><code>function which does the peak fitting.
 :param x_data: np array of x data
@@ -113,43 +128,13 @@ values and the model_result object
 </code></pre>
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">fit_peaks</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.0000001</span><span class="p">):</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-6'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-6'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="n">impl_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">,</span> <span class="s1">&#39;nelder&#39;</span><span class="p">,</span> <span class="s1">&#39;lbfgsb&#39;</span><span class="p">,</span> <span class="s1">&#39;powell&#39;</span><span class="p">,</span> <span class="s1">&#39;cg&#39;</span><span class="p">,</span> <span class="s1">&#39;cobyla&#39;</span><span class="p">,</span> <span class="s1">&#39;bfgsb&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;differential_evolution&#39;</span><span class="p">,</span> <span class="s1">&#39;basinhopping&#39;</span><span class="p">,</span> <span class="s1">&#39;ampgo&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">impl_methods</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;The method supplied is not supported. Available methods: {impl_methods}&quot;</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;fitting peaks:  {peak_info_dict}&#39;</span><span class="p">)</span>
-
-    <span class="n">tols</span> <span class="o">=</span> <span class="n">prep_algo</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span> <span class="c1"># prep for the fitting</span>
-    <span class="n">model_specs</span> <span class="o">=</span> <span class="n">build_specs</span><span class="p">(</span><span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span> <span class="c1"># build a correctly formatted dictionary for fitting</span>
-    <span class="n">model</span><span class="p">,</span> <span class="n">peak_params</span> <span class="o">=</span> <span class="n">generate_model</span><span class="p">(</span><span class="n">model_specs</span><span class="p">)</span> <span class="c1"># generate the composite model for fitting</span>
-
-    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">,</span> <span class="s1">&#39;nelder&#39;</span><span class="p">,</span> <span class="s1">&#39;cobyla&#39;</span><span class="p">]:</span>
-        <span class="n">peaks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">fit_kws</span><span class="o">=</span><span class="n">tols</span><span class="p">)</span> <span class="c1"># fit the model to the data</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">peaks</span><span class="o">.</span><span class="n">success</span><span class="p">:</span> <span class="c1"># then raise tolerance and try again</span>
-            <span class="k">print</span><span class="p">(</span><span class="s1">&#39;peaks failed to fit, raising tolerance by one order magnitude and trying again&#39;</span><span class="p">)</span>
-            <span class="n">tols</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span><span class="n">value</span><span class="o">*</span><span class="mi">10</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tols</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span> <span class="c1"># try raising the tolerance if it fails by one order</span>
-            <span class="n">peaks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">fit_kws</span><span class="o">=</span><span class="n">tols</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">peaks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span>
-
-    <span class="n">peak_params</span> <span class="o">=</span> <span class="n">peaks</span><span class="o">.</span><span class="n">best_values</span> <span class="c1"># what are the best parameters used # shoudl create a function as an abstraction barrier for this</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">peaks</span><span class="o">.</span><span class="n">success</span><span class="p">:</span> <span class="c1"># then didn&#39;t fit for some reason, so set everything to nan in results</span>
-        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;peaks failed to fit&#39;</span><span class="p">)</span>
-        <span class="n">peak_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">nan</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">peak_params</span><span class="p">}</span>
-
-    <span class="k">return</span> <span class="n">model_specs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">peaks</span> <span class="c1"># really should clean this up but allows flexibility for user by passing the actual objects back too</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">fit_peaks</span><span class="p">(</span>
+        <span class="n">x_data</span><span class="p">,</span>
+        <span class="n">y_data</span><span class="p">,</span>
+        <span class="n">peak_info_dict</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="mf">0.0000001</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -158,10 +143,27 @@ values and the model_result object
       <div class='octowrap'>
         <a class='octothorpe' href='#section-7'>#</a>
       </div>
-      <p>fetch items safely from a list, if it isn&rsquo;t long enough return a default value</p>
+      
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">safe_list_get</span> <span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">impl_methods</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;leastsq&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;least_squares&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;nelder&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;lbfgsb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;powell&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cg&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cobyla&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;bfgsb&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;differential_evolution&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;basinhopping&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;ampgo&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">impl_methods</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="n">f</span><span class="s2">&quot;The method supplied is not supported. Available methods: {impl_methods}&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;fitting peaks:  {peak_info_dict}&#39;</span><span class="p">)</span>
+
+    <span class="n">tols</span> <span class="o">=</span> <span class="n">prep_algo</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>  <span class="c1"># prep for the fitting</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -169,6 +171,102 @@ values and the model_result object
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>build a correctly formatted dictionary for fitting</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">model_specs</span> <span class="o">=</span> <span class="n">build_specs</span><span class="p">(</span><span class="n">peak_info_dict</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>generate the composite model for fitting</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">model</span><span class="p">,</span> <span class="n">peak_params</span> <span class="o">=</span> <span class="n">generate_model</span><span class="p">(</span><span class="n">model_specs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;leastsq&#39;</span><span class="p">,</span> <span class="s1">&#39;least_squares&#39;</span><span class="p">,</span> <span class="s1">&#39;nelder&#39;</span><span class="p">,</span> <span class="s1">&#39;cobyla&#39;</span><span class="p">]:</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">y_data</span><span class="p">,</span>
+            <span class="n">peak_params</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">fit_kws</span><span class="o">=</span><span class="n">tols</span><span class="p">)</span>  <span class="c1"># fit the model to the data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">peaks</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>  <span class="c1"># then raise tolerance and try again</span>
+            <span class="k">print</span><span class="p">(</span>
+                <span class="s1">&#39;peaks failed to fit, raising tolerance by one order magnitude and trying again&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      <p>try raising the tolerance if it fails by one order</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>            <span class="n">tols</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="o">*</span> <span class="mi">10</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tols</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+            <span class="n">peaks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+                <span class="n">y_data</span><span class="p">,</span>
+                <span class="n">peak_params</span><span class="p">,</span>
+                <span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+                <span class="n">fit_kws</span><span class="o">=</span><span class="n">tols</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">peaks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x_data</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>what are the best parameters used # shoudl create a function as an
+abstraction barrier for this</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">peak_params</span> <span class="o">=</span> <span class="n">peaks</span><span class="o">.</span><span class="n">best_values</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">peaks</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>  <span class="c1"># then didn&#39;t fit for some reason, so set everything to nan in results</span>
+        <span class="k">print</span><span class="p">(</span><span class="s1">&#39;peaks failed to fit&#39;</span><span class="p">)</span>
+        <span class="n">peak_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">nan</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">peak_params</span><span class="p">}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>really should clean this up but allows flexibility for user by passing
+the actual objects back too</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">return</span> <span class="n">model_specs</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">peak_params</span><span class="p">,</span> <span class="n">peaks</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <p>fetch items safely from a list, if it isn&rsquo;t long enough return a default value</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">safe_list_get</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
       </div>
       
     </div>
@@ -180,22 +278,22 @@ values and the model_result object
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-9'>
+  <div class='section' id='section-15'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-9'>#</a>
+        <a class='octothorpe' href='#section-15'>#</a>
       </div>
-      <h4>Call this with correct arguments, should always call with all the arguments!</h4>
+      <p>Call this with correct arguments, should always call with all the arguments!</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">build_specs</span><span class="p">(</span><span class="n">peak_info_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="o">=</span><span class="p">{},</span> <span class="n">bounds</span><span class="p">:</span> <span class="nb">dict</span><span class="o">=</span><span class="p">{}):</span></pre></div>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-10'>
+  <div class='section' id='section-16'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-10'>#</a>
+        <a class='octothorpe' href='#section-16'>#</a>
       </div>
       <pre><code>should be depreciated in future. can get by with bypassing this, currently acts to cleanse inputs so maybe could be
 shortened/changed with that goal in mind
@@ -203,17 +301,28 @@ shortened/changed with that goal in mind
 :param bounds:
 :return:
 </code></pre>
-<p>Build a specs list, which has the peak specification details for each element corresponding to a peak to fit.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">build_specs</span><span class="p">(</span><span class="n">peak_info_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">bounds</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      <p>Build a specs list, which has the peak specification details for each element corresponding to a peak to fit.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-11'>
+  <div class='section' id='section-18'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-11'>#</a>
+        <a class='octothorpe' href='#section-18'>#</a>
       </div>
       <p>Note that each element is a dictionary containing either None, or a value for that peak i.e. the parameter guess,</p>
     </div>
@@ -222,7 +331,8 @@ shortened/changed with that goal in mind
 <span class="s2">    logging.debug(&#39;building specs&#39;)</span>
 <span class="s2">    type_ = peak_info_dict.get(&#39;type&#39;, ())</span>
 <span class="s2">    if &#39;SplitLorentzianModel&#39; in type_ or &#39;ExponentialGaussianModel&#39; in type_:</span>
-<span class="s2">        raise NotImplementedError(&quot;No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel&quot;)</span>
+<span class="s2">        raise NotImplementedError(</span>
+<span class="s2">            &quot;No support for this model yet: polynomialmodel, ExponentialGaussianModel and splitlorentzianmodel&quot;)</span>
 <span class="s2">    if &#39;ExpressionModel&#39; in type_:</span>
 <span class="s2">        raise NotImplementedError(&quot;no support for expression models yet!&quot;)</span>
 <span class="s2">    center = peak_info_dict.get(&#39;center&#39;, ())</span>
@@ -257,7 +367,6 @@ shortened/changed with that goal in mind
 <span class="s2">    c6 = peak_info_dict.get(&#39;c6&#39;, ())</span>
 <span class="s2">    c7 = peak_info_dict.get(&#39;c7&#39;, ())</span>
 
-
 <span class="s2">    specs = [</span>
 <span class="s2">        {</span>
 <span class="s2">            &#39;type&#39;: type_[i],</span>
@@ -290,7 +399,7 @@ shortened/changed with that goal in mind
 <span class="s2">                       &#39;c6&#39;: utils.safe_list_get(c6, i, None),</span>
 <span class="s2">                       &#39;c7&#39;: utils.safe_list_get(c7, i, None)</span>
 <span class="s2">                       },</span>
-<span class="s2">            &#39;bounds&#39;: {&#39;center&#39;: utils.safe_list_get(bounds.get(&#39;center&#39;, []), i,(None, None)),</span>
+<span class="s2">            &#39;bounds&#39;: {&#39;center&#39;: utils.safe_list_get(bounds.get(&#39;center&#39;, []), i, (None, None)),</span>
 <span class="s2">                       &#39;amplitude&#39;: utils.safe_list_get(bounds.get(&#39;amplitude&#39;, []), i, (None, None)),</span>
 <span class="s2">                       &#39;sigma&#39;: utils.safe_list_get(bounds.get(&#39;sigma&#39;, []), i, (None, None)),</span>
 <span class="s2">                       &#39;sigma_r&#39;: utils.safe_list_get(bounds.get(&#39;sigma_r&#39;, []), i, (None, None)),</span>
@@ -335,10 +444,10 @@ shortened/changed with that goal in mind
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-12'>
+  <div class='section' id='section-19'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-12'>#</a>
+        <a class='octothorpe' href='#section-19'>#</a>
       </div>
       <pre><code>logging.debug('generating model specs')
 composite_model = None
@@ -349,19 +458,25 @@ for i, spec in enumerate(model_specs):
    if spec[&lsquo;type&rsquo;] == &lsquo;ExpressionModel&rsquo;:
        expr = spec[&lsquo;expr&rsquo;]
        model = models.ExpressionModel(expr)
-   elif spec[&lsquo;type&rsquo;] in [&lsquo;StepModel&rsquo;,&rsquo;RectangleModel&rsquo;]:
+   elif spec[&lsquo;type&rsquo;] in [&lsquo;StepModel&rsquo;, &lsquo;RectangleModel&rsquo;]:
        form = spec[&lsquo;form&rsquo;]
        model = getattr(models, spec[&lsquo;type&rsquo;])(prefix=prefix, form=form)
    elif spec[&lsquo;type&rsquo;] == &lsquo;PolynomialModel&rsquo;:
-       model = getattr(models, spec[&lsquo;type&rsquo;])(prefix=prefix, degree = spec[&lsquo;degree&rsquo;])
+       model = getattr(
+           models,
+           spec[&lsquo;type&rsquo;])(
+           prefix=prefix,
+           degree=spec[&lsquo;degree&rsquo;])
    else:
-       model = getattr(models, spec[&lsquo;type&rsquo;])(prefix=prefix)  # generate the lmfit model based on the type specified
-   model = decide_model_actions(spec, model) # call another function to decide what to do
-   model_params = model.make_params() # make the params object
-   if params is None: # first loop
+       # generate the lmfit model based on the type specified
+       model = getattr(models, spec[&lsquo;type&rsquo;])(prefix=prefix)
+   # call another function to decide what to do
+   model = decide_model_actions(spec, model)
+   model_params = model.make_params()  # make the params object
+   if params is None:  # first loop
        params = model_params
        composite_model = model
-   else: # subsequent loops
+   else:  # subsequent loops
        params.update(model_params)
        composite_model = composite_model + model
     return composite_model, params</p>
@@ -377,19 +492,19 @@ for i, spec in enumerate(model_specs):
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-13'>
+  <div class='section' id='section-20'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-13'>#</a>
+        <a class='octothorpe' href='#section-20'>#</a>
       </div>
       <pre><code>for param_key, param_value in spec['params'].items():
 </code></pre>
-<p>if param_value: # then set this value
+<p>if param_value:  # then set this value
        model.set_param_hint(param_key, value=param_value)
     for bound_key, bound_value in spec[&lsquo;bounds&rsquo;].items():
-   if bound_value[0]: # then set lower bound
+   if bound_value[0]:  # then set lower bound
        model.set_param_hint(bound_key, min=bound_value[0])
-   if bound_value[1]: # then set upper bound
+   if bound_value[1]:  # then set upper bound
        model.set_param_hint(bound_key, max=bound_value[1])
     return model</p>
     </div>

@@ -64,7 +64,9 @@
     <span class="k">except</span> <span class="p">(</span><span class="ne">SyntaxError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>  <span class="c1"># assume its just a string and not a list passed</span>
         <span class="n">file_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
         <span class="n">log_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
-        <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="s2">&quot;{arguments[&#39;datapath&#39;]}&quot;</span><span class="p">,]</span>  <span class="c1"># as this is what multiobj needs</span></pre></div>
+        <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">f</span><span class="s2">&quot;{arguments[&#39;datapath&#39;]}&quot;</span><span class="p">,</span>
+        <span class="p">]</span>  <span class="c1"># as this is what multiobj needs</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -79,14 +81,7 @@
       <div class="highlight"><pre>    <span class="n">log_filename</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">setup_logger</span><span class="p">(</span><span class="n">log_name</span><span class="p">)</span>
 
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;creating multi_obj object&#39;</span><span class="p">)</span>
-    <span class="n">bag</span> <span class="o">=</span> <span class="n">multi_obj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># create a Thunder object</span>
-
-    <span class="n">bag</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">((</span><span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span> <span class="c1"># get the first thunder object</span>
-
-    <span class="k">if</span> <span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bg_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s1">&#39;peakf_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span> <span class="c1">#then we want the user to decide which thunder object to use</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;choosing spectrum for data&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">choose_spectrum</span><span class="p">()</span>  <span class="c1"># choose which spectrum to base everything off of if user wants to use one spectra to</span></pre></div>
+    <span class="n">bag</span> <span class="o">=</span> <span class="n">multi_obj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># create a Thunder object</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -95,10 +90,18 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-4'>#</a>
       </div>
-      <p>choose parameters</p>
+      <p>get the first thunder object</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;using spectra {bag.first} as spectra to set any user variables from&#39;</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">bag</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">((</span><span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span>
+                      <span class="bp">False</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span>
+                                                   <span class="bp">False</span><span class="p">))</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bg_first_only&#39;</span><span class="p">,</span>
+                                                                            <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;peakf_first_only&#39;</span><span class="p">,</span>
+                                                                                                    <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds_first_only&#39;</span><span class="p">,</span>
+                                                                                                                            <span class="bp">False</span><span class="p">):</span>  <span class="c1"># then we want the user to decide which thunder object to use</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;choosing spectrum for data&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -107,12 +110,11 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-5'>#</a>
       </div>
-      <h5>clip the data if weird edges</h5>
+      <p>choose which spectrum to base everything off of if user wants to use
+one spectra to</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;clipping data&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">clip_data</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span></pre></div>
+      <div class="highlight"><pre>        <span class="n">bag</span><span class="o">.</span><span class="n">choose_spectrum</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -121,11 +123,11 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-6'>#</a>
       </div>
-      <h5>cosmic ray removal goes here</h5>
-<h6></h6>
+      <p>choose parameters</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="n">f</span><span class="s1">&#39;using spectra {bag.first} as spectra to set any user variables from&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -134,14 +136,12 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-7'>#</a>
       </div>
-      <h5>remove background</h5>
+      <p>clip the data if weird edges</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bg_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;determining background conditions for all based on user guided for first&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">bg_param_setter</span><span class="p">()</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;removing background from data for all thunder objects&#39;</span><span class="p">)</span>
-    <span class="n">bag</span><span class="o">.</span><span class="n">remove_backgrounds</span><span class="p">()</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;clipping data&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">clip_data</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -150,12 +150,11 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-8'>#</a>
       </div>
-      <h5>normalisation</h5>
+      <p>cosmic ray removal goes here</p>
+<h6></h6>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;normalise&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;normalising data using svn normalisation&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">normalise_data</span><span class="p">()</span></pre></div>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -164,11 +163,15 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-9'>#</a>
       </div>
-      <p>then shift the values up since normalisation may create negative values</p>
+      <p>remove background</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>        <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
-            <span class="n">thund</span><span class="o">.</span><span class="n">y_data_bg_rm</span> <span class="o">=</span> <span class="n">thund</span><span class="o">.</span><span class="n">y_data_bg_rm</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bg_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;determining background conditions for all based on user guided for first&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">bg_param_setter</span><span class="p">()</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;removing background from data for all thunder objects&#39;</span><span class="p">)</span>
+    <span class="n">bag</span><span class="o">.</span><span class="n">remove_backgrounds</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -177,17 +180,12 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-10'>#</a>
       </div>
-      <h5>find peaks</h5>
+      <p>normalisation</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_peaks&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting peak information for all thunder objects&#39;</span><span class="p">)</span>
-        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Warning: Finding peaks automatically will overwirte and peak_info_dict supplied&quot;</span><span class="p">)</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;running user guided routine to determine peak information&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;adj_params&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting peak information for all thunder objects&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">peaks_adj_params</span><span class="p">()</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;normalise&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;normalising data using svn normalisation&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">normalise_data</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -196,16 +194,12 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-11'>#</a>
       </div>
-      <h5>find bounds</h5>
+      <p>then shift the values up since normalisation may create negative
+values</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_bounds&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;finding bounds via user guided routine&#39;</span><span class="p">)</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">bound_setter</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;setting all bounds to either user supplied or preset: {&#39;amplitude&#39;: False, &#39;center&#39;: False, &#39;sigma&#39;: False}&quot;</span><span class="p">)</span>
-        <span class="n">bounds</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="p">{})</span>  <span class="c1"># should really do this in the thunderobj # also don&#39;t set as these presets!</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">bound_setter</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>        <span class="k">for</span> <span class="n">thund</span> <span class="ow">in</span> <span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">thund</span><span class="o">.</span><span class="n">y_data_bg_rm</span> <span class="o">=</span> <span class="n">thund</span><span class="o">.</span><span class="n">y_data_bg_rm</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">thund</span><span class="o">.</span><span class="n">y_data_bg_rm</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -214,11 +208,18 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-12'>#</a>
       </div>
-      <h5>fit peaks</h5>
+      <p>find peaks</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;fitting peaks for all&#39;</span><span class="p">)</span>
-    <span class="n">bag</span><span class="o">.</span><span class="n">fit_peaks</span><span class="p">()</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_peaks&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting peak information for all thunder objects&#39;</span><span class="p">)</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Warning: Finding peaks automatically will overwirte and peak_info_dict supplied&quot;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;running user guided routine to determine peak information&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">find_peaks</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;adj_params&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;setting peak information for all thunder objects&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">peaks_adj_params</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -227,8 +228,52 @@
       <div class='octowrap'>
         <a class='octothorpe' href='#section-13'>#</a>
       </div>
-      <h4>fit params dictionary</h4>
-<p>store all the peak parameters in a dictionary, so the keys are e.g. sigma, center, amplitude, and the values are
+      <p>find bounds</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;find_bounds&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;finding bounds via user guided routine&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">bound_setter</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;setting all bounds to either user supplied or preset: {&#39;amplitude&#39;: False, &#39;center&#39;: False, &#39;sigma&#39;: False}&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p>should really do this in the thunderobj # also don&rsquo;t set as these
+presets!</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>        <span class="n">bounds</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">bound_setter</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      <p>fit peaks</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;fitting peaks for all&#39;</span><span class="p">)</span>
+    <span class="n">bag</span><span class="o">.</span><span class="n">fit_peaks</span><span class="p">()</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <p>fit params dictionary
+store all the peak parameters in a dictionary, so the keys are e.g. sigma, center, amplitude, and the values are
 dictionaries with keys as the run number with values as lists of values for all the peaks for that run
 this will for now assume the same types of peak for all fits!</p>
     </div>
@@ -238,55 +283,16 @@ this will for now assume the same types of peak for all fits!</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-14'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-14'>#</a>
-      </div>
-      <h5>fetch stats etc</h5>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;making stats dictionary&#39;</span><span class="p">)</span>
-    <span class="n">bag</span><span class="o">.</span><span class="n">get_fit_stats</span><span class="p">()</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-15'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-15'>#</a>
-      </div>
-      <h5>make directory to save everything in</h5>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="n">file_name</span><span class="p">,</span> <span class="n">dirname</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">make_user_files</span><span class="p">(</span><span class="n">arguments</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-16'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-16'>#</a>
-      </div>
-      <h5>plot map scan</h5>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plotting map scans&#39;</span><span class="p">)</span>
-    <span class="n">bag</span><span class="o">.</span><span class="n">make_map_matrices</span><span class="p">()</span> <span class="c1"># make the mapscan arrays</span>
-    <span class="n">map_scan_tools</span><span class="o">.</span><span class="n">plot_map_scan</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span> <span class="n">bag</span><span class="o">.</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">bag</span><span class="o">.</span><span class="n">X_coords</span><span class="p">,</span> <span class="n">bag</span><span class="o">.</span><span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-17'>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-17'>#</a>
       </div>
-      <h5>save individual plots for each of the failed fits</h5>
+      <p>fetch stats etc</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving failed fit plots&#39;</span><span class="p">)</span>
-    <span class="n">bag</span><span class="o">.</span><span class="n">save_failed_plots</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;making stats dictionary&#39;</span><span class="p">)</span>
+    <span class="n">bag</span><span class="o">.</span><span class="n">get_fit_stats</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -295,12 +301,10 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-18'>#</a>
       </div>
-      <h5>save a gif of every single plot</h5>
+      <p>make directory to save everything in</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;make_gif&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
-        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving all plots as gif&#39;</span><span class="p">)</span>
-        <span class="n">utili</span><span class="o">.</span><span class="n">gif_maker</span><span class="p">(</span><span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{dirname}/all_data.gif&#39;</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">file_name</span><span class="p">,</span> <span class="n">dirname</span> <span class="o">=</span> <span class="n">parsing</span><span class="o">.</span><span class="n">make_user_files</span><span class="p">(</span><span class="n">arguments</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -309,10 +313,19 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-19'>#</a>
       </div>
-      <h5>put here some code for cluster analysis and pca</h5>
+      <p>plot map scan</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;not currently doing cluster analysis or pca&#39;</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plotting map scans&#39;</span><span class="p">)</span>
+    <span class="n">bag</span><span class="o">.</span><span class="n">make_map_matrices</span><span class="p">()</span>  <span class="c1"># make the mapscan arrays</span>
+    <span class="n">map_scan_tools</span><span class="o">.</span><span class="n">plot_map_scan</span><span class="p">(</span>
+        <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">bag</span><span class="p">,</span>
+            <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">map_matrices</span><span class="p">,</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">X_coords</span><span class="p">,</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">Y_coords</span><span class="p">,</span>
+        <span class="n">dirname</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -321,10 +334,11 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-20'>#</a>
       </div>
-      <h6></h6>
+      <p>save individual plots for each of the failed fits</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving failed fit plots&#39;</span><span class="p">)</span>
+    <span class="n">bag</span><span class="o">.</span><span class="n">save_failed_plots</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -333,14 +347,12 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-21'>#</a>
       </div>
-      <h5>save the bag object and it reports</h5>
+      <p>save a gif of every single plot</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving fit reports on stats and fitting parameters&#39;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="s1">&#39;stats&#39;</span><span class="p">),</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_report.json&quot;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_peak_info.json&quot;</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving thunderbag object&#39;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}.d&quot;</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;make_gif&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving all plots as gif&#39;</span><span class="p">)</span>
+        <span class="n">utili</span><span class="o">.</span><span class="n">gif_maker</span><span class="p">(</span><span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{dirname}/all_data.gif&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -349,12 +361,76 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-22'>#</a>
       </div>
-      <h5>move the log file in with all the rest of it</h5>
+      <p>put here some code for cluster analysis and pca</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{file_name}.log&#39;</span><span class="p">))</span>
-    <span class="n">rename</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="n">log_filename_</span><span class="p">)</span> <span class="c1"># use os.rename to move the log file to the final destination</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span><span class="n">arguments</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_inpargs.json&quot;</span><span class="p">)</span>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;not currently doing cluster analysis or pca&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      <h6></h6>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      <p>save the bag object and it reports</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving fit reports on stats and fitting parameters&#39;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
+        <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">bag</span><span class="p">,</span>
+            <span class="s1">&#39;stats&#39;</span><span class="p">),</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_report.json&quot;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
+        <span class="nb">getattr</span><span class="p">(</span>
+            <span class="n">bag</span><span class="p">,</span>
+            <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_peak_info.json&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving thunderbag object&#39;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}.d&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>move the log file in with all the rest of it</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{file_name}.log&#39;</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      <p>use os.rename to move the log file to the final destination</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">rename</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="n">log_filename_</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
+        <span class="n">arguments</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_inpargs.json&quot;</span><span class="p">)</span>
 
 </pre></div>
     </div>
