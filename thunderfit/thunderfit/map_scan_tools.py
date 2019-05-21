@@ -205,7 +205,12 @@ def mapscans_for_parameter(
     plt.close()
 
 
-def plot_map_scan(fit_params, map_matrices, X_coords, Y_coords, dirname):
+def plot_all_maps(fit_params, map_matrices, X_coords, Y_coords, dirname):
+    for p in fit_params.keys():
+        mapscans_for_parameter(map_matrices, X_coords, Y_coords, p, fit_params, dirname)
+
+
+def plot_map_scan(fit_params, map_matrices, X_coords, Y_coords, dirname, plot_all=False):
     """
     function to plot the mapscans given user input on what to plot for.
     :param fit_params: a dictionary of dicts. 1st keys are properties e.g. 'center' and second keys are for each model
@@ -218,6 +223,9 @@ def plot_map_scan(fit_params, map_matrices, X_coords, Y_coords, dirname):
     """
     logging.debug(
         'runnning user input routine to generate/save user chosen variables in maps')
+    if plot_all:
+        plot_all_maps(fit_params, map_matrices, X_coords, Y_coords, dirname)
+        return map_matrices
     while True:
         ans = input(
             "making map scans, please input which property you would like to scan. options are:"
@@ -225,15 +233,12 @@ def plot_map_scan(fit_params, map_matrices, X_coords, Y_coords, dirname):
         if ans == 'e':
             break
         elif ans == 'all':
-            for p in fit_params.keys():
-                mapscans_for_parameter(
-                    map_matrices, X_coords, Y_coords, p, fit_params, dirname)
+            plot_all_maps(fit_params, map_matrices, X_coords, Y_coords, dirname)
             break  # break the while loop
         else:
             try:
                 p = ans
-                mapscans_for_parameter(
-                    map_matrices, X_coords, Y_coords, p, fit_params, dirname)
+                mapscans_for_parameter(map_matrices, X_coords, Y_coords, p, fit_params, dirname)
             except KeyError:
                 print('wrong answer entered, trying again!')
 #

@@ -123,13 +123,13 @@ def main():
     logging.info('plotting map scans')
     bag.make_map_matrices()  # make the mapscan arrays
     map_scan_tools.plot_map_scan(
-        getattr(
-            bag,
-            'fit_params'),
-        bag.map_matrices,
-        bag.X_coords,
-        bag.Y_coords,
-        dirname)
+                                getattr( bag,'fit_params'),
+                                bag.map_matrices,
+                                bag.X_coords,
+                                bag.Y_coords,
+                                dirname,
+                                arguments.get('map_all_params', False)
+                                )
 
     # save individual plots for each of the failed fits
     logging.info('saving failed fit plots')
@@ -140,6 +140,11 @@ def main():
         logging.info('saving all plots as gif')
         utili.gif_maker(bag.thunder_bag, f'{dirname}/all_data.gif')
 
+    # save all plots
+    if arguments.get('save_all_plots', False):
+        logging.info('saving all plots individually')
+        bag.save_all_plots(dirname)
+
     # put here some code for cluster analysis and pca
     logging.info('not currently doing cluster analysis or pca')
     ##########################################################################
@@ -147,26 +152,24 @@ def main():
     # save the bag object and it reports
     logging.info('saving fit reports on stats and fitting parameters')
     utili.save_fit_report(
-        getattr(
-            bag,
-            'stats'),
-        path=dirname,
-        filename=f"report.json")
+                        getattr(bag,'stats'),
+                        path=dirname,
+                        filename=f"report.json")
     utili.save_fit_report(
-        getattr(
-            bag,
-            'fit_params'),
-        path=dirname,
-        filename=f"peak_info.json")
+                        getattr(bag, 'fit_params'),
+                        path=dirname,
+                        filename=f"peak_info.json")
     logging.info('saving thunderbag object')
     utili.save_thunder(bag, path=dirname, filename=f"bag_object.d")
+
+    utili.save_fit_report(
+                        arguments,
+                        path=dirname,
+                        filename=f"inpargs.json")
 
     # move the log file in with all the rest of it
     log_filename_ = str(join(dirname, f'log.log'))
     # use os.rename to move the log file to the final destination
     logging.getLogger().handlers[0].close()
     rename(log_filename, log_filename_)
-    utili.save_fit_report(
-        arguments,
-        path=dirname,
-        filename=f"inpargs.json")
+
