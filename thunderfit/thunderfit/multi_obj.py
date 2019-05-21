@@ -188,7 +188,10 @@ class ThunderBag():
             for i, arg in enumerate(sett_args):
                 try:
                     # set the data as an attribute to the thunder object
-                    setattr(thund, arg, val[i])
+                    if len(sett_args) == 1:
+                        setattr(thund, arg, val)
+                    else:
+                        setattr(thund, arg, val[i])
                 except KeyError as e:
                     if isinstance(val, dict):
                         setattr(thund, arg, val)
@@ -253,6 +256,12 @@ class ThunderBag():
                     thund, 'y_data')[
                     clip_left:clip_right])
 
+    def cosmic_rays(self):
+        print(
+            'cosmic ray removal is not yet implemented. If this is an issue I recommend first smoothing the data elsewhere/ '
+            'if you can select a range to delete any troublesome cosmic rays then do that')
+        self.bag_iterator(getattr(self,'thunder_bag'), utili.cosmic_rays, ('y_data',), ('y_data',))
+
     def bg_param_setter(self):
         """
         method for setting the parameters for the background for all the thunder objects in the bag
@@ -288,17 +297,11 @@ class ThunderBag():
         """
         # do some checks
         self.bag_iterator(
-            getattr(
-                self,
-                'thunder_bag'),
+            getattr( self,'thunder_bag'),
             bg_remove.background_finder,
-            ('x_data',
-             'y_data',
-             'background',
-             'scarf_params'),
-            ('background',
-             'y_data_bg_rm',
-             'params'))
+            ('x_data','y_data','background','scarf_params'),
+            ('background', 'y_data_bg_rm', 'params')
+        )
 
     def normalise_data(self):
         """

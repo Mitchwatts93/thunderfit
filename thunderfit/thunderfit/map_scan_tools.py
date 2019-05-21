@@ -156,7 +156,7 @@ def get_cent_mean(peak_label, fit_params):
             peak_label,
             0) for cent in fit_params.get(
             'center',
-            nan).values()]
+            {}).values()]
     cent_mean = nanmean(cents)
     return cent_mean
 

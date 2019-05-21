@@ -57,7 +57,9 @@ def main():
         bag.clip_data(arguments.get('clips', False))
 
     # cosmic ray removal goes here
-    ##########################################################################
+    if arguments.get('cosmic_rays', False):
+        logging.info('removing cosmic rays')
+        bag.cosmic_rays()
 
     # remove background
     if arguments.get('bg_first_only', False):

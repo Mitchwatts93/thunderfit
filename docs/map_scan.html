@@ -23,8 +23,8 @@
       <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">ast</span> <span class="kn">import</span> <span class="n">literal_eval</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">basename</span>
-<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">rename</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">abspath</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">map_scan_tools</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">multi_obj</span>
@@ -78,7 +78,7 @@
       <p>setup logger</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">log_filename</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">setup_logger</span><span class="p">(</span><span class="n">log_name</span><span class="p">)</span>
+      <div class="highlight"><pre>    <span class="n">log_filename</span> <span class="o">=</span> <span class="n">utili</span><span class="o">.</span><span class="n">setup_logger</span><span class="p">(</span><span class="n">log_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="c1"># don&#39;t name it with the .txt</span>
 
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;creating multi_obj object&#39;</span><span class="p">)</span>
     <span class="n">bag</span> <span class="o">=</span> <span class="n">multi_obj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># create a Thunder object</span></pre></div>
@@ -95,12 +95,10 @@
     <div class='code'>
       <div class="highlight"><pre>    <span class="n">bag</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">((</span><span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
 
-    <span class="k">if</span> <span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span>
-                      <span class="bp">False</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span>
-                                                   <span class="bp">False</span><span class="p">))</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bg_first_only&#39;</span><span class="p">,</span>
-                                                                            <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;peakf_first_only&#39;</span><span class="p">,</span>
-                                                                                                    <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds_first_only&#39;</span><span class="p">,</span>
-                                                                                                                            <span class="bp">False</span><span class="p">):</span>  <span class="c1"># then we want the user to decide which thunder object to use</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clip_data&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;clips&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">))</span> \
+            <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bg_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> \
+            <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;peakf_first_only&#39;</span><span class="p">,</span><span class="bp">False</span><span class="p">)</span> \
+            <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bounds_first_only&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>  <span class="c1"># then we want the user to decide which thunder object to use</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;choosing spectrum for data&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
@@ -394,15 +392,15 @@ this will for now assume the same types of peak for all fits!</p>
             <span class="n">bag</span><span class="p">,</span>
             <span class="s1">&#39;stats&#39;</span><span class="p">),</span>
         <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_report.json&quot;</span><span class="p">)</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;report.json&quot;</span><span class="p">)</span>
     <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
         <span class="nb">getattr</span><span class="p">(</span>
             <span class="n">bag</span><span class="p">,</span>
             <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
         <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_peak_info.json&quot;</span><span class="p">)</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;peak_info.json&quot;</span><span class="p">)</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving thunderbag object&#39;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}.d&quot;</span><span class="p">)</span></pre></div>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;bag_object.d&quot;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -414,7 +412,7 @@ this will for now assume the same types of peak for all fits!</p>
       <p>move the log file in with all the rest of it</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;{file_name}.log&#39;</span><span class="p">))</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;log.log&#39;</span><span class="p">))</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -426,11 +424,12 @@ this will for now assume the same types of peak for all fits!</p>
       <p>use os.rename to move the log file to the final destination</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">rename</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="n">log_filename_</span><span class="p">)</span>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">rename</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="n">log_filename_</span><span class="p">)</span>
     <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
         <span class="n">arguments</span><span class="p">,</span>
         <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;{file_name}_inpargs.json&quot;</span><span class="p">)</span>
+        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;inpargs.json&quot;</span><span class="p">)</span>
 
 </pre></div>
     </div>

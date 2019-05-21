@@ -91,3 +91,23 @@ def corr_mats(mat1,mat2):
     :return:
     """
     return np.square(mat1-mat2)
+
+
+#pca
+import dill
+bag = dill.load(open('bag_object.d','rb')) # load the bag
+vals = [i.y_data_bg_rm for i in bag.thunder_bag.values()] # get the values
+coordinates = bag.coordinates
+pca = decomposition.PCA(n_components=4)
+val_std = StandardScaler().fit_transform(ys) # this will get the pcas from the spatial variation - i.e. can use it in a
+#  map scan plot. taking the transpose will give pcas of the data which can be plotted like an x-y spectrum
+pcas = pca.fit_transform(val_std)
+# this uses pcas as generated above
+values_zero = dict(zip(coordinates.keys(),list(pcas[:,0]))) # repeat changing the 0 to the other elements
+#...
+X_coords, Y_coords, data = {},{},{} # will save vlaues in these
+X_coords[0],Y_coords[0], data[0] = map_scan_tools.generate_map_matrix(coordinates, values_zero) # repeat for all the other elements
+#...
+figs, axs = map_scan_tools.map_scan_plot_dicts(data, X_coords, Y_coords) # generate plots for all the maps
+for peak_label in figs.keys():
+    map_scan_tools.save_mapscan(peak_label, {}, figs, './', 0) # save all the figures

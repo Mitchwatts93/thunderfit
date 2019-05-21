@@ -115,9 +115,7 @@ cool things like store a thunderfit object for each coordinate and make mapscans
         <span class="bp">self</span><span class="o">.</span><span class="n">x_coord_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y_coord_ind</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
-                <span class="nb">input</span><span class="p">,</span>
-                <span class="n">Thunder</span><span class="p">):</span>  <span class="c1"># if only pass one but its already a thunder object then just use that</span></pre></div>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">Thunder</span><span class="p">):</span>  <span class="c1"># if only pass one but its already a thunder object then just use that</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -190,11 +188,8 @@ file</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>        <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;datapath&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span>
-            <span class="nb">enumerate</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">)):</span>  <span class="c1"># iterate through the datapaths for each file to be loaded</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">):</span></pre></div>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">)):</span>  <span class="c1"># iterate through the datapaths for each file to be loaded</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">datapath</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -203,12 +198,11 @@ file</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-11'>#</a>
       </div>
-      <p>if more than one datapath then we name them with i_j prefix.
-if not its just j</p>
+      <p>if more than one datapath then we name them with i_j prefix.</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>                <span class="n">prefix</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;{i}_&#39;</span>
-            <span class="k">else</span><span class="p">:</span>
+            <span class="k">else</span><span class="p">:</span><span class="c1"># if not its just j</span>
                 <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Thunder</span><span class="p">):</span></pre></div>
     </div>
@@ -236,8 +230,7 @@ if not its just j</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="p">:</span>  <span class="c1"># then we have a map file with 4 columns and lots of individual runs in it</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">x_coord_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_coord_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                        <span class="s1">&#39;x_coord_ind&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;y_coord_ind&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></pre></div>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x_coord_ind</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_coord_ind</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x_coord_ind&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">inp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;y_coord_ind&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>

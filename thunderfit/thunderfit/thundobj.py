@@ -173,6 +173,13 @@ class Thunder():
                 clip_left:clip_right])  # clip the data points
         setattr(self, 'y_data', getattr(self, 'y_data')[clip_left:clip_right])
 
+    def cosmic_rays(self):
+        print(
+            'cosmic ray removal is not yet implemented. If this is an issue I recommend first smoothing the data elsewhere/ '
+            'if you can select a range to delete any troublesome cosmic rays then do that')
+        self.y_data = utili.cosmic_rays(self.y_data)
+        self.y_data_bg_rm = utili.cosmic_rays(self.y_data_bg_rm)
+
     def remove_bg(self):
         """
         call the background_finder function and then set attributes from it

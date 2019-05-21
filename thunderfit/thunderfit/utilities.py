@@ -417,3 +417,54 @@ def gif_maker(bag, filename):
     import imageio
     imageio.mimsave(filename, [update(i) for i in range(len(bag))], fps=2)
 #
+
+def cosmic_rays(y_data, width_threshold=3):
+    """
+    this currently fails if data is sloping and cosmic ray is below max values. change to sloping mad in future
+    :param y_data: np array of data
+    :return:
+    """
+    """
+    import numpy as np
+    from scipy.signal import find_peaks
+    import ipdb
+    ipdb.set_trace()
+    peaks, properties = find_peaks(y_data, width=0, rel_height=0.8) # find peaks with a minimum prominence of zero -
+    # finds widths at 0.8 the height of peaks - quick experiment shows this is optimal for a random example
+    # - needs more testing
+    prominences = properties['prominences']
+    peak_ind = np.argwhere(prominences > np.percentile(prominences, 99))[:,0] # indices of peaks with prominence in 99th percentile
+    y_data_peak_indices = np.take(peaks, peak_ind)
+
+    widths = np.take(properties['widths'], peak_ind) # these are the widths with this peak prominence
+    np.argwhere(widths < width_threshold) # this may fail often?
+
+    """
+
+
+
+    """
+    mad = np.median(abs(y_data - np.median(y_data))) # median abs deviation of the data
+    y_mad = abs(y_data - np.median(y_data)) / mad # abs mdeviation from median divided by mad to get ratio
+    cutoff = np.percentile(y_mad, 99.5) # what values make up the 99th percentile, above this are rare!
+    bad_indices = np.argwhere(y_mad > cutoff)
+    for i in bad_indices[:,0]:
+        y_data[i] = np.mean(y_data[i-10:i+10]) # set as the mean value in a window around the peak
+    """
+    #### ideas:
+    ### detection:
+    ## r-pca as from stanford - probably not good here. https://medium.com/netflix-techblog/rad-outlier-detection-on-big-data-d6b0494371cc : https://github.com/dganguli/robust-pca/blob/master/r_pca.py
+    ## differentiate in time across multiple spectra, use that to detect spikes - for single spectra do user guided 'zap' function?
+    ## just smoothing? or smoothing and then a residual threshold?
+    ## find peaks using scipy and delete low width peaks, doesn't work if small though
+    ## https://journals.sagepub.com/doi/pdf/10.1366/000370207781745847 - simulate the data and set a threshold for
+    # residual, replace pixels with simulated. this would involve a cosmic spike removal step at the end of fitting.
+    # if fitting has already failed then wouldn't work. could be a bit delicate
+    ## asto guy: https://cosmicrayapp.com/2017/02/03/signal-processing-details/
+    ## mad - also captures peaks in general so no bueno
+    ## https://pureportal.strath.ac.uk/files-asset/38783720/Littlejohn_Automated_cosmic_spike_filter.pdf
+    ## https://www.osti.gov/pages/servlets/purl/1334720
+    ## https://www.researchgate.net/publication/233403614_Automated_Cosmic_Spike_Filter_Optimized_for_Process_Raman_Spectroscopy
+
+
+    return y_data
