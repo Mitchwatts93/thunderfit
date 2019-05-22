@@ -1,5 +1,3 @@
-from . import normalisation
-import matplotlib.pyplot as plt
 import logging
 from json import dump as j_dumps
 from json import load as j_load
@@ -7,14 +5,18 @@ from os import mkdir
 from os.path import join, abspath
 from time import strftime
 
-import matplotlib
 import pandas as pd
 from dill import dump as d_dump
 from dill import load as d_load
-from numpy import vstack, pad, diff, frombuffer
+from numpy import vstack, pad, diff, frombuffer, round, mean, ndarray, std, histogram, exp, percentile
+from sklearn.mixture import GaussianMixture
+from tqdm import tqdm
 
+import matplotlib
+import matplotlib.pyplot as plt
 matplotlib.use('TkAgg')
 
+from . import normalisation
 
 # tools
 def save_thunder(obj, path, filename='thunder.d'):
@@ -415,7 +417,8 @@ def gif_maker(bag, filename):
         return img
 
     import imageio
-    imageio.mimsave(filename, [update(i) for i in range(len(bag))], fps=2)
+    print("Creating gif")
+    imageio.mimsave(filename, tqdm([update(i) for i in range(len(bag))]), fps=2)
 #
 
 def cosmic_rays(y_data, width_threshold=3):
@@ -468,3 +471,36 @@ def cosmic_rays(y_data, width_threshold=3):
 
 
     return y_data
+
+
+def histogram_func(u_vals:ndarray, x_label, gmm=False, f=None, ax=None, bins='auto'):
+    assert(len(u_vals.shape) == 1), "The nd array passed to histogram func must be a 1d ndarray"
+    if not ax or f: # then create the figure
+        f = plt.figure()
+        ax = f.add_subplot(111)
+    # get the hist
+    range_l, range_h = percentile(u_vals,1), percentile(u_vals,99)
+    if (range_h - range_l) > 5 * (percentile(u_vals,90) - percentile(u_vals,10)):
+        range_l = percentile(u_vals, 5)
+        range_h = percentile(u_vals, 95)
+    heights, edges = histogram(a=u_vals, bins=bins, range=(range_l, range_h ))
+    widths = [0.8*(edges[i+1] - edges[i]) for i in range(len(edges) - 1)]
+    edges = edges[:-1]
+    # plot it
+    ax.bar(edges, heights, width=widths, color='r', align='edge')
+    ax.grid(axis='y', alpha=0.75)
+    ax.set(xlabel=x_label, ylabel='Frequency')
+    mu = round(mean(u_vals), 1)
+    mu_unc = round(std(u_vals) / len(u_vals), 1) # standard error
+    sig = round(std(u_vals), 1) # sigma
+
+    plt.text(0.3, 0.9, r'$\mu=$' + f'{mu}' + f'pm {mu_unc}' + ', ' + r'$\sigma=$' + f'{sig}' ,
+             horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+    if gmm: # then add gaussian mixture
+        vals, bins = histogram(u_vals, bins='auto')
+        gmm = GaussianMixture(n_components=3)
+        gmm = gmm.fit(u_vals[:, None])
+        plt.plot(bins[:None], exp(gmm.score_samples(bins[:, None])))
+        plt.text(0.3, 0.8, r'GaussianMixture Components:', horizontalalignment='center',
+                 verticalalignment='center', transform=ax.transAxes)
+    return f, ax, bins

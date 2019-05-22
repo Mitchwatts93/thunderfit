@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from numpy import unique, round, array, nanmin, nanmax, nan, nanpercentile, nanmean
 from scipy.sparse import coo_matrix
+from tqdm import tqdm
 
 matplotlib.use('TkAgg')
 
@@ -202,11 +203,13 @@ def mapscans_for_parameter(
     plot, ax = map_scan_plot_dicts(data_mat, X_coords[p], Y_coords[p])
     for peak_label in plot.keys():
         save_mapscan(peak_label, fit_params, plot, dirname, p)
-    plt.close()
+    plt.close('all')
 
 
 def plot_all_maps(fit_params, map_matrices, X_coords, Y_coords, dirname):
-    for p in fit_params.keys():
+    fit_params_iter = tqdm(fit_params.keys())
+    fit_params_iter.set_description('plotting and saving all maps')
+    for p in fit_params_iter:
         mapscans_for_parameter(map_matrices, X_coords, Y_coords, p, fit_params, dirname)
 
 
@@ -241,5 +244,6 @@ def plot_map_scan(fit_params, map_matrices, X_coords, Y_coords, dirname, plot_al
                 mapscans_for_parameter(map_matrices, X_coords, Y_coords, p, fit_params, dirname)
             except KeyError:
                 print('wrong answer entered, trying again!')
+    plt.close('all')
 #
     return map_matrices

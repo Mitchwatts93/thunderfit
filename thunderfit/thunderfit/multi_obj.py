@@ -1,22 +1,22 @@
-from . import map_scan_tools
-from . import peak_fitting
-from . import peak_finding
-from .background import background_removal as bg_remove
-from . import utilities as utili
-from .thundobj import Thunder
 import logging
 from typing import Union
 from copy import deepcopy
 from glob import glob
-from numpy import array, ndarray
+from numpy import array, ndarray, round
+from pandas.errors import ParserError
+from tqdm import tqdm
+from os.path import join
 
 import matplotlib
 import matplotlib.pyplot as plt
-from numpy import round
-from pandas.errors import ParserError
-from tqdm import tqdm
-
 matplotlib.use('TkAgg')
+
+from . import utilities as utili
+from .thundobj import Thunder
+from . import map_scan_tools
+from . import peak_fitting
+from . import peak_finding
+from .background import background_removal as bg_remove
 
 
 # TODO
@@ -419,7 +419,9 @@ class ThunderBag():
         map_matrices = {}
         X_dict = {}
         Y_dict = {}
-        for p in self.fit_params.keys():
+        fit_iter = tqdm(self.fit_params.keys())
+        fit_iter.set_description("making map matrices")
+        for p in fit_iter:
             data_mat, X_, Y_ = map_scan_tools.map_scan_matrices_from_dicts(
                 getattr(self, 'coordinates'), self.fit_params.get(p))
             map_matrices[p] = data_mat
@@ -429,6 +431,35 @@ class ThunderBag():
         self.map_matrices = map_matrices
         self.X_coords = X_dict
         self.Y_coords = Y_dict
+
+    def histograms(self, map_matrices, path, keys=None, gmm=False, bins='auto'):
+        if not keys:
+            keys = map_matrices.keys()
+        if isinstance(map_matrices, dict):
+            keys1 = tqdm(keys)
+            keys1.set_description("making histograms for each parameter")
+            for key1 in keys1:
+                map_lvl_1 = map_matrices.get(key1) # this should now be a np array or could still be a dict
+                if isinstance(map_lvl_1, dict):
+                    keys2 = tqdm(map_lvl_1)
+                    keys2.set_description("making histograms for each sub parameter")
+                    for key2 in keys2:
+                        map_lvl_2 = map_lvl_1[key2] # this should now be an nd array
+                        assert isinstance(map_lvl_2, ndarray), "The dictionary contains a dictionary whose values " \
+                                                               "aren't np arrays!"
+                        f, ax, bins_ = utili.histogram_func(map_lvl_2.flatten(), x_label=f'{key2}_value', gmm=gmm,
+                                                           bins=bins)
+                        f.savefig(join(path, f"{key1}_{key2}s_histogram.svg"), transparent=True, format='svg')
+                        plt.close('all')
+                elif isinstance(map_lvl_1, ndarray):
+                    f, ax, bins_ = utili.histogram_func(map_lvl_1.flatten(),x_label=f'{key1}_value', gmm=gmm,
+                                                 bins=bins)
+                    f.savefig(join(path, f"{key1}s_histogram.svg"), transparent=True,
+                                format='svg')
+                    plt.close('all')
+        else:
+            raise TypeError("The map matrices object supplied is the incorrect type. Must be a dictionary")
+
 
     def make_fit_params(self):
         """
@@ -440,7 +471,9 @@ class ThunderBag():
         first_thunder = self.thunder_bag.get(self.first)
         params = set([key.split('__')[1]
                       for key in getattr(first_thunder, 'peak_params').keys()])
-        for param in params:
+        param_iter = tqdm(params)
+        param_iter.set_description('making fit parameters')
+        for param in param_iter:
             fit_params[param] = {}  # e.g. 'center'
             for key in self.thunder_bag.keys():
                 fit_details = getattr(self.thunder_bag.get(key), 'peak_params')
@@ -456,7 +489,9 @@ class ThunderBag():
         """
         logging.debug('generating fit stats')
         stats = {'chisq': {}, 'reduced_chi_sq': {}, 'free_params': {}}
-        for key, thund in self.thunder_bag.items():
+        dict_iter = tqdm(self.thunder_bag.items())
+        dict_iter.set_description('making stats dict')
+        for key, thund in dict_iter:
             chisq = getattr(getattr(thund, 'peaks'), 'chisqr')
             reduced_chi_sq = getattr(getattr(thund, 'peaks'), 'redchi')
             free_params = round(chisq / reduced_chi_sq)
@@ -472,7 +507,9 @@ class ThunderBag():
         :return:
         """
         logging.debug('saving failed plots')
-        for key, thund in self.thunder_bag.items():
+        dict_iter = tqdm(self.thunder_bag.items())
+        dict_iter.set_description('saving failed plots')
+        for key, thund in dict_iter:
             if not getattr(getattr(thund, 'peaks'), 'success'):
                 thund.plot_all()
                 utili.save_plot(
@@ -488,7 +525,9 @@ class ThunderBag():
         :param plot_unc: bool, if True then also plots uncertainty
         :return:
         """
-        for key, thund in self.thunder_bag.items():
+        dict_iter = tqdm(self.thunder_bag.items())
+        dict_iter.set_description('saving all plots')
+        for key, thund in dict_iter:
             thund.plot_all(plot_unc=plot_unc)
             utili.save_plot(
                 thund.plot,

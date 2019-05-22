@@ -131,6 +131,12 @@ def main():
                                 arguments.get('map_all_params', False)
                                 )
 
+    # save a histograms
+    if arguments.get('make_hists', False):
+        logging.info('creating and saving histograms')
+        bag.histograms(bag.map_matrices, path=f'{dirname}', keys=arguments.get('hist_keys', None))
+
+
     # save individual plots for each of the failed fits
     logging.info('saving failed fit plots')
     bag.save_failed_plots(dirname)

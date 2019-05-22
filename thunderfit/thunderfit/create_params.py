@@ -22,13 +22,12 @@ def main():
     if arguments['map']:
         try:  # a user can pass in a list of filenames or just one
             file_name = basename(literal_eval(arguments['datapath'])[0])
-        except SyntaxError:  # assume its just a string and not a list passed
-            file_name = None
+            log_name = file_name
+        except (SyntaxError, ValueError):  # assume its just a string and not a list passed
+            file_name = arguments['datapath']
             log_name = arguments['datapath']
-            # as this is what multiobj needs
-            arguments['datapath'] = f"['{arguments['datapath']}',]"
+            arguments['datapath'] = [f"{arguments['datapath']}",]  # as this is what multiobj needs
         bag = multi_obj.main(arguments)  # create a Thunder object
-
         bag.choose_spectrum()  # get the user to choose which spectrum to create params from
         thund = bag.thunder_bag[bag.first]
     else:

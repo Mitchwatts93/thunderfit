@@ -11,57 +11,6 @@ from sklearn.mixture import GaussianMixture
 #https://stackoverflow.com/questions/45304016/how-to-get-kernels-from-kernel-density-estimation-preferrably-sklearn-neighbors
 #https://stackoverflow.com/questions/45805316/gaussian-mixture-models-of-an-images-histogram
 
-
-#AG1/AG2 ratio histogram
-def plot_ag1_ag2_ratio(bag, key='center', path='./',):
-    """
-
-    :param bag:
-    :param key:
-    :param path:
-    :return:
-    """
-    foursix_vals = np.array([fit[5] for fit in bag.fit_params[key].values()])
-    threesix_vals = np.array([fit[4] for fit in bag.fit_params[key].values()])
-    u_vals = threesix_vals/foursix_vals
-    f = plt.figure()
-    ax = f.add_subplot(111)
-    plt.hist(x=u_vals, bins='auto', color='#0504aa', alpha=0.7,rwidth=0.85, density=True)
-    plt.grid(axis='y', alpha=0.75)
-    plt.xlabel('peak center values')
-    plt.ylabel('Frequency Density')
-    plt.text(0.3, 0.9, r'$\mu=$'+f'{np.round(np.mean(u_vals), 3)}, '+r'$\sigma=$'+f'{np.round(np.std(u_vals), 3)}',horizontalalignment='center',verticalalignment='center', transform=ax.transAxes)
-    plt.savefig(join(path, f"Ag1_over_Ag2_ratio_{key}.svg"), transparent=True, format='svg')
-
-#histogram for key at each peak # commented out is the gaussian mixture model for this
-def plot_histogram(bag, key='center', gmm=False, path='./'):
-    """
-
-    :param bag:
-    :param key:
-    :param gmm:
-    :param path:
-    :return:
-    """
-    for i in range(len(bag.fit_params[key]['0'])):
-        key_ = key
-        u_vals = np.array([fit[i] for fit in bag.fit_params[key].values()])
-        f = plt.figure()
-        ax = f.add_subplot(111)
-        plt.hist(x=u_vals, bins='auto', color='#0504aa', alpha=0.7,rwidth=0.85, density=True)
-        plt.grid(axis='y', alpha=0.75)
-        plt.xlabel(f'{key}')
-        plt.ylabel('Frequency Density')
-        plt.text(0.3, 0.9, r'$\mu=$'+f'{np.round(np.mean(u_vals), 1)}, '+r'$\sigma=$'+f'{np.round(np.std(u_vals), 1)}',horizontalalignment='center',verticalalignment='center', transform=ax.transAxes)
-        if gmm:
-            vals,bins = np.histogram(u_vals, bins='auto')
-            gmm = GaussianMixture(n_components = 3)
-            gmm = gmm.fit(u_vals[:,None])
-            plt.plot(bins[:None],np.exp(gmm.score_samples(bins[:,None])))
-            plt.text(0.3, 0.8, r'GaussianMixture Components:',horizontalalignment='center',verticalalignment='center', transform=ax.transAxes)
-            key_ = key + 'gmm'
-        plt.savefig(join(path, f"{key_}s_at_{bag.fit_params['center']['0'][i]}.svg"), transparent=True, format='svg')
-
 # correlations of maps
 import itertools
 import numpy as np

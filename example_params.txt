@@ -1,0 +1,18 @@
+{"x_ind": 2, "y_ind": 3,"x_coord_ind":1, "y_coord_ind":0, "map": true, "background": "no", "make_hists":true,
+"clip_data": true, "clips":[1650, 200], "method": "leastsq", "tol": 0.000001, "make_gif":true, "map_all_params":true, "save_all_plots":true,
+"peak_info_dict": 
+{
+"type": ["LorentzianModel", "LorentzianModel", "LorentzianModel", "LorentzianModel", "ConstantModel", "PowerLawModel"], 
+"center": [466.6, 363, 437, 1580],
+"sigma": [2, 2, 3, 8], 
+"height": [5000, 2000, 2000, 1000],
+"c":[null,null,null,null,100],
+"exponent":[null,null,null,null,null,2]
+}, 
+"bounds": 
+{
+"center": [[462, 469], [358, 365], [435, 441], [1570,1590]],
+"sigma": [[0.5, 5], [0.5, 5], [0.5, 5],[5,12]],
+"amplitude": [[0.0001,null], [0.0001,null], [0.0001,null], [0.0001,null]]
+}
+}
