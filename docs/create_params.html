@@ -62,23 +62,12 @@
     <span class="k">if</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;map&#39;</span><span class="p">]:</span>
         <span class="k">try</span><span class="p">:</span>  <span class="c1"># a user can pass in a list of filenames or just one</span>
             <span class="n">file_name</span> <span class="o">=</span> <span class="n">basename</span><span class="p">(</span><span class="n">literal_eval</span><span class="p">(</span><span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">except</span> <span class="ne">SyntaxError</span><span class="p">:</span>  <span class="c1"># assume its just a string and not a list passed</span>
-            <span class="n">file_name</span> <span class="o">=</span> <span class="bp">None</span>
-            <span class="n">log_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-3'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-3'>#</a>
-      </div>
-      <p>as this is what multiobj needs</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>            <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;[&#39;{arguments[&#39;datapath&#39;]}&#39;,]&quot;</span>
+            <span class="n">log_name</span> <span class="o">=</span> <span class="n">file_name</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">SyntaxError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>  <span class="c1"># assume its just a string and not a list passed</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
+            <span class="n">log_name</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span>
+            <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;datapath&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="s2">&quot;{arguments[&#39;datapath&#39;]}&quot;</span><span class="p">,]</span>  <span class="c1"># as this is what multiobj needs</span>
         <span class="n">bag</span> <span class="o">=</span> <span class="n">multi_obj</span><span class="o">.</span><span class="n">main</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>  <span class="c1"># create a Thunder object</span>
-
         <span class="n">bag</span><span class="o">.</span><span class="n">choose_spectrum</span><span class="p">()</span>  <span class="c1"># get the user to choose which spectrum to create params from</span>
         <span class="n">thund</span> <span class="o">=</span> <span class="n">bag</span><span class="o">.</span><span class="n">thunder_bag</span><span class="p">[</span><span class="n">bag</span><span class="o">.</span><span class="n">first</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>

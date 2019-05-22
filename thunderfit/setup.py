@@ -7,7 +7,7 @@ def readme():
 setup(
     name='thunderfit',
     python_requires='>3.6',
-    version='1.7.2.3',
+    version='1.7.2.4',
     description='Thunderfit fitting code',
     long_description=readme(),
     classifiers=[
@@ -31,7 +31,8 @@ setup(
         'tqdm==4.26.0',
         'asteval==0.9.13',
         'typing==3.6.6',
-        'imageio ==2.5.0'
+        'imageio ==2.5.0',
+        'sklearn == 0.0'
         ],
     include_package_data=True,
     test_suite='nose.collector',

@@ -149,10 +149,11 @@ one spectra to</p>
         <a class='octothorpe' href='#section-8'>#</a>
       </div>
       <p>cosmic ray removal goes here</p>
-<h6></h6>
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cosmic_rays&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;removing cosmic rays&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">cosmic_rays</span><span class="p">()</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -317,13 +318,13 @@ this will for now assume the same types of peak for all fits!</p>
       <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;plotting map scans&#39;</span><span class="p">)</span>
     <span class="n">bag</span><span class="o">.</span><span class="n">make_map_matrices</span><span class="p">()</span>  <span class="c1"># make the mapscan arrays</span>
     <span class="n">map_scan_tools</span><span class="o">.</span><span class="n">plot_map_scan</span><span class="p">(</span>
-        <span class="nb">getattr</span><span class="p">(</span>
-            <span class="n">bag</span><span class="p">,</span>
-            <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">map_matrices</span><span class="p">,</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">X_coords</span><span class="p">,</span>
-        <span class="n">bag</span><span class="o">.</span><span class="n">Y_coords</span><span class="p">,</span>
-        <span class="n">dirname</span><span class="p">)</span></pre></div>
+                                <span class="nb">getattr</span><span class="p">(</span> <span class="n">bag</span><span class="p">,</span><span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
+                                <span class="n">bag</span><span class="o">.</span><span class="n">map_matrices</span><span class="p">,</span>
+                                <span class="n">bag</span><span class="o">.</span><span class="n">X_coords</span><span class="p">,</span>
+                                <span class="n">bag</span><span class="o">.</span><span class="n">Y_coords</span><span class="p">,</span>
+                                <span class="n">dirname</span><span class="p">,</span>
+                                <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;map_all_params&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+                                <span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -331,6 +332,20 @@ this will for now assume the same types of peak for all fits!</p>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>save a histograms</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;make_hists&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;creating and saving histograms&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">histograms</span><span class="p">(</span><span class="n">bag</span><span class="o">.</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">f</span><span class="s1">&#39;{dirname}&#39;</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;hist_keys&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
       </div>
       <p>save individual plots for each of the failed fits</p>
     </div>
@@ -340,10 +355,10 @@ this will for now assume the same types of peak for all fits!</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-21'>
+  <div class='section' id='section-22'>
     <div class='docs'>
       <div class='octowrap'>
-        <a class='octothorpe' href='#section-21'>#</a>
+        <a class='octothorpe' href='#section-22'>#</a>
       </div>
       <p>save a gif of every single plot</p>
     </div>
@@ -354,27 +369,17 @@ this will for now assume the same types of peak for all fits!</p>
     </div>
   </div>
   <div class='clearall'></div>
-  <div class='section' id='section-22'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-22'>#</a>
-      </div>
-      <p>put here some code for cluster analysis and pca</p>
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;not currently doing cluster analysis or pca&#39;</span><span class="p">)</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
   <div class='section' id='section-23'>
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-23'>#</a>
       </div>
-      <h6></h6>
+      <p>save all plots</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre></pre></div>
+      <div class="highlight"><pre>    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;save_all_plots&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving all plots individually&#39;</span><span class="p">)</span>
+        <span class="n">bag</span><span class="o">.</span><span class="n">save_all_plots</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -383,24 +388,10 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-24'>#</a>
       </div>
-      <p>save the bag object and it reports</p>
+      <p>put here some code for cluster analysis and pca</p>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving fit reports on stats and fitting parameters&#39;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
-        <span class="nb">getattr</span><span class="p">(</span>
-            <span class="n">bag</span><span class="p">,</span>
-            <span class="s1">&#39;stats&#39;</span><span class="p">),</span>
-        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;report.json&quot;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
-        <span class="nb">getattr</span><span class="p">(</span>
-            <span class="n">bag</span><span class="p">,</span>
-            <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
-        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;peak_info.json&quot;</span><span class="p">)</span>
-    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving thunderbag object&#39;</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;bag_object.d&quot;</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;not currently doing cluster analysis or pca&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -409,10 +400,10 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-25'>#</a>
       </div>
-      <p>move the log file in with all the rest of it</p>
+      <h6></h6>
     </div>
     <div class='code'>
-      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;log.log&#39;</span><span class="p">))</span></pre></div>
+      <div class="highlight"><pre></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -421,15 +412,50 @@ this will for now assume the same types of peak for all fits!</p>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-26'>#</a>
       </div>
+      <p>save the bag object and it reports</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving fit reports on stats and fitting parameters&#39;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span><span class="s1">&#39;stats&#39;</span><span class="p">),</span>
+                        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+                        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;report.json&quot;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
+                        <span class="nb">getattr</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="s1">&#39;fit_params&#39;</span><span class="p">),</span>
+                        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+                        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;peak_info.json&quot;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving thunderbag object&#39;</span><span class="p">)</span>
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_thunder</span><span class="p">(</span><span class="n">bag</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;bag_object.d&quot;</span><span class="p">)</span>
+
+    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
+                        <span class="n">arguments</span><span class="p">,</span>
+                        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
+                        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;inpargs.json&quot;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>move the log file in with all the rest of it</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">log_filename_</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">dirname</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;log.log&#39;</span><span class="p">))</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
       <p>use os.rename to move the log file to the final destination</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     <span class="n">rename</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="n">log_filename_</span><span class="p">)</span>
-    <span class="n">utili</span><span class="o">.</span><span class="n">save_fit_report</span><span class="p">(</span>
-        <span class="n">arguments</span><span class="p">,</span>
-        <span class="n">path</span><span class="o">=</span><span class="n">dirname</span><span class="p">,</span>
-        <span class="n">filename</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;inpargs.json&quot;</span><span class="p">)</span>
 
 </pre></div>
     </div>

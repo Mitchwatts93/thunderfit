@@ -27,6 +27,7 @@
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">unique</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">nanmin</span><span class="p">,</span> <span class="n">nanmax</span><span class="p">,</span> <span class="n">nan</span><span class="p">,</span> <span class="n">nanpercentile</span><span class="p">,</span> <span class="n">nanmean</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
 <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span></pre></div>
     </div>
@@ -325,7 +326,7 @@ for each peak
             <span class="n">peak_label</span><span class="p">,</span>
             <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">cent</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
             <span class="s1">&#39;center&#39;</span><span class="p">,</span>
-            <span class="n">nan</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+            <span class="p">{})</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
     <span class="n">cent_mean</span> <span class="o">=</span> <span class="n">nanmean</span><span class="p">(</span><span class="n">cents</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">cent_mean</span></pre></div>
     </div>
@@ -407,7 +408,7 @@ actual data matrices as values and keys correspond to the model keys e.g. 'm0'
     <span class="n">plot</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">map_scan_plot_dicts</span><span class="p">(</span><span class="n">data_mat</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">Y_coords</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
     <span class="k">for</span> <span class="n">peak_label</span> <span class="ow">in</span> <span class="n">plot</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">save_mapscan</span><span class="p">(</span><span class="n">peak_label</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></pre></div>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -415,6 +416,22 @@ actual data matrices as values and keys correspond to the model keys e.g. 'm0'
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">plot_all_maps</span><span class="p">(</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span>
+    <span class="n">fit_params_iter</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">fit_params</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">fit_params_iter</span><span class="o">.</span><span class="n">set_description</span><span class="p">(</span><span class="s1">&#39;plotting and saving all maps&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fit_params_iter</span><span class="p">:</span>
+        <span class="n">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
       </div>
       <pre><code>function to plot the mapscans given user input on what to plot for.
 :param fit_params: a dictionary of dicts. 1st keys are properties e.g. 'center' and second keys are for each model
@@ -427,38 +444,7 @@ e.g. 'm0'. values are a dict of the actual values for each pixel in the map
 </code></pre>
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span class="k">def</span> <span class="nf">plot_map_scan</span><span class="p">(</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">):</span></pre></div>
-    </div>
-  </div>
-  <div class='clearall'></div>
-  <div class='section' id='section-22'>
-    <div class='docs'>
-      <div class='octowrap'>
-        <a class='octothorpe' href='#section-22'>#</a>
-      </div>
-      
-    </div>
-    <div class='code'>
-      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-        <span class="s1">&#39;runnning user input routine to generate/save user chosen variables in maps&#39;</span><span class="p">)</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
-            <span class="s2">&quot;making map scans, please input which property you would like to scan. options are:&quot;</span>
-            <span class="n">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> {[p_ for p_ in fit_params.keys()]}, or type &#39;all&#39; to plot all, or type e to exit&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span>
-            <span class="k">break</span>
-        <span class="k">elif</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fit_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">mapscans_for_parameter</span><span class="p">(</span>
-                    <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
-            <span class="k">break</span>  <span class="c1"># break the while loop</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">p</span> <span class="o">=</span> <span class="n">ans</span>
-                <span class="n">mapscans_for_parameter</span><span class="p">(</span>
-                    <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;wrong answer entered, trying again!&#39;</span><span class="p">)</span></pre></div>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">plot_map_scan</span><span class="p">(</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">plot_all</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -466,6 +452,38 @@ e.g. 'm0'. values are a dict of the actual values for each pixel in the map
     <div class='docs'>
       <div class='octowrap'>
         <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s1">&#39;runnning user input routine to generate/save user chosen variables in maps&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">plot_all</span><span class="p">:</span>
+        <span class="n">plot_all_maps</span><span class="p">(</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">map_matrices</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+            <span class="s2">&quot;making map scans, please input which property you would like to scan. options are:&quot;</span>
+            <span class="n">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> {[p_ for p_ in fit_params.keys()]}, or type &#39;all&#39; to plot all, or type e to exit&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;e&#39;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">elif</span> <span class="n">ans</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+            <span class="n">plot_all_maps</span><span class="p">(</span><span class="n">fit_params</span><span class="p">,</span> <span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+            <span class="k">break</span>  <span class="c1"># break the while loop</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">ans</span>
+                <span class="n">mapscans_for_parameter</span><span class="p">(</span><span class="n">map_matrices</span><span class="p">,</span> <span class="n">X_coords</span><span class="p">,</span> <span class="n">Y_coords</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">fit_params</span><span class="p">,</span> <span class="n">dirname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s1">&#39;wrong answer entered, trying again!&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
       </div>
       
     </div>

@@ -20,22 +20,25 @@
       
     </div>
     <div class='code'>
-      <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">normalisation</span>
-<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">logging</span>
+      <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">dump</span> <span class="k">as</span> <span class="n">j_dumps</span>
 <span class="kn">from</span> <span class="nn">json</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">j_load</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">mkdir</span>
 <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span><span class="p">,</span> <span class="n">abspath</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">strftime</span>
 
-<span class="kn">import</span> <span class="nn">matplotlib</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="kn">from</span> <span class="nn">dill</span> <span class="kn">import</span> <span class="n">dump</span> <span class="k">as</span> <span class="n">d_dump</span>
 <span class="kn">from</span> <span class="nn">dill</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">d_load</span>
-<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">vstack</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">frombuffer</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">vstack</span><span class="p">,</span> <span class="n">pad</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">frombuffer</span><span class="p">,</span> <span class="nb">round</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">ndarray</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">histogram</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">percentile</span>
+<span class="kn">from</span> <span class="nn">sklearn.mixture</span> <span class="kn">import</span> <span class="n">GaussianMixture</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span></pre></div>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;TkAgg&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">normalisation</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -907,7 +910,8 @@ values</p>
         <span class="k">return</span> <span class="n">img</span>
 
     <span class="kn">import</span> <span class="nn">imageio</span>
-    <span class="n">imageio</span><span class="o">.</span><span class="n">mimsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="p">[</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bag</span><span class="p">))],</span> <span class="n">fps</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></pre></div>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Creating gif&quot;</span><span class="p">)</span>
+    <span class="n">imageio</span><span class="o">.</span><span class="n">mimsave</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">tqdm</span><span class="p">([</span><span class="n">update</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bag</span><span class="p">))]),</span> <span class="n">fps</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span></pre></div>
     </div>
   </div>
   <div class='clearall'></div>
@@ -920,6 +924,142 @@ values</p>
     </div>
     <div class='code'>
       <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-53'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-53'>#</a>
+      </div>
+      <pre><code>this currently fails if data is sloping and cosmic ray is below max values. change to sloping mad in future
+:param y_data: np array of data
+:return:
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">cosmic_rays</span><span class="p">(</span><span class="n">y_data</span><span class="p">,</span> <span class="n">width_threshold</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-54'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-54'>#</a>
+      </div>
+      <pre><code>import numpy as np
+from scipy.signal import find_peaks
+import ipdb
+ipdb.set_trace()
+peaks, properties = find_peaks(y_data, width=0, rel_height=0.8) # find peaks with a minimum prominence of zero -
+# finds widths at 0.8 the height of peaks - quick experiment shows this is optimal for a random example
+# - needs more testing
+prominences = properties['prominences']
+peak_ind = np.argwhere(prominences &gt; np.percentile(prominences, 99))[:,0] # indices of peaks with prominence in 99th percentile
+y_data_peak_indices = np.take(peaks, peak_ind)
+
+widths = np.take(properties['widths'], peak_ind) # these are the widths with this peak prominence
+np.argwhere(widths &lt; width_threshold) # this may fail often?
+</code></pre>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-55'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-55'>#</a>
+      </div>
+      <pre><code>mad = np.median(abs(y_data - np.median(y_data))) # median abs deviation of the data
+y_mad = abs(y_data - np.median(y_data)) / mad # abs mdeviation from median divided by mad to get ratio
+cutoff = np.percentile(y_mad, 99.5) # what values make up the 99th percentile, above this are rare!
+bad_indices = np.argwhere(y_mad &gt; cutoff)
+for i in bad_indices[:,0]:
+</code></pre>
+<p>y_data[i] = np.mean(y_data[i-10:i+10]) # set as the mean value in a window around the peak</p>
+<h3>ideas:</h3>
+<h2>detection:</h2>
+<h1>r-pca as from stanford - probably not good here. https://medium.com/netflix-techblog/rad-outlier-detection-on-big-data-d6b0494371cc : https://github.com/dganguli/robust-pca/blob/master/r_pca.py</h1>
+<h1>differentiate in time across multiple spectra, use that to detect spikes - for single spectra do user guided &lsquo;zap&rsquo; function?</h1>
+<h1>just smoothing? or smoothing and then a residual threshold?</h1>
+<h1>find peaks using scipy and delete low width peaks, doesn&rsquo;t work if small though</h1>
+<h1>https://journals.sagepub.com/doi/pdf/10.1366/000370207781745847 - simulate the data and set a threshold for</h1>
+<p>residual, replace pixels with simulated. this would involve a cosmic spike removal step at the end of fitting.
+if fitting has already failed then wouldn&rsquo;t work. could be a bit delicate</p>
+<h1>asto guy: https://cosmicrayapp.com/2017/02/03/signal-processing-details/</h1>
+<h1>mad - also captures peaks in general so no bueno</h1>
+<h1>https://pureportal.strath.ac.uk/files-asset/38783720/Littlejohn_Automated_cosmic_spike_filter.pdf</h1>
+<h1>https://www.osti.gov/pages/servlets/purl/1334720</h1>
+<h1>https://www.researchgate.net/publication/233403614_Automated_Cosmic_Spike_Filter_Optimized_for_Process_Raman_Spectroscopy</h1>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="k">return</span> <span class="n">y_data</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-56'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-56'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="k">def</span> <span class="nf">histogram_func</span><span class="p">(</span><span class="n">u_vals</span><span class="p">:</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">x_label</span><span class="p">,</span> <span class="n">gmm</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u_vals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;The nd array passed to histogram func must be a 1d ndarray&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ax</span> <span class="ow">or</span> <span class="n">f</span><span class="p">:</span> <span class="c1"># then create the figure</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-57'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-57'>#</a>
+      </div>
+      <p>get the hist</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">range_l</span><span class="p">,</span> <span class="n">range_h</span> <span class="o">=</span> <span class="n">percentile</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">percentile</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span><span class="mi">99</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">range_h</span> <span class="o">-</span> <span class="n">range_l</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">percentile</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span><span class="mi">90</span><span class="p">)</span> <span class="o">-</span> <span class="n">percentile</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span><span class="mi">10</span><span class="p">)):</span>
+        <span class="n">range_l</span> <span class="o">=</span> <span class="n">percentile</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="n">range_h</span> <span class="o">=</span> <span class="n">percentile</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span> <span class="mi">95</span><span class="p">)</span>
+    <span class="n">heights</span><span class="p">,</span> <span class="n">edges</span> <span class="o">=</span> <span class="n">histogram</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">u_vals</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="n">range_l</span><span class="p">,</span> <span class="n">range_h</span> <span class="p">))</span>
+    <span class="n">widths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.8</span><span class="o">*</span><span class="p">(</span><span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">edges</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+  <div class='section' id='section-58'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-58'>#</a>
+      </div>
+      <p>plot it</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>    <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">heights</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">widths</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="n">x_label</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Frequency&#39;</span><span class="p">)</span>
+    <span class="n">mu</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">mean</span><span class="p">(</span><span class="n">u_vals</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">mu_unc</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">std</span><span class="p">(</span><span class="n">u_vals</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">u_vals</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># standard error</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">std</span><span class="p">(</span><span class="n">u_vals</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># sigma</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;$\mu=$&#39;</span> <span class="o">+</span> <span class="n">f</span><span class="s1">&#39;{mu}&#39;</span> <span class="o">+</span> <span class="n">f</span><span class="s1">&#39;pm {mu_unc}&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\sigma=$&#39;</span> <span class="o">+</span> <span class="n">f</span><span class="s1">&#39;{sig}&#39;</span> <span class="p">,</span>
+             <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gmm</span><span class="p">:</span> <span class="c1"># then add gaussian mixture</span>
+        <span class="n">vals</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">histogram</span><span class="p">(</span><span class="n">u_vals</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
+        <span class="n">gmm</span> <span class="o">=</span> <span class="n">GaussianMixture</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">gmm</span> <span class="o">=</span> <span class="n">gmm</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">u_vals</span><span class="p">[:,</span> <span class="bp">None</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">bins</span><span class="p">[:</span><span class="bp">None</span><span class="p">],</span> <span class="n">exp</span><span class="p">(</span><span class="n">gmm</span><span class="o">.</span><span class="n">score_samples</span><span class="p">(</span><span class="n">bins</span><span class="p">[:,</span> <span class="bp">None</span><span class="p">])))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;GaussianMixture Components:&#39;</span><span class="p">,</span> <span class="n">horizontalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span>
+                 <span class="n">verticalalignment</span><span class="o">=</span><span class="s1">&#39;center&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">bins</span>
+
+</pre></div>
     </div>
   </div>
   <div class='clearall'></div>

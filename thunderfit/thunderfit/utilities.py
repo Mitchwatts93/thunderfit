@@ -473,19 +473,26 @@ def cosmic_rays(y_data, width_threshold=3):
     return y_data
 
 
+def hist_chooser(u_vals, bins, lower_per=1, upper_perc=99):
+    range_l, range_h = percentile(u_vals, lower_per), percentile(u_vals, upper_perc)
+    heights, edges = histogram(a=u_vals, bins=bins, range=(range_l, range_h))
+    if len(edges) > 70:
+        heights, edges = hist_chooser(u_vals, bins, lower_per + 2, upper_perc - 2)
+    return heights, edges
+
+
 def histogram_func(u_vals:ndarray, x_label, gmm=False, f=None, ax=None, bins='auto'):
     assert(len(u_vals.shape) == 1), "The nd array passed to histogram func must be a 1d ndarray"
     if not ax or f: # then create the figure
         f = plt.figure()
         ax = f.add_subplot(111)
     # get the hist
-    range_l, range_h = percentile(u_vals,1), percentile(u_vals,99)
-    if (range_h - range_l) > 5 * (percentile(u_vals,90) - percentile(u_vals,10)):
-        range_l = percentile(u_vals, 5)
-        range_h = percentile(u_vals, 95)
-    heights, edges = histogram(a=u_vals, bins=bins, range=(range_l, range_h ))
+    heights, edges = hist_chooser(u_vals, bins)
     widths = [0.8*(edges[i+1] - edges[i]) for i in range(len(edges) - 1)]
     edges = edges[:-1]
+
+    print(len(heights), len(edges), len(widths))
+
     # plot it
     ax.bar(edges, heights, width=widths, color='r', align='edge')
     ax.grid(axis='y', alpha=0.75)
