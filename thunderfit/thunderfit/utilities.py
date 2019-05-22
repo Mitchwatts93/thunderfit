@@ -490,9 +490,6 @@ def histogram_func(u_vals:ndarray, x_label, gmm=False, f=None, ax=None, bins='au
     heights, edges = hist_chooser(u_vals, bins)
     widths = [0.8*(edges[i+1] - edges[i]) for i in range(len(edges) - 1)]
     edges = edges[:-1]
-
-    print(len(heights), len(edges), len(widths))
-
     # plot it
     ax.bar(edges, heights, width=widths, color='r', align='edge')
     ax.grid(axis='y', alpha=0.75)
