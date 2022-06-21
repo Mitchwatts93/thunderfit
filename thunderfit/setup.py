@@ -24,7 +24,7 @@ setup(
     install_requires = ['jsonschema==2.6.0',
         'dill==0.2.9',
         'scipy==1.1.0',
-        'numpy==1.15.1',
+        'numpy==1.22.0',
         'matplotlib==2.2.3',
         'pandas==0.23.4',
         'lmfit==0.9.13',
