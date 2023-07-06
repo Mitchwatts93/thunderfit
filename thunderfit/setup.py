@@ -23,7 +23,7 @@ setup(
     packages=find_packages(),
     install_requires = ['jsonschema==2.6.0',
         'dill==0.2.9',
-        'scipy==1.1.0',
+        'scipy==1.10.0',
         'numpy==1.15.1',
         'matplotlib==2.2.3',
         'pandas==0.23.4',
